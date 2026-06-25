@@ -60,7 +60,7 @@ function DietDetail() {
             Highlights
           </h2>
           <ul className="mt-3 space-y-2">
-            {diet.highlights.map((h) => (
+            {diet.highlights.map((h: string) => (
               <li key={h} className="flex items-start gap-2 text-sm">
                 <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                 {h}
