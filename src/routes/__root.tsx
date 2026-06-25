@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Navigation } from "../components/Navigation";
+import { Footer } from "../components/Footer";
 
 function NotFoundComponent() {
   return (
@@ -77,21 +79,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-    ],
-    links: [
+      { title: "SmartyDiet — Smart nutrition, personalized diets & tracking tools" },
       {
-        rel: "stylesheet",
-        href: appCss,
+        name: "description",
+        content:
+          "SmartyDiet brings together personalized diet plans, smart calorie & macro tracking tools, and a growing library of nutrition articles — all in one science-based place.",
       },
+      { name: "author", content: "SmartyDiet" },
+      { property: "og:title", content: "SmartyDiet — Smart Nutrition Companion" },
+      {
+        property: "og:description",
+        content:
+          "Pre-built diets, a personal diet builder, nutrition articles and tracking tools. Part of the Smarty family.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "stylesheet", href: appCss }],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -118,8 +122,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="flex min-h-screen flex-col bg-background">
+        <Navigation />
+        <main className="flex-1">
+          <Outlet />
+        </main>
+        <Footer />
+      </div>
     </QueryClientProvider>
   );
 }
