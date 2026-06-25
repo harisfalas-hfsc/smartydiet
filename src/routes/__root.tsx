@@ -86,7 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "SmartyDiet brings together personalized diet plans, smart calorie & macro tracking tools, and a growing library of nutrition articles — all in one science-based place.",
       },
       { name: "author", content: "SmartyDiet" },
-      { property: "og:title", content: "SmartyDiet — Smart Nutrition Companion" },
+      { property: "og:title", content: "SmartyDiet — Smart nutrition, personalized diets & tracking tools" },
       {
         property: "og:description",
         content:
@@ -94,6 +94,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "SmartyDiet — Smart nutrition, personalized diets & tracking tools" },
+      { name: "description", content: "Your smart nutrition companion. SmartyDiet brings together personalized diet plans, smart tools for tracking calories and macros, food and recipe guidance, and" },
+      { property: "og:description", content: "Your smart nutrition companion. SmartyDiet brings together personalized diet plans, smart tools for tracking calories and macros, food and recipe guidance, and" },
+      { name: "twitter:description", content: "Your smart nutrition companion. SmartyDiet brings together personalized diet plans, smart tools for tracking calories and macros, food and recipe guidance, and" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/f399e1dc-88f5-42a6-95ff-6f64ad53810e" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/f399e1dc-88f5-42a6-95ff-6f64ad53810e" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
