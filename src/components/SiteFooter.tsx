@@ -6,7 +6,7 @@ const socialClass =
 
 export function SiteFooter() {
   return (
-    <footer className="bg-background mt-auto w-full pt-6 pb-4 px-4">
+    <footer className="bg-background w-full pt-6 pb-4 px-4">
       <div className="container mx-auto max-w-7xl">
         <div className="flex flex-col items-center gap-6">
           <div className="flex items-center gap-4">
