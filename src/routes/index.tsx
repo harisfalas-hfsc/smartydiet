@@ -98,7 +98,7 @@ function Home() {
       </section>
 
       {/* What's included / Pricing */}
-      <section className="px-5 py-10 sm:py-14">
+      <section className="px-5 pt-6 pb-10 sm:pt-10 sm:pb-14">
         <div className="mx-auto max-w-3xl">
           <div className="rounded-3xl border-2 border-primary bg-card p-5 shadow-soft sm:p-10">
             <div className="text-center">
