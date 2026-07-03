@@ -100,7 +100,7 @@ function Home() {
       {/* What's included / Pricing */}
       <section className="px-5 py-10 sm:py-14">
         <div className="mx-auto max-w-3xl">
-          <div className="rounded-3xl border-2 border-primary bg-card p-6 shadow-soft sm:p-10">
+          <div className="rounded-3xl border-2 border-primary bg-card p-5 shadow-soft sm:p-10">
             <div className="text-center">
               <p className="text-xs font-semibold uppercase tracking-wider text-primary">
                 One-time payment
@@ -112,7 +112,7 @@ function Home() {
             </div>
             <ul className="mx-auto mt-6 max-w-md space-y-3">
               {INCLUDES.map((it) => (
-                <li key={it} className="flex items-center gap-3 text-sm">
+                <li key={it} className="flex items-center gap-3 text-xs sm:text-sm">
                   <CheckCircle2 className="h-5 w-5 flex-none text-primary" />
                   <span className="whitespace-nowrap">{it}</span>
                 </li>
