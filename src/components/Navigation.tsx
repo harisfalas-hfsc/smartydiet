@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Apple, LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import logoUrl from "@/assets/smartydiet-logo.png";
 
 export function Navigation() {
   const { user, loading } = useAuth();
@@ -28,9 +29,7 @@ export function Navigation() {
     >
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2" aria-label="SmartyDiet home">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
-            <Apple className="h-5 w-5 text-primary" strokeWidth={2.25} />
-          </span>
+          <img src={logoUrl} alt="" width={36} height={36} className="h-9 w-9 rounded-lg" />
           <span className="text-lg font-extrabold tracking-tight text-foreground">
             SMARTY <span className="text-primary">DIET</span>
           </span>
