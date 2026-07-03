@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,7 +25,10 @@ interface Row {
 }
 
 function PlansList() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [rows, setRows] = useState<Row[] | null>(null);
+
+  if (pathname !== "/plans") return <Outlet />;
 
   useEffect(() => {
     (async () => {
