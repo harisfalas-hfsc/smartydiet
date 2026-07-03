@@ -11,10 +11,13 @@ export type DietStyle =
   | "vegan"
   | "low_carb"
   | "high_protein"
+  | "intermittent_fasting"
   | "other";
 export type Budget = "low" | "medium" | "high";
 export type Sleep = "poor" | "average" | "good";
 export type CookingSkill = "beginner" | "intermediate" | "advanced";
+export type FastingWindow = "16:8" | "18:6" | "20:4" | "OMAD" | "custom";
+export type FastingApproach = "balanced" | "aggressive" | "very_aggressive";
 
 export interface QuestionnaireData {
   basics: {
@@ -47,19 +50,29 @@ export interface QuestionnaireData {
     goal: Goal;
     targetWeight?: number;
     timelineWeeks?: number;
+    calorieTarget?: number; // optional exact calorie target user wants
   };
   eating: {
     dietStyle: DietStyle;
     dietStyleOther?: string;
     mealsPerDay: number;
     preferredMealTimes?: string;
-    foodsLike?: string;
-    foodsDislike?: string;
-    allergies: string; // required
-    culturalRestrictions?: string;
+    likedFoods: string[];
+    likedFoodsOther?: string;
+    dislikedFoods: string[];
+    dislikedFoodsOther?: string;
+    allergyTags: string[];
+    allergies: string; // free-text extra
+    culturalRestrictions: string[];
+    culturalRestrictionsOther?: string;
     alcohol?: string;
     caffeine?: string;
     waterLitersPerDay?: number;
+    fasting?: {
+      window?: FastingWindow;
+      customWindow?: string;
+      approach?: FastingApproach;
+    };
   };
   constraints: {
     cookingSkill: CookingSkill;
@@ -82,7 +95,15 @@ export const DEFAULT_QUESTIONNAIRE: QuestionnaireData = {
   body: {},
   activity: { trains: false, activityLevel: "moderate", sleep: "average" },
   goal: { goal: "maintenance" },
-  eating: { dietStyle: "balanced", mealsPerDay: 3, allergies: "" },
+  eating: {
+    dietStyle: "balanced",
+    mealsPerDay: 3,
+    likedFoods: [],
+    dislikedFoods: [],
+    allergyTags: [],
+    allergies: "",
+    culturalRestrictions: [],
+  },
   constraints: { cookingSkill: "intermediate", budget: "medium" },
   health: { disclaimerAcknowledged: false },
   notes: "",
@@ -98,3 +119,45 @@ export const STEP_LABELS = [
   "Health",
   "Notes",
 ];
+
+export const FOOD_CATEGORIES: Array<{ label: string; foods: string[] }> = [
+  {
+    label: "Proteins",
+    foods: ["chicken", "beef", "pork", "turkey", "eggs", "fish", "tuna", "salmon", "shrimp", "tofu"],
+  },
+  {
+    label: "Dairy",
+    foods: ["milk", "yogurt", "cheese", "cottage cheese", "butter"],
+  },
+  {
+    label: "Carbs",
+    foods: ["rice", "potatoes", "pasta", "bread", "oats", "quinoa", "couscous"],
+  },
+  {
+    label: "Vegetables",
+    foods: ["spinach", "broccoli", "tomato", "cucumber", "salad greens", "peppers", "carrots", "zucchini"],
+  },
+  {
+    label: "Fruits",
+    foods: ["banana", "apple", "berries", "orange", "grapes", "watermelon"],
+  },
+  {
+    label: "Legumes & Nuts",
+    foods: ["lentils", "chickpeas", "beans", "almonds", "walnuts", "peanuts", "peanut butter"],
+  },
+];
+
+export const ALLERGY_TAGS = [
+  "none",
+  "nuts",
+  "peanuts",
+  "dairy/lactose",
+  "gluten",
+  "eggs",
+  "shellfish",
+  "fish",
+  "soy",
+  "sesame",
+];
+
+export const CULTURAL_TAGS = ["halal", "kosher", "no pork", "no beef", "no alcohol"];

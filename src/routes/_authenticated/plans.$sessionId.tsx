@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { generatePlan } from "@/lib/plan.functions";
+import { generatePlan, listPlanVersions, restorePlanVersion } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Download, Utensils, ShoppingBasket, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Download, Utensils, ShoppingBasket, RefreshCw, History, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
 
@@ -24,11 +25,12 @@ interface Session {
   credits_used: number;
   status: string;
 }
-interface Plan {
+interface PlanRow {
   id: string;
   version: number;
   plan: any;
   rationale: string | null;
+  refinement_note: string | null;
   is_final: boolean;
   created_at: string;
 }
@@ -36,8 +38,11 @@ interface Plan {
 function PlanView() {
   const { sessionId } = Route.useParams();
   const generate = useServerFn(generatePlan);
+  const listVersions = useServerFn(listPlanVersions);
+  const restore = useServerFn(restorePlanVersion);
   const [session, setSession] = useState<Session | null>(null);
-  const [plan, setPlan] = useState<Plan | null>(null);
+  const [versions, setVersions] = useState<PlanRow[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [refineText, setRefineText] = useState("");
   const [busy, setBusy] = useState(false);
   const [autoGenerating, setAutoGenerating] = useState(false);
@@ -49,23 +54,20 @@ function PlanView() {
       .eq("id", sessionId)
       .maybeSingle();
     setSession(s as Session | null);
-    const { data: p } = await supabase
-      .from("diet_plans")
-      .select("id,version,plan,rationale,is_final,created_at")
-      .eq("session_id", sessionId)
-      .order("version", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    setPlan(p as Plan | null);
-  }, [sessionId]);
+    const rows = (await listVersions({ data: { sessionId } })) as PlanRow[];
+    setVersions(rows);
+    // Prefer is_final; else newest
+    const active = rows.find((r) => r.is_final) ?? rows[0];
+    setActiveId((prev) => prev ?? active?.id ?? null);
+  }, [sessionId, listVersions]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  // Recovery: if session is paid but no plan yet, auto-generate.
+  // Recovery: paid, no plan → auto-generate.
   useEffect(() => {
-    if (!session || plan || autoGenerating) return;
+    if (!session || versions.length > 0 || autoGenerating) return;
     if (session.status !== "paid") return;
     if ((session.credits_used ?? 0) > 0) return;
     setAutoGenerating(true);
@@ -81,7 +83,7 @@ function PlanView() {
         setAutoGenerating(false);
       }
     })();
-  }, [session, plan, autoGenerating, generate, sessionId, load]);
+  }, [session, versions.length, autoGenerating, generate, sessionId, load]);
 
   async function refine() {
     if (!refineText.trim()) return toast.error("Describe the change you want");
@@ -92,8 +94,13 @@ function PlanView() {
       });
       if (res.error) throw new Error(res.error);
       setRefineText("");
+      setActiveId(null); // let load() pick the new active
       await load();
-      toast.success("Plan refined");
+      if (res.warnings?.length) {
+        toast.warning(`Plan refined with ${res.warnings.length} warning(s)`);
+      } else {
+        toast.success("Plan refined");
+      }
     } catch (e: any) {
       toast.error(e.message ?? "Refinement failed");
     } finally {
@@ -101,19 +108,35 @@ function PlanView() {
     }
   }
 
-  async function exportPdf() {
-    if (!plan) return;
+  async function doRestore(version: number) {
+    setBusy(true);
     try {
-      await exportPlanPdf(plan.plan, session?.duration_weeks ?? 1);
+      await restore({ data: { sessionId, version } });
+      setActiveId(null);
+      await load();
+      toast.success(`Restored version ${version} (no credit spent)`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Restore failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const active = versions.find((v) => v.id === activeId) ?? versions[0] ?? null;
+
+  async function exportPdf() {
+    if (!active) return;
+    try {
+      await exportPlanPdf(active.plan, session?.duration_weeks ?? 1);
     } catch (e: any) {
       toast.error(e?.message ?? "Could not build PDF");
     }
   }
 
   async function exportGrocery() {
-    if (!plan?.plan?.weeks) return;
+    if (!active?.plan?.weeks) return;
     try {
-      await exportGroceryPdf(plan.plan);
+      await exportGroceryPdf(active.plan);
     } catch (e: any) {
       toast.error(e?.message ?? "Could not build PDF");
     }
@@ -127,6 +150,7 @@ function PlanView() {
     );
 
   const remaining = session.credits_total - session.credits_used;
+  const warnings: string[] = active?.plan?._warnings ?? [];
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -134,20 +158,20 @@ function PlanView() {
         <div>
           <h1 className="text-2xl font-bold">Your {session.duration_weeks}-week plan</h1>
           <p className="text-sm text-muted-foreground">
-            {remaining} refinement{remaining === 1 ? "" : "s"} remaining · v{plan?.version ?? 1}
+            {remaining} refinement{remaining === 1 ? "" : "s"} remaining · viewing v{active?.version ?? 1}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={exportGrocery} disabled={!plan}>
+          <Button variant="outline" size="sm" onClick={exportGrocery} disabled={!active}>
             <ShoppingBasket className="mr-1.5 h-4 w-4" /> Grocery PDF
           </Button>
-          <Button size="sm" onClick={exportPdf} disabled={!plan}>
+          <Button size="sm" onClick={exportPdf} disabled={!active}>
             <Download className="mr-1.5 h-4 w-4" /> Plan PDF
           </Button>
         </div>
       </div>
 
-      {!plan ? (
+      {!active ? (
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
             {autoGenerating ? (
@@ -183,24 +207,38 @@ function PlanView() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {plan.plan?.summary && (
+          {warnings.length > 0 && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-semibold mb-1">The generator couldn't fully match your rules:</p>
+                <ul className="list-disc pl-4 text-xs">
+                  {warnings.slice(0, 5).map((w, i) => (
+                    <li key={i}>{w}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {active.plan?.summary && (
             <Card>
               <CardContent className="p-4 text-sm">
                 <p className="font-semibold">
-                  {plan.plan.summary.calorieTarget} kcal / day ·{" "}
+                  {active.plan.summary.calorieTarget} kcal / day ·{" "}
                   <span className="text-muted-foreground">
-                    P {plan.plan.summary.macros?.protein_g}g · C{" "}
-                    {plan.plan.summary.macros?.carbs_g}g · F {plan.plan.summary.macros?.fat_g}g
+                    P {active.plan.summary.macros?.protein_g}g · C{" "}
+                    {active.plan.summary.macros?.carbs_g}g · F {active.plan.summary.macros?.fat_g}g
                   </span>
                 </p>
                 <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">
-                  {plan.plan.summary.dietStyle} · {plan.plan.summary.goal}
+                  {active.plan.summary.dietStyle} · {active.plan.summary.goal}
                 </p>
               </CardContent>
             </Card>
           )}
 
-          {(plan.plan?.weeks ?? []).map((w: any) => (
+          {(active.plan?.weeks ?? []).map((w: any) => (
             <div key={w.weekNumber} className="space-y-3">
               <h2 className="text-lg font-bold">Week {w.weekNumber}</h2>
               {(w.days ?? []).map((d: any) => (
@@ -259,21 +297,70 @@ function PlanView() {
             </div>
           ))}
 
-          {plan.plan?.rationale && (
+          {active.plan?.rationale && (
             <Card>
               <CardContent className="p-4">
                 <p className="font-semibold">Why this plan fits you</p>
-                <p className="mt-1 text-sm text-muted-foreground">{plan.plan.rationale}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{active.plan.rationale}</p>
               </CardContent>
             </Card>
           )}
-          {plan.plan?.disclaimer && (
-            <p className="text-xs text-muted-foreground">{plan.plan.disclaimer}</p>
+          {active.plan?.disclaimer && (
+            <p className="text-xs text-muted-foreground">{active.plan.disclaimer}</p>
           )}
         </div>
       )}
 
-      {plan && remaining > 0 && (
+      {versions.length > 1 && (
+        <Card className="mt-8">
+          <CardContent className="p-4">
+            <p className="mb-3 font-semibold">
+              <History className="mr-1.5 inline h-4 w-4 text-primary" />
+              Plan versions
+            </p>
+            <div className="space-y-2">
+              {versions.map((v) => (
+                <div
+                  key={v.id}
+                  className={`flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm ${
+                    v.id === active?.id ? "border-primary bg-primary/5" : ""
+                  }`}
+                >
+                  <div>
+                    <p className="font-medium">
+                      v{v.version}
+                      {v.is_final ? " · active" : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(v.created_at).toLocaleString()}
+                      {v.refinement_note ? ` · "${v.refinement_note}"` : " · initial"}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={v.id === active?.id ? "secondary" : "outline"}
+                      onClick={() => setActiveId(v.id)}
+                    >
+                      View
+                    </Button>
+                    {!v.is_final && (
+                      <Button size="sm" onClick={() => doRestore(v.version)} disabled={busy}>
+                        Restore
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Restoring a previous version does NOT cost a credit.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {active && remaining > 0 && (
         <Card className="mt-8">
           <CardContent className="p-4">
             <p className="font-semibold">
@@ -283,7 +370,7 @@ function PlanView() {
             <Textarea
               className="mt-2"
               rows={3}
-              placeholder="e.g. Swap breakfasts for higher-protein options; less dairy; more Mediterranean flavors"
+              placeholder='e.g. "one meal per day", "no dairy", "1800 kcal", "more protein"'
               value={refineText}
               onChange={(e) => setRefineText(e.target.value)}
             />
