@@ -220,10 +220,31 @@ function PlanView() {
       {!plan ? (
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
-            {autoGenerating || session.status === "paid" ? (
+            {autoGenerating ? (
               <>
                 <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
                 Building your plan… this takes 20–40 seconds.
+              </>
+            ) : session.status === "paid" ? (
+              <>
+                <p className="mb-4">Your payment is confirmed. Tap below to build your plan.</p>
+                <Button
+                  onClick={async () => {
+                    setAutoGenerating(true);
+                    try {
+                      const res = await generate({ data: { sessionId } });
+                      if (res.error) toast.error(res.error);
+                      else toast.success("Your plan is ready");
+                      await load();
+                    } catch (e: any) {
+                      toast.error(e?.message ?? "Generation failed");
+                    } finally {
+                      setAutoGenerating(false);
+                    }
+                  }}
+                >
+                  Generate my plan
+                </Button>
               </>
             ) : (
               "No plan yet."
