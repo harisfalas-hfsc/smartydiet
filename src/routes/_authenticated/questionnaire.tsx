@@ -66,7 +66,10 @@ function QuestionnairePage() {
   const upd = <K extends keyof QuestionnaireData>(
     key: K,
     patch: Partial<QuestionnaireData[K]>,
-  ) => setData((d) => ({ ...d, [key]: { ...(d[key] as object), ...patch } as QuestionnaireData[K] }));
+  ) => setData((d) => {
+    const cur = d[key] as Record<string, unknown>;
+    return { ...d, [key]: { ...cur, ...(patch as Record<string, unknown>) } as QuestionnaireData[K] };
+  });
 
   function validateStep(): string | null {
     if (step === 0) {
