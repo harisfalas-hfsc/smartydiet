@@ -41,13 +41,18 @@ function PlansList() {
 
   if (pathname !== "/plans") return <Outlet />;
 
+  const hasActive = (rows ?? []).some((r) => (r.credits_used ?? 0) < (r.credits_total ?? 0));
+  const showNewPlanCard = rows !== null && rows.length > 0 && !hasActive;
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">My plans</h1>
-        <Button asChild size="sm">
-          <Link to="/questionnaire">New plan</Link>
-        </Button>
+        {rows !== null && rows.length > 0 && (
+          <Button asChild size="sm" variant={hasActive ? "outline" : "default"}>
+            <Link to="/questionnaire">New plan</Link>
+          </Button>
+        )}
       </div>
       {rows === null ? (
         <div className="flex justify-center py-10">
@@ -66,27 +71,46 @@ function PlansList() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {rows.map((r) => (
-            <Link
-              key={r.id}
-              to="/plans/$sessionId"
-              params={{ sessionId: r.id }}
-              className="block rounded-lg border bg-card p-4 transition-colors hover:border-primary"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">{r.duration_weeks}-week plan</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(r.created_at).toLocaleDateString()} · {r.credits_used}/{r.credits_total}{" "}
-                    credits used
-                  </p>
+        <>
+          <div className="space-y-3">
+            {rows.map((r) => (
+              <Link
+                key={r.id}
+                to="/plans/$sessionId"
+                params={{ sessionId: r.id }}
+                className="block rounded-lg border bg-card p-4 transition-colors hover:border-primary"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">{r.duration_weeks}-week plan</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(r.created_at).toLocaleDateString()} · {r.credits_used}/
+                      {r.credits_total} credits used
+                    </p>
+                  </div>
+                  <span className="text-sm text-primary">View →</span>
                 </div>
-                <span className="text-sm text-primary">View →</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+
+          {showNewPlanCard && (
+            <Card className="mt-8 border-2 border-primary">
+              <CardContent className="p-6 text-center">
+                <h2 className="text-lg font-semibold">Want a fresh start?</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  You've used all refinements on your current plans. Create a brand new
+                  personalized diet plan for $4.99.
+                </p>
+                <div className="mt-4">
+                  <Button asChild size="lg">
+                    <Link to="/questionnaire">Create a new diet plan — $4.99</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );
