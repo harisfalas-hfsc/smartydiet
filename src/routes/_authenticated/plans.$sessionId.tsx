@@ -22,6 +22,7 @@ interface Session {
   duration_weeks: number;
   credits_total: number;
   credits_used: number;
+  status: string;
 }
 interface Plan {
   id: string;
@@ -39,11 +40,12 @@ function PlanView() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [refineText, setRefineText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [autoGenerating, setAutoGenerating] = useState(false);
 
   const load = useCallback(async () => {
     const { data: s } = await supabase
       .from("generation_sessions")
-      .select("id,duration_weeks,credits_total,credits_used")
+      .select("id,duration_weeks,credits_total,credits_used,status")
       .eq("id", sessionId)
       .maybeSingle();
     setSession(s as Session | null);
@@ -60,6 +62,26 @@ function PlanView() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Recovery: if session is paid but no plan yet, auto-generate.
+  useEffect(() => {
+    if (!session || plan || autoGenerating) return;
+    if (session.status !== "paid") return;
+    if ((session.credits_used ?? 0) > 0) return;
+    setAutoGenerating(true);
+    (async () => {
+      try {
+        const res = await generate({ data: { sessionId } });
+        if (res.error) toast.error(res.error);
+        else toast.success("Your plan is ready");
+        await load();
+      } catch (e: any) {
+        toast.error(e?.message ?? "Generation failed");
+      } finally {
+        setAutoGenerating(false);
+      }
+    })();
+  }, [session, plan, autoGenerating, generate, sessionId, load]);
 
   async function refine() {
     if (!refineText.trim()) return toast.error("Describe the change you want");
