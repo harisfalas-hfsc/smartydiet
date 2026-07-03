@@ -91,7 +91,7 @@ function QuestionnairePage() {
     setBusy(true);
     try {
       const res = await save({
-        data: { data, durationWeeks, status: "submitted" },
+        data: { data: data as any, durationWeeks, status: "submitted" as const },
       });
       localStorage.removeItem(STORAGE_KEY);
       navigate({ to: "/checkout", search: { qid: res.id } });
