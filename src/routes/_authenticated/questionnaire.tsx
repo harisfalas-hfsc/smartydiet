@@ -19,7 +19,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import {
+  ALLERGY_TAGS,
+  CULTURAL_TAGS,
   DEFAULT_QUESTIONNAIRE,
+  FOOD_CATEGORIES,
   STEP_LABELS,
   type QuestionnaireData,
 } from "@/lib/questionnaire-schema";
@@ -37,7 +40,7 @@ export const Route = createFileRoute("/_authenticated/questionnaire")({
   component: QuestionnairePage,
 });
 
-const STORAGE_KEY = "smartydiet.questionnaire.v1";
+const STORAGE_KEY = "smartydiet.questionnaire.v2";
 
 function QuestionnairePage() {
   const navigate = useNavigate();
@@ -76,8 +79,10 @@ function QuestionnairePage() {
       if (!data.basics.age || !data.basics.gender || !data.basics.weight || !data.basics.height)
         return "Please fill in age, gender, height and weight.";
     }
-    if (step === 4 && !data.eating.allergies?.trim())
-      return "Please list allergies and intolerances (or type 'none').";
+    if (step === 4) {
+      if (!data.eating.allergyTags?.length && !data.eating.allergies?.trim())
+        return "Please pick allergies (or select 'none').";
+    }
     if (step === 6 && !data.health.disclaimerAcknowledged)
       return "Please acknowledge the health disclaimer to continue.";
     return null;
@@ -161,6 +166,30 @@ type StepProps = {
   data: QuestionnaireData;
   upd: <K extends keyof QuestionnaireData>(k: K, p: Partial<QuestionnaireData[K]>) => void;
 };
+
+function Chip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border bg-background hover:border-primary/60"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
 
 function StepBasics({ data, upd }: StepProps) {
   return (
@@ -440,13 +469,54 @@ function StepGoal({ data, upd }: StepProps) {
           />
         </div>
       </div>
+      <div>
+        <Label>Exact daily calorie target (optional)</Label>
+        <Input
+          type="number"
+          placeholder="e.g. 2000 — leave blank to auto-calculate"
+          value={data.goal.calorieTarget ?? ""}
+          onChange={(e) => upd("goal", { calorieTarget: Number(e.target.value) || undefined })}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          If you set a number here, every day of your plan will match it (within 25 kcal).
+        </p>
+      </div>
     </div>
   );
 }
 
 function StepEating({ data, upd }: StepProps) {
+  const isFasting = data.eating.dietStyle === "intermittent_fasting";
+  const isOMAD = isFasting && data.eating.fasting?.window === "OMAD";
+  const minMeals = isOMAD ? 1 : 2;
+
+  function toggleFood(kind: "likedFoods" | "dislikedFoods", food: string) {
+    const cur = new Set(data.eating[kind]);
+    if (cur.has(food)) cur.delete(food);
+    else cur.add(food);
+    upd("eating", { [kind]: [...cur] } as any);
+  }
+  function toggleAllergy(tag: string) {
+    const cur = new Set(data.eating.allergyTags);
+    if (tag === "none") {
+      cur.clear();
+      cur.add("none");
+    } else {
+      cur.delete("none");
+      if (cur.has(tag)) cur.delete(tag);
+      else cur.add(tag);
+    }
+    upd("eating", { allergyTags: [...cur] });
+  }
+  function toggleCultural(tag: string) {
+    const cur = new Set(data.eating.culturalRestrictions);
+    if (cur.has(tag)) cur.delete(tag);
+    else cur.add(tag);
+    upd("eating", { culturalRestrictions: [...cur] });
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
         <Label>Diet style</Label>
         <Select
@@ -463,6 +533,7 @@ function StepEating({ data, upd }: StepProps) {
             <SelectItem value="vegan">Vegan</SelectItem>
             <SelectItem value="low_carb">Low carb</SelectItem>
             <SelectItem value="high_protein">High protein</SelectItem>
+            <SelectItem value="intermittent_fasting">Intermittent fasting</SelectItem>
             <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>
@@ -474,18 +545,74 @@ function StepEating({ data, upd }: StepProps) {
           onChange={(e) => upd("eating", { dietStyleOther: e.target.value })}
         />
       )}
+
+      {isFasting && (
+        <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 space-y-3">
+          <div>
+            <Label>Eating window</Label>
+            <Select
+              value={data.eating.fasting?.window ?? "16:8"}
+              onValueChange={(v) =>
+                upd("eating", { fasting: { ...(data.eating.fasting ?? {}), window: v as any } })
+              }
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="16:8">16:8 (8-hour window)</SelectItem>
+                <SelectItem value="18:6">18:6 (6-hour window)</SelectItem>
+                <SelectItem value="20:4">20:4 (4-hour window)</SelectItem>
+                <SelectItem value="OMAD">OMAD — one meal a day</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {data.eating.fasting?.window === "custom" && (
+            <Input
+              placeholder="e.g. eat 12:00–18:00"
+              value={data.eating.fasting?.customWindow ?? ""}
+              onChange={(e) =>
+                upd("eating", {
+                  fasting: { ...(data.eating.fasting ?? {}), customWindow: e.target.value },
+                })
+              }
+            />
+          )}
+          <div>
+            <Label>Approach</Label>
+            <Select
+              value={data.eating.fasting?.approach ?? "balanced"}
+              onValueChange={(v) =>
+                upd("eating", { fasting: { ...(data.eating.fasting ?? {}), approach: v as any } })
+              }
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="balanced">Balanced</SelectItem>
+                <SelectItem value="aggressive">Aggressive (bigger deficit)</SelectItem>
+                <SelectItem value="very_aggressive">Very aggressive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>Meals per day</Label>
           <Input
             type="number"
-            min={2}
+            min={minMeals}
             max={6}
             value={data.eating.mealsPerDay}
             onChange={(e) =>
-              upd("eating", { mealsPerDay: Math.max(2, Math.min(6, Number(e.target.value) || 3)) })
+              upd("eating", {
+                mealsPerDay: Math.max(minMeals, Math.min(6, Number(e.target.value) || 3)),
+              })
             }
           />
+          {isOMAD && (
+            <p className="mt-1 text-xs text-primary">OMAD selected — 1 meal/day allowed.</p>
+          )}
         </div>
         <div>
           <Label>Preferred meal times</Label>
@@ -496,40 +623,102 @@ function StepEating({ data, upd }: StepProps) {
           />
         </div>
       </div>
+
       <div>
-        <Label>Foods you like</Label>
-        <Textarea
-          value={data.eating.foodsLike ?? ""}
-          onChange={(e) => upd("eating", { foodsLike: e.target.value })}
-        />
+        <Label>Foods you like — pick any</Label>
+        <div className="mt-2 space-y-3">
+          {FOOD_CATEGORIES.map((cat) => (
+            <div key={cat.label}>
+              <p className="mb-1 text-xs font-semibold text-muted-foreground">{cat.label}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {cat.foods.map((f) => (
+                  <Chip
+                    key={f}
+                    label={f}
+                    active={data.eating.likedFoods.includes(f)}
+                    onClick={() => toggleFood("likedFoods", f)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+          <Input
+            placeholder="Add your own (comma separated)"
+            value={data.eating.likedFoodsOther ?? ""}
+            onChange={(e) => upd("eating", { likedFoodsOther: e.target.value })}
+          />
+        </div>
       </div>
+
       <div>
-        <Label>Foods you dislike</Label>
-        <Textarea
-          value={data.eating.foodsDislike ?? ""}
-          onChange={(e) => upd("eating", { foodsDislike: e.target.value })}
-        />
+        <Label>Foods you dislike — pick any</Label>
+        <div className="mt-2 space-y-3">
+          {FOOD_CATEGORIES.map((cat) => (
+            <div key={cat.label}>
+              <p className="mb-1 text-xs font-semibold text-muted-foreground">{cat.label}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {cat.foods.map((f) => (
+                  <Chip
+                    key={f}
+                    label={f}
+                    active={data.eating.dislikedFoods.includes(f)}
+                    onClick={() => toggleFood("dislikedFoods", f)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+          <Input
+            placeholder="Add your own (comma separated)"
+            value={data.eating.dislikedFoodsOther ?? ""}
+            onChange={(e) => upd("eating", { dislikedFoodsOther: e.target.value })}
+          />
+        </div>
       </div>
+
       <div>
         <Label className="flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-destructive" />
           Allergies & intolerances (required)
         </Label>
-        <Textarea
-          className="border-destructive/50"
-          placeholder="List everything you're allergic to. Type 'none' if none."
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {ALLERGY_TAGS.map((t) => (
+            <Chip
+              key={t}
+              label={t}
+              active={data.eating.allergyTags.includes(t)}
+              onClick={() => toggleAllergy(t)}
+            />
+          ))}
+        </div>
+        <Input
+          className="mt-2"
+          placeholder="Anything else? (comma separated)"
           value={data.eating.allergies}
           onChange={(e) => upd("eating", { allergies: e.target.value })}
         />
       </div>
+
       <div>
         <Label>Cultural / religious restrictions</Label>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {CULTURAL_TAGS.map((t) => (
+            <Chip
+              key={t}
+              label={t}
+              active={data.eating.culturalRestrictions.includes(t)}
+              onClick={() => toggleCultural(t)}
+            />
+          ))}
+        </div>
         <Input
-          placeholder="e.g. halal, kosher, no pork"
-          value={data.eating.culturalRestrictions ?? ""}
-          onChange={(e) => upd("eating", { culturalRestrictions: e.target.value })}
+          className="mt-2"
+          placeholder="Anything else?"
+          value={data.eating.culturalRestrictionsOther ?? ""}
+          onChange={(e) => upd("eating", { culturalRestrictionsOther: e.target.value })}
         />
       </div>
+
       <div className="grid grid-cols-3 gap-3">
         <div>
           <Label>Alcohol</Label>
