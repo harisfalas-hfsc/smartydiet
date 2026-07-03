@@ -7,7 +7,7 @@ import logoUrl from "@/assets/smartydiet-logo.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SmartyDiet — Your personalized AI nutrition plan in minutes" },
+      { title: "SmartyDiet — Your personalized nutrition plan in minutes" },
       {
         name: "description",
         content:
@@ -26,8 +26,8 @@ const HOW = [
   },
   {
     icon: Sparkles,
-    title: "AI builds your plan",
-    text: "Our nutrition AI generates a full 1, 2 or 4-week plan tailored to your calories, macros, budget and cooking time.",
+    title: "Smarty Diet builds your plan",
+    text: "We generate a full 1, 2 or 4-week plan tailored to your calories, macros, budget and cooking time.",
   },
   {
     icon: FileDown,
@@ -55,7 +55,9 @@ function Home() {
 
           <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
             Your personalized <span className="text-primary">nutrition plan</span>,
-            built by AI in minutes.
+            built in minutes.
+            <br />
+            Built by Smarty Diet.
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
             Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan tailored to your

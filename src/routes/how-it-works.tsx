@@ -8,7 +8,7 @@ export const Route = createFileRoute("/how-it-works")({
       {
         name: "description",
         content:
-          "See exactly what SmartyDiet asks, how the AI builds your plan, and what you get back — meals, macros, grocery list and PDF export.",
+          "See exactly what SmartyDiet asks, how we build your plan, and what you get back — meals, macros, grocery list and PDF export.",
       },
     ],
   }),
@@ -51,12 +51,12 @@ function HowItWorks() {
         <Section
           n={3}
           title="Pick your plan duration"
-          body="Choose 1, 2 or 4 weeks. The AI uses your answers to set calorie targets, macro splits, meals per day and food choices."
+          body="Choose 1, 2 or 4 weeks. We use your answers to set calorie targets, macro splits, meals per day and food choices."
         />
         <Section
           n={4}
           title="Pay $4.99, once"
-          body="A single one-time payment unlocks 1 initial plan generation + 2 refinement credits (3 AI calls total)."
+          body="A single one-time payment unlocks 1 initial plan generation + 2 refinement credits."
         />
         <Section
           n={5}
