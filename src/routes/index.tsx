@@ -37,12 +37,12 @@ const HOW = [
 ];
 
 const INCLUDES = [
-  "Personalized calorie & macro targets",
-  "Full 1 / 2 / 4-week meal plan with portions",
-  "Weekly consolidated grocery list",
-  "2 free refinements ('less dairy', 'swap breakfasts'…)",
-  "PDF export + printable shopping list",
-  "Saved to your account, forever",
+  "Calorie & macro targets",
+  "Full 1, 2 or 4-week meal plan with portions",
+  "Weekly grocery list",
+  "2 free refinements",
+  "PDF export + printable list",
+  "Saved to your account",
 ];
 
 function Home() {
@@ -54,10 +54,7 @@ function Home() {
           <img src={logoUrl} alt="SmartyDiet" width={72} height={72} className="mx-auto h-18 w-18" />
 
           <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-            Your personalized <span className="text-primary">nutrition plan</span>,
-            built in minutes.
-            <br />
-            Built by Smarty Diet.
+            Your personal nutrition plan, built in minutes.
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
             Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan tailored to your
@@ -101,9 +98,9 @@ function Home() {
       </section>
 
       {/* What's included / Pricing */}
-      <section className="px-5 py-14 sm:py-20">
+      <section className="px-5 pt-6 pb-10 sm:pt-10 sm:pb-14">
         <div className="mx-auto max-w-3xl">
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-10">
+          <div className="rounded-3xl border-2 border-primary bg-card p-5 shadow-soft sm:p-10">
             <div className="text-center">
               <p className="text-xs font-semibold uppercase tracking-wider text-primary">
                 One-time payment
@@ -115,9 +112,9 @@ function Home() {
             </div>
             <ul className="mx-auto mt-6 max-w-md space-y-3">
               {INCLUDES.map((it) => (
-                <li key={it} className="flex items-start gap-3 text-sm">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 flex-none text-primary" />
-                  <span>{it}</span>
+                <li key={it} className="flex items-center gap-3 text-xs sm:text-sm">
+                  <CheckCircle2 className="h-5 w-5 flex-none text-primary" />
+                  <span className="whitespace-nowrap">{it}</span>
                 </li>
               ))}
             </ul>
