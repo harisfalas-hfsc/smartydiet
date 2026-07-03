@@ -29,7 +29,7 @@ export function Navigation() {
     >
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2" aria-label="SmartyDiet home">
-          <img src={logoUrl} alt="" width={36} height={36} className="h-9 w-9 rounded-lg" />
+          <img src={logoUrl} alt="" width={36} height={36} className="h-9 w-9" />
           <span className="text-lg font-extrabold tracking-tight text-foreground">
             SMARTY <span className="text-primary">DIET</span>
           </span>

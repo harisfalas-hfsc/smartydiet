@@ -100,11 +100,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Your smart nutrition companion. SmartyDiet brings together personalized diet plans, smart tools for tracking calories and macros, food and recipe guidance." },
       { property: "og:description", content: "Your smart nutrition companion. SmartyDiet brings together personalized diet plans, smart tools for tracking calories and macros, food and recipe guidance." },
       { name: "twitter:description", content: "Your smart nutrition companion. SmartyDiet brings together personalized diet plans, smart tools for tracking calories and macros, food and recipe guidance." },
-      { property: "og:image", content: "https://smartydiet.com/__l5e/assets-v1/f89b5aed-4f8d-42bf-ba21-4119a911a593/smartydiet-social.jpg" },
+      { property: "og:image", content: "https://smartydiet.com/__l5e/assets-v1/29f97184-fb57-410f-b081-fae36ebc10f0/smartydiet-social.jpg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:alt", content: "SmartyDiet — Your personalized AI diet plan" },
-      { name: "twitter:image", content: "https://smartydiet.com/__l5e/assets-v1/f89b5aed-4f8d-42bf-ba21-4119a911a593/smartydiet-social.jpg" },
+      { name: "twitter:image", content: "https://smartydiet.com/__l5e/assets-v1/29f97184-fb57-410f-b081-fae36ebc10f0/smartydiet-social.jpg" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
