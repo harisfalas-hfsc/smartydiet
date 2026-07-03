@@ -10,22 +10,10 @@ export function SiteFooter() {
       <div className="container mx-auto max-w-7xl">
         <div className="flex flex-col items-center gap-6">
           <div className="flex items-center gap-4">
-            <a
-              href="https://www.facebook.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook"
-              className={socialClass}
-            >
+            <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className={socialClass}>
               <Facebook className="h-5 w-5" />
             </a>
-            <a
-              href="https://www.instagram.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram"
-              className={socialClass}
-            >
+            <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={socialClass}>
               <Instagram className="h-5 w-5" />
             </a>
             <a href="#" aria-label="TikTok" className={socialClass}>
@@ -38,12 +26,16 @@ export function SiteFooter() {
             </a>
           </div>
 
-          <div className="flex flex-nowrap items-center justify-center gap-x-3 whitespace-nowrap text-xs sm:text-sm text-muted-foreground">
-            <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground">
+            <Link to="/how-it-works" className="hover:text-primary transition-colors">How it works</Link>
+            <span className="text-muted-foreground/40">·</span>
+            <Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link>
+            <span className="text-muted-foreground/40">·</span>
+            <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
             <span className="text-muted-foreground/40">·</span>
             <Link to="/terms" className="hover:text-primary transition-colors">
               <span className="md:hidden">T&amp;Cs</span>
-              <span className="hidden md:inline">Terms of Service</span>
+              <span className="hidden md:inline">Terms</span>
             </Link>
             <span className="text-muted-foreground/40">·</span>
             <Link to="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>
