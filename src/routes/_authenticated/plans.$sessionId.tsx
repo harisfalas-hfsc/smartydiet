@@ -220,7 +220,14 @@ function PlanView() {
       {!plan ? (
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
-            No plan generated yet. This normally takes 20–40 seconds. If you just paid, please wait.
+            {autoGenerating || session.status === "paid" ? (
+              <>
+                <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
+                Building your plan… this takes 20–40 seconds.
+              </>
+            ) : (
+              "No plan yet."
+            )}
           </CardContent>
         </Card>
       ) : (
