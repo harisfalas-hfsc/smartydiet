@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Apple, ClipboardList, Sparkles, FileDown, CheckCircle2 } from "lucide-react";
+import { ClipboardList, Sparkles, FileDown, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoUrl from "@/assets/smartydiet-logo.png";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
