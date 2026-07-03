@@ -28,8 +28,6 @@ function PlansList() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [rows, setRows] = useState<Row[] | null>(null);
 
-  if (pathname !== "/plans") return <Outlet />;
-
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -40,6 +38,8 @@ function PlansList() {
       setRows((data as Row[]) ?? []);
     })();
   }, []);
+
+  if (pathname !== "/plans") return <Outlet />;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
