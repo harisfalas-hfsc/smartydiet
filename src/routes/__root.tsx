@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navigation } from "../components/Navigation";
-import { Footer } from "../components/Footer";
+import { SiteFooter } from "../components/SiteFooter";
 
 function NotFoundComponent() {
   return (

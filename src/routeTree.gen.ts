@@ -9,190 +9,38 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ToolsRouteImport } from './routes/tools'
-import { Route as NutritionRouteImport } from './routes/nutrition'
-import { Route as DietsRouteImport } from './routes/diets'
-import { Route as BuilderRouteImport } from './routes/builder'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ToolsMacroTrackerRouteImport } from './routes/tools.macro-tracker'
-import { Route as ToolsCalorieTrackerRouteImport } from './routes/tools.calorie-tracker'
-import { Route as NutritionSlugRouteImport } from './routes/nutrition.$slug'
-import { Route as DietsSlugRouteImport } from './routes/diets.$slug'
 
-const ToolsRoute = ToolsRouteImport.update({
-  id: '/tools',
-  path: '/tools',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NutritionRoute = NutritionRouteImport.update({
-  id: '/nutrition',
-  path: '/nutrition',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DietsRoute = DietsRouteImport.update({
-  id: '/diets',
-  path: '/diets',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BuilderRoute = BuilderRouteImport.update({
-  id: '/builder',
-  path: '/builder',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ToolsMacroTrackerRoute = ToolsMacroTrackerRouteImport.update({
-  id: '/macro-tracker',
-  path: '/macro-tracker',
-  getParentRoute: () => ToolsRoute,
-} as any)
-const ToolsCalorieTrackerRoute = ToolsCalorieTrackerRouteImport.update({
-  id: '/calorie-tracker',
-  path: '/calorie-tracker',
-  getParentRoute: () => ToolsRoute,
-} as any)
-const NutritionSlugRoute = NutritionSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => NutritionRoute,
-} as any)
-const DietsSlugRoute = DietsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => DietsRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/builder': typeof BuilderRoute
-  '/diets': typeof DietsRouteWithChildren
-  '/nutrition': typeof NutritionRouteWithChildren
-  '/tools': typeof ToolsRouteWithChildren
-  '/diets/$slug': typeof DietsSlugRoute
-  '/nutrition/$slug': typeof NutritionSlugRoute
-  '/tools/calorie-tracker': typeof ToolsCalorieTrackerRoute
-  '/tools/macro-tracker': typeof ToolsMacroTrackerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/builder': typeof BuilderRoute
-  '/diets': typeof DietsRouteWithChildren
-  '/nutrition': typeof NutritionRouteWithChildren
-  '/tools': typeof ToolsRouteWithChildren
-  '/diets/$slug': typeof DietsSlugRoute
-  '/nutrition/$slug': typeof NutritionSlugRoute
-  '/tools/calorie-tracker': typeof ToolsCalorieTrackerRoute
-  '/tools/macro-tracker': typeof ToolsMacroTrackerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/builder': typeof BuilderRoute
-  '/diets': typeof DietsRouteWithChildren
-  '/nutrition': typeof NutritionRouteWithChildren
-  '/tools': typeof ToolsRouteWithChildren
-  '/diets/$slug': typeof DietsSlugRoute
-  '/nutrition/$slug': typeof NutritionSlugRoute
-  '/tools/calorie-tracker': typeof ToolsCalorieTrackerRoute
-  '/tools/macro-tracker': typeof ToolsMacroTrackerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/about'
-    | '/builder'
-    | '/diets'
-    | '/nutrition'
-    | '/tools'
-    | '/diets/$slug'
-    | '/nutrition/$slug'
-    | '/tools/calorie-tracker'
-    | '/tools/macro-tracker'
+  fullPaths: '/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/about'
-    | '/builder'
-    | '/diets'
-    | '/nutrition'
-    | '/tools'
-    | '/diets/$slug'
-    | '/nutrition/$slug'
-    | '/tools/calorie-tracker'
-    | '/tools/macro-tracker'
-  id:
-    | '__root__'
-    | '/'
-    | '/about'
-    | '/builder'
-    | '/diets'
-    | '/nutrition'
-    | '/tools'
-    | '/diets/$slug'
-    | '/nutrition/$slug'
-    | '/tools/calorie-tracker'
-    | '/tools/macro-tracker'
+  to: '/'
+  id: '__root__' | '/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  BuilderRoute: typeof BuilderRoute
-  DietsRoute: typeof DietsRouteWithChildren
-  NutritionRoute: typeof NutritionRouteWithChildren
-  ToolsRoute: typeof ToolsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tools': {
-      id: '/tools'
-      path: '/tools'
-      fullPath: '/tools'
-      preLoaderRoute: typeof ToolsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/nutrition': {
-      id: '/nutrition'
-      path: '/nutrition'
-      fullPath: '/nutrition'
-      preLoaderRoute: typeof NutritionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/diets': {
-      id: '/diets'
-      path: '/diets'
-      fullPath: '/diets'
-      preLoaderRoute: typeof DietsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/builder': {
-      id: '/builder'
-      path: '/builder'
-      fullPath: '/builder'
-      preLoaderRoute: typeof BuilderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -200,78 +48,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tools/macro-tracker': {
-      id: '/tools/macro-tracker'
-      path: '/macro-tracker'
-      fullPath: '/tools/macro-tracker'
-      preLoaderRoute: typeof ToolsMacroTrackerRouteImport
-      parentRoute: typeof ToolsRoute
-    }
-    '/tools/calorie-tracker': {
-      id: '/tools/calorie-tracker'
-      path: '/calorie-tracker'
-      fullPath: '/tools/calorie-tracker'
-      preLoaderRoute: typeof ToolsCalorieTrackerRouteImport
-      parentRoute: typeof ToolsRoute
-    }
-    '/nutrition/$slug': {
-      id: '/nutrition/$slug'
-      path: '/$slug'
-      fullPath: '/nutrition/$slug'
-      preLoaderRoute: typeof NutritionSlugRouteImport
-      parentRoute: typeof NutritionRoute
-    }
-    '/diets/$slug': {
-      id: '/diets/$slug'
-      path: '/$slug'
-      fullPath: '/diets/$slug'
-      preLoaderRoute: typeof DietsSlugRouteImport
-      parentRoute: typeof DietsRoute
-    }
   }
 }
 
-interface DietsRouteChildren {
-  DietsSlugRoute: typeof DietsSlugRoute
-}
-
-const DietsRouteChildren: DietsRouteChildren = {
-  DietsSlugRoute: DietsSlugRoute,
-}
-
-const DietsRouteWithChildren = DietsRoute._addFileChildren(DietsRouteChildren)
-
-interface NutritionRouteChildren {
-  NutritionSlugRoute: typeof NutritionSlugRoute
-}
-
-const NutritionRouteChildren: NutritionRouteChildren = {
-  NutritionSlugRoute: NutritionSlugRoute,
-}
-
-const NutritionRouteWithChildren = NutritionRoute._addFileChildren(
-  NutritionRouteChildren,
-)
-
-interface ToolsRouteChildren {
-  ToolsCalorieTrackerRoute: typeof ToolsCalorieTrackerRoute
-  ToolsMacroTrackerRoute: typeof ToolsMacroTrackerRoute
-}
-
-const ToolsRouteChildren: ToolsRouteChildren = {
-  ToolsCalorieTrackerRoute: ToolsCalorieTrackerRoute,
-  ToolsMacroTrackerRoute: ToolsMacroTrackerRoute,
-}
-
-const ToolsRouteWithChildren = ToolsRoute._addFileChildren(ToolsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  BuilderRoute: BuilderRoute,
-  DietsRoute: DietsRouteWithChildren,
-  NutritionRoute: NutritionRouteWithChildren,
-  ToolsRoute: ToolsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
