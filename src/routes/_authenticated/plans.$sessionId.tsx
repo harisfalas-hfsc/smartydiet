@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Download, Utensils, ShoppingBasket, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { jsPDF } from "jspdf";
+import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
 
 export const Route = createFileRoute("/_authenticated/plans/$sessionId")({
   head: () => ({
