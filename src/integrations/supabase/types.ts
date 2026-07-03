@@ -14,7 +14,163 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      diet_plans: {
+        Row: {
+          created_at: string
+          id: string
+          is_final: boolean
+          plan: Json
+          rationale: string | null
+          refinement_note: string | null
+          session_id: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_final?: boolean
+          plan: Json
+          rationale?: string | null
+          refinement_note?: string | null
+          session_id: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_final?: boolean
+          plan?: Json
+          rationale?: string | null
+          refinement_note?: string | null
+          session_id?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diet_plans_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "generation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generation_sessions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          credits_total: number
+          credits_used: number
+          currency: string
+          duration_weeks: number
+          id: string
+          questionnaire_id: string
+          status: string
+          stripe_payment_intent: string | null
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          credits_total?: number
+          credits_used?: number
+          currency?: string
+          duration_weeks: number
+          id?: string
+          questionnaire_id: string
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          credits_total?: number
+          credits_used?: number
+          currency?: string
+          duration_weeks?: number
+          id?: string
+          questionnaire_id?: string
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_sessions_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          marketing_opt_in: boolean
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          marketing_opt_in?: boolean
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          marketing_opt_in?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      questionnaires: {
+        Row: {
+          created_at: string
+          data: Json
+          duration_weeks: number | null
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          duration_weeks?: number | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          duration_weeks?: number | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
