@@ -49,9 +49,8 @@ function Home() {
       {/* Hero */}
       <section className="px-5 pt-12 pb-14 sm:pt-20 sm:pb-20">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-            <Apple className="h-7 w-7 text-primary" strokeWidth={2.25} />
-          </span>
+          <img src={logoUrl} alt="SmartyDiet" width={72} height={72} className="mx-auto h-18 w-18" />
+
           <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
             Your personalized <span className="text-primary">nutrition plan</span>,
             built by AI in minutes.
