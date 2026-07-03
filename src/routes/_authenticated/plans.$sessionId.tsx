@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Download, Utensils, ShoppingBasket, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { jsPDF } from "jspdf";
+import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
 
 export const Route = createFileRoute("/_authenticated/plans/$sessionId")({
   head: () => ({
@@ -101,92 +101,22 @@ function PlanView() {
     }
   }
 
-  function exportPdf() {
+  async function exportPdf() {
     if (!plan) return;
-    const doc = new jsPDF({ unit: "pt", format: "a4" });
-    const margin = 40;
-    let y = margin;
-    const width = doc.internal.pageSize.getWidth() - margin * 2;
-    const height = doc.internal.pageSize.getHeight() - margin;
-    const write = (txt: string, size = 11, bold = false) => {
-      doc.setFont("helvetica", bold ? "bold" : "normal");
-      doc.setFontSize(size);
-      const lines = doc.splitTextToSize(txt, width);
-      for (const line of lines) {
-        if (y > height) {
-          doc.addPage();
-          y = margin;
-        }
-        doc.text(line, margin, y);
-        y += size * 1.3;
-      }
-    };
-    write("SmartyDiet — Personalized Plan", 18, true);
-    y += 6;
-    const p = plan.plan;
-    if (p?.summary) {
-      write(
-        `Calorie target: ${p.summary.calorieTarget} kcal · Protein ${p.summary.macros?.protein_g}g · Carbs ${p.summary.macros?.carbs_g}g · Fat ${p.summary.macros?.fat_g}g`,
-      );
-      write(`Diet style: ${p.summary.dietStyle} · Goal: ${p.summary.goal}`);
-      y += 6;
+    try {
+      await exportPlanPdf(plan.plan, session?.duration_weeks ?? 1);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not build PDF");
     }
-    for (const w of p?.weeks ?? []) {
-      write(`Week ${w.weekNumber}`, 14, true);
-      for (const d of w.days ?? []) {
-        write(`Day ${d.day} — ${d.totals?.calories ?? "-"} kcal`, 12, true);
-        for (const m of d.meals ?? []) {
-          write(`• ${m.name}: ${m.title} — ${m.calories} kcal (P${m.protein_g}/C${m.carbs_g}/F${m.fat_g})`);
-          if (m.ingredients?.length)
-            write(`  Ingredients: ${m.ingredients.map((i: any) => `${i.qty} ${i.item}`).join(", ")}`);
-          if (m.instructions) write(`  ${m.instructions}`);
-        }
-        y += 4;
-      }
-      if (w.groceryList?.length) {
-        write("Grocery list", 12, true);
-        for (const g of w.groceryList) write(`- ${g.qty} ${g.item}${g.category ? ` (${g.category})` : ""}`);
-      }
-      y += 8;
-    }
-    if (p?.rationale) {
-      write("Why this plan", 14, true);
-      write(p.rationale);
-    }
-    if (p?.disclaimer) {
-      y += 6;
-      write(p.disclaimer, 9);
-    }
-    doc.save("smartydiet-plan.pdf");
   }
 
-  function exportGrocery() {
+  async function exportGrocery() {
     if (!plan?.plan?.weeks) return;
-    const doc = new jsPDF({ unit: "pt", format: "a4" });
-    const margin = 40;
-    let y = margin;
-    const width = doc.internal.pageSize.getWidth() - margin * 2;
-    const height = doc.internal.pageSize.getHeight() - margin;
-    const write = (txt: string, size = 11, bold = false) => {
-      doc.setFont("helvetica", bold ? "bold" : "normal");
-      doc.setFontSize(size);
-      for (const line of doc.splitTextToSize(txt, width)) {
-        if (y > height) {
-          doc.addPage();
-          y = margin;
-        }
-        doc.text(line, margin, y);
-        y += size * 1.3;
-      }
-    };
-    write("SmartyDiet — Grocery List", 18, true);
-    for (const w of plan.plan.weeks) {
-      write(`Week ${w.weekNumber}`, 14, true);
-      for (const g of w.groceryList ?? [])
-        write(`☐ ${g.qty} ${g.item}${g.category ? ` (${g.category})` : ""}`);
-      y += 6;
+    try {
+      await exportGroceryPdf(plan.plan);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not build PDF");
     }
-    doc.save("smartydiet-grocery.pdf");
   }
 
   if (!session)
