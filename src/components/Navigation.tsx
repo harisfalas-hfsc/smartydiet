@@ -37,21 +37,20 @@ export function Navigation() {
 
   return (
     <header
-      className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur"
+      className="sticky top-0 z-40 w-full bg-background"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
+              <button
+                type="button"
                 aria-label="Open menu"
-                className="bg-transparent text-primary hover:bg-transparent hover:text-primary"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-primary hover:bg-primary/10"
               >
-                <Menu className="h-5 w-5" />
-              </Button>
+                <Menu className="h-8 w-8" strokeWidth={2.5} />
+              </button>
             </SheetTrigger>
             <SheetContent side="left" className="w-72">
               <SheetHeader>
