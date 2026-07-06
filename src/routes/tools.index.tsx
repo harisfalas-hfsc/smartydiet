@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Flame, PieChart, Calculator, ArrowRight } from "lucide-react";
 
-export const Route = createFileRoute("/tools")({
+export const Route = createFileRoute("/tools/")({
   head: () => ({
     meta: [
       { title: "SmartyDiet Tools — Free nutrition calculators" },
