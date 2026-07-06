@@ -27,10 +27,6 @@ export function SiteFooter() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-            <Link to="/how-it-works" className="hover:text-primary transition-colors">How it works</Link>
-            <span className="text-muted-foreground/40">·</span>
-            <Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link>
-            <span className="text-muted-foreground/40">·</span>
             <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
             <span className="text-muted-foreground/40">·</span>
             <Link to="/terms" className="hover:text-primary transition-colors">
