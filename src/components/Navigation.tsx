@@ -56,30 +56,36 @@ export function Navigation() {
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="flex h-11 items-center justify-between gap-2 px-3">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-primary hover:bg-primary/10"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary hover:bg-primary/10"
           >
             <Menu className="h-5 w-5" />
           </button>
           <Link
             to="/"
             aria-label="SmartyDiet home"
-            className="flex items-center gap-1.5 text-lg font-extrabold tracking-tight leading-none"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-base font-extrabold tracking-tight leading-none no-underline hover:no-underline"
             style={{ textDecoration: "none" }}
           >
-            <img src={logoUrl} alt="" width={22} height={22} className="h-[22px] w-[22px]" />
-            <span>
+            <img
+              src={logoUrl}
+              alt=""
+              width={22}
+              height={22}
+              className="h-[22px] w-[22px] shrink-0"
+            />
+            <span className="whitespace-nowrap">
               <span className="text-primary">SMARTY</span>
               <span className="text-foreground"> DIET</span>
             </span>
           </Link>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {loading ? null : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -110,7 +116,7 @@ export function Navigation() {
             <>
               <Link
                 to="/auth"
-                className="inline-flex h-7 items-center justify-center rounded-full px-3 text-xs font-semibold text-foreground/80 hover:text-primary"
+                className="inline-flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3 text-xs font-semibold text-foreground/80 no-underline hover:text-primary hover:no-underline"
                 style={{ textDecoration: "none" }}
               >
                 Sign in
@@ -118,7 +124,7 @@ export function Navigation() {
               <Link
                 to="/auth"
                 search={{ mode: "signup" } as never}
-                className="inline-flex h-7 items-center justify-center rounded-full border-2 border-primary px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+                className="inline-flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-full border-2 border-primary px-3 text-xs font-semibold text-primary no-underline transition-colors hover:bg-primary hover:text-primary-foreground hover:no-underline"
                 style={{ textDecoration: "none" }}
               >
                 Sign up
