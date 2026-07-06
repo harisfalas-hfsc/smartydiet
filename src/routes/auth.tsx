@@ -48,19 +48,6 @@ function Auth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, next]);
 
-  async function handleGoogle() {
-    setBusy(true);
-    const redirectTarget = next ? `${window.location.origin}${next}` : window.location.origin;
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: redirectTarget,
-    });
-    if (result.error) {
-      toast.error(result.error.message ?? "Google sign-in failed");
-      setBusy(false);
-      return;
-    }
-    if (!result.redirected) goNext();
-  }
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
