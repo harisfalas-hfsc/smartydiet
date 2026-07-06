@@ -30,7 +30,7 @@ import {
 import logoUrl from "@/assets/smartydiet-logo.png";
 
 export function Navigation() {
-  const { user, loading } = useAuth();
+  const { user, displayName, loading } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -48,7 +48,8 @@ export function Navigation() {
     navigate({ to: "/", replace: true });
   }
 
-  const initial = (user?.email ?? "?").slice(0, 1).toUpperCase();
+  const accountName = displayName || user?.email || "Account";
+  const initial = accountName.slice(0, 1).toUpperCase();
 
   return (
     <header
@@ -98,7 +99,12 @@ export function Navigation() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+                <DropdownMenuLabel className="space-y-0.5">
+                  <span className="block truncate">{accountName}</span>
+                  {user.email && accountName !== user.email && (
+                    <span className="block truncate text-xs font-normal text-muted-foreground">{user.email}</span>
+                  )}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link to="/plans">My plans</Link>
