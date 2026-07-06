@@ -1,64 +1,55 @@
-Fix the questionnaire, refinements, and generation so the AI actually obeys what the customer said.
+## Goal
 
-1. Questionnaire: guided choices instead of typing
+1. Add a hamburger menu on the LEFT of the logo in the header (mobile + desktop) that opens a drawer with public navigation links.
+2. Create new public pages: About, Pricing, Contact, Tools hub + 3 tools (BMR Calculator, Macro Calculator, Calorie Counter).
+3. Port the 3 calculators from SmartyGym, rewritten to SmartyDiet's TanStack Start + SmartyDiet branding/design tokens.
 
-- Foods you like / dislike: replace free-text with selectable chips grouped by category (proteins: chicken, beef, eggs, fish, tuna, salmon, shrimp; dairy: milk, yogurt, cheese; carbs: rice, potatoes, pasta, bread, oats; veg: spinach, broccoli, tomato, salad; fruits; legumes; nuts) plus an "add your own" input for anything not listed.
-- Allergies (required): quick chips for the common ones (none, nuts, peanuts, dairy/lactose, gluten, eggs, shellfish, fish, soy, sesame) plus free-text for the rest. "None" is a valid answer.
-- Cultural/religious restrictions: chips (none, halal, kosher, no pork, no beef) + free text.
-- Equipment / cooking: keep as chips (already good).
+## Header changes (`src/components/Navigation.tsx`)
 
-2. Fasting support
+- Add a `Menu` (lucide) icon `Button variant="ghost"` on the LEFT of the logo that opens a `Sheet` (side="left") from shadcn.
+- Sheet contents (public — visible signed-in or not):
+  - Home `/`
+  - How it works `/how-it-works`
+  - Tools `/tools`
+  - Pricing `/pricing`
+  - About `/about`
+  - Contact `/contact`
+  - FAQ `/faq`
+- Sheet auto-closes on nav (control `open` state, close on Link click).
+- Keep existing right-side user dropdown / Sign in button unchanged.
 
-- Add "Intermittent fasting" as a diet style. When selected:
-  - Eating window: 16:8, 18:6, 20:4, OMAD (one meal a day), custom.
-  - Approach: balanced, aggressive, very aggressive (larger deficit).
-- Allow meals per day = 1 when OMAD is chosen (current form forces min 2 — fix it).
+## New route files (all public, under `src/routes/`)
 
-3. Strict adherence engine (this is the core fix)
+Each route: `createFileRoute` with `head()` providing route-specific title, description, og:title, og:description.
 
-The AI must obey the customer's numbers and rules, not "approximate" them. Do this in three layers:
+- `about.tsx` — story of SmartyDiet, mission, science-based approach, part of Smarty family. Simple typographic layout using existing design tokens (no new colors). Includes CTA button to `/questionnaire`.
+- `pricing.tsx` — reuse the pricing card block currently on the homepage ($4.99 one-time, INCLUDES list, CTA). Extract into a self-contained page. Homepage keeps its own pricing block (unchanged).
+- `contact.tsx` — envelope icon (`Mail` from lucide) hero, mailto link to a support email (placeholder `support@smartydiet.com` — will confirm below), plus a simple non-functional message form OR just the email CTA. Uses same card + primary token styling as rest of app.
+- `tools.tsx` — "SmartyDiet Tools" hub: 3 cards linking to the 3 tools with short descriptions and icons (`Flame`, `PieChart`, `Calculator`).
+- `tools.bmr-calculator.tsx` — BMR Calculator.
+- `tools.macro-calculator.tsx` — Macro Calculator.
+- `tools.calorie-counter.tsx` — Calorie Counter.
 
-a. Prompt tightening
+## Tools implementation
 
-- The system prompt gets hard rules: exact meal count per day, exact calorie target (±25 kcal max), exclude every disliked/allergic food, respect fasting window (only meals inside it, no snacks outside), respect refinement instructions over the original questionnaire when they conflict.
+Port logic (formulas, inputs, activity multipliers, result display) from SmartyGym's `BMRCalculator.tsx`, `MacroTrackingCalculator.tsx`, `CalorieCounter.tsx`. Rewrite as:
 
-b. Deterministic math check (server side, before saving)
-After the AI returns the plan, the server calculates for each day:
+- Pure client React components using shadcn `Card`, `Input`, `Label`, `Select`, `Button` already in this project.
+- SmartyDiet design tokens only (`bg-card`, `text-foreground`, `text-primary`, `border-border`) — no hard-coded colors, no SmartyGym-specific classes.
+- Same visual structure/layout as SmartyGym (form on top, big result panel below, explanation text), but restyled to match SmartyDiet.
+- No Supabase save button (SmartyGym has save-to-history; SmartyDiet tools stay stateless/public for now).
+- Metric units only (kg/cm) to match SmartyDiet audience; unit toggle can be added later.
+- Include short educational blurb per tool.
 
-- sum of meal calories vs the target
-- meal count vs the requested count (or 1 for OMAD)
-- presence of any excluded food (allergy/dislike keywords) in ingredients
-If any check fails, the server sends the plan back to the AI with a short "fix this" message listing the specific violations, and asks it to return a corrected plan. Up to 2 auto-repair passes.
+## Homepage pricing block
 
-c. Refinement obedience
-When the user writes a refinement (e.g. "one meal per day", "less dairy", "no fish", "more protein"), the server extracts explicit constraints from that text using the AI itself (short structured extraction call), merges them into the strict rule set, and the same math/exclusion checks then enforce them. So "one meal per day" is treated as: mealsPerDay=1 for this and future refinements in this session.
+Leave in place — a duplicate on `/pricing` is expected. No content trimming beyond what's already done.
 
-4. Credits — clearly answered
+## Verification
 
-- The customer still gets exactly 3 credits total (1 initial + 2 refinements). This does not change.
-- Auto-repair passes (the AI fixing its own math/exclusion mistakes) do NOT cost the customer an extra credit — they are the same generation, just corrected before we save it. The extra token cost is on us and is small.
-- If after 2 auto-repair passes the plan still fails the checks, we still save it (best effort) and spend the credit, but we show a small warning on the plan ("some daily totals are off by X kcal") so the user knows.
-- So no, users cannot refine endlessly — hard cap stays at 2 refinements.
+- `bunx tsgo --noEmit`
+- Playwright smoke: open `/`, click hamburger, verify links; visit `/about`, `/pricing`, `/contact`, `/tools`, and each `/tools/*` route; run BMR calc with sample inputs and screenshot the result.
 
-5. Keep previous plans + rollback
+## Open question
 
-- Every generation and refinement is already saved as a new version (v1, v2, v3). Currently only the newest is shown.
-- Add a "Versions" panel on the plan page listing v1..vN with date and refinement note.
-- Clicking a version shows that version's plan.
-- "Restore this version" button sets it as the active/current one without spending a credit. The other versions stay accessible.
-
-Technical section
-
-- `src/lib/questionnaire-schema.ts`: add `fasting` fields (`window`, `approach`), extend `eating` with `likedFoods: string[]`, `dislikedFoods: string[]`, `allergyTags: string[]`, allow `mealsPerDay: 1`.
-- `src/routes/_authenticated/questionnaire.tsx`: replace free-text like/dislike with grouped chip pickers + "add your own"; chip picker for allergies; fasting UI conditional on diet style; unblock 1 meal/day when fasting is on.
-- `src/lib/plan.functions.ts`:
-  - Rewrite `buildSystemPrompt` with the hard rules above.
-  - Add `extractRefinementConstraints(refinement)` (AI SDK structured call) that returns `{ mealsPerDay?, excludeFoods?, includeMoreFoods?, calorieDelta?, fastingWindow?, notes? }`.
-  - Add `validatePlan(plan, rules)` — pure JS: per-day calorie sum tolerance, meal count, banned ingredient scan.
-  - Add auto-repair loop in `generatePlan` (max 2 passes) before persisting.
-  - Add `restorePlanVersion({sessionId, version})` server fn — copies old plan into a new "restored" record marked active, no credit spent.
-- `src/routes/_authenticated/plans.$sessionId.tsx`:
-  - Load all versions, add Versions panel, active version highlighted.
-  - "Restore this version" button wired to `restorePlanVersion`.
-  - Show warning banner if the last generation didn't fully satisfy strict rules.
-- Verify: `bun run build` + Playwright pass on questionnaire fasting flow + a generation smoke test. 
+- Contact email address to use? Default to `support@smartydiet.com` unless you say otherwise. Confirm or provide the address before implementation.

@@ -11,14 +11,21 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ToolsIndexRouteImport } from './routes/tools.index'
+import { Route as ToolsMacroCalculatorRouteImport } from './routes/tools.macro-calculator'
+import { Route as ToolsCalorieCounterRouteImport } from './routes/tools.calorie-counter'
+import { Route as ToolsBmrCalculatorRouteImport } from './routes/tools.bmr-calculator'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
 import { Route as AuthenticatedQuestionnaireRouteImport } from './routes/_authenticated/questionnaire'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
@@ -37,6 +44,11 @@ const TermsRoute = TermsRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -59,6 +71,11 @@ const DisclaimerRoute = DisclaimerRouteImport.update({
   path: '/disclaimer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -69,6 +86,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -76,6 +98,26 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsIndexRoute = ToolsIndexRouteImport.update({
+  id: '/tools/',
+  path: '/tools/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsMacroCalculatorRoute = ToolsMacroCalculatorRouteImport.update({
+  id: '/tools/macro-calculator',
+  path: '/tools/macro-calculator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsCalorieCounterRoute = ToolsCalorieCounterRouteImport.update({
+  id: '/tools/calorie-counter',
+  path: '/tools/calorie-counter',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsBmrCalculatorRoute = ToolsBmrCalculatorRouteImport.update({
+  id: '/tools/bmr-calculator',
+  path: '/tools/bmr-calculator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
@@ -132,12 +174,15 @@ const ApiPublicPaymentsWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
+  '/contact': typeof ContactRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mcp': typeof McpRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -145,6 +190,10 @@ export interface FileRoutesByFullPath {
   '/plans': typeof AuthenticatedPlansRouteWithChildren
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
+  '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
+  '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
+  '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/plans/$sessionId': typeof AuthenticatedPlansSessionIdRoute
@@ -152,12 +201,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
+  '/contact': typeof ContactRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mcp': typeof McpRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -165,6 +217,10 @@ export interface FileRoutesByTo {
   '/plans': typeof AuthenticatedPlansRouteWithChildren
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
+  '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
+  '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
+  '/tools': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/plans/$sessionId': typeof AuthenticatedPlansSessionIdRoute
@@ -174,12 +230,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
+  '/contact': typeof ContactRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mcp': typeof McpRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -187,6 +246,10 @@ export interface FileRoutesById {
   '/_authenticated/plans': typeof AuthenticatedPlansRouteWithChildren
   '/_authenticated/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
+  '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
+  '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
+  '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/plans/$sessionId': typeof AuthenticatedPlansSessionIdRoute
@@ -196,12 +259,15 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/auth'
     | '/checkout'
+    | '/contact'
     | '/disclaimer'
     | '/faq'
     | '/how-it-works'
     | '/mcp'
+    | '/pricing'
     | '/privacy'
     | '/terms'
     | '/.mcp/list-tools'
@@ -209,6 +275,10 @@ export interface FileRouteTypes {
     | '/plans'
     | '/questionnaire'
     | '/checkout/return'
+    | '/tools/bmr-calculator'
+    | '/tools/calorie-counter'
+    | '/tools/macro-calculator'
+    | '/tools/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/plans/$sessionId'
@@ -216,12 +286,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/auth'
     | '/checkout'
+    | '/contact'
     | '/disclaimer'
     | '/faq'
     | '/how-it-works'
     | '/mcp'
+    | '/pricing'
     | '/privacy'
     | '/terms'
     | '/.mcp/list-tools'
@@ -229,6 +302,10 @@ export interface FileRouteTypes {
     | '/plans'
     | '/questionnaire'
     | '/checkout/return'
+    | '/tools/bmr-calculator'
+    | '/tools/calorie-counter'
+    | '/tools/macro-calculator'
+    | '/tools'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/plans/$sessionId'
@@ -237,12 +314,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/about'
     | '/auth'
     | '/checkout'
+    | '/contact'
     | '/disclaimer'
     | '/faq'
     | '/how-it-works'
     | '/mcp'
+    | '/pricing'
     | '/privacy'
     | '/terms'
     | '/.mcp/list-tools'
@@ -250,6 +330,10 @@ export interface FileRouteTypes {
     | '/_authenticated/plans'
     | '/_authenticated/questionnaire'
     | '/checkout/return'
+    | '/tools/bmr-calculator'
+    | '/tools/calorie-counter'
+    | '/tools/macro-calculator'
+    | '/tools/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/plans/$sessionId'
@@ -259,16 +343,23 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
+  ContactRoute: typeof ContactRoute
   DisclaimerRoute: typeof DisclaimerRoute
   FaqRoute: typeof FaqRoute
   HowItWorksRoute: typeof HowItWorksRoute
   McpRoute: typeof McpRoute
+  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ToolsBmrCalculatorRoute: typeof ToolsBmrCalculatorRoute
+  ToolsCalorieCounterRoute: typeof ToolsCalorieCounterRoute
+  ToolsMacroCalculatorRoute: typeof ToolsMacroCalculatorRoute
+  ToolsIndexRoute: typeof ToolsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -288,6 +379,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -318,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DisclaimerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout': {
       id: '/checkout'
       path: '/checkout'
@@ -332,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -344,6 +456,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/': {
+      id: '/tools/'
+      path: '/tools'
+      fullPath: '/tools/'
+      preLoaderRoute: typeof ToolsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/macro-calculator': {
+      id: '/tools/macro-calculator'
+      path: '/tools/macro-calculator'
+      fullPath: '/tools/macro-calculator'
+      preLoaderRoute: typeof ToolsMacroCalculatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/calorie-counter': {
+      id: '/tools/calorie-counter'
+      path: '/tools/calorie-counter'
+      fullPath: '/tools/calorie-counter'
+      preLoaderRoute: typeof ToolsCalorieCounterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/bmr-calculator': {
+      id: '/tools/bmr-calculator'
+      path: '/tools/bmr-calculator'
+      fullPath: '/tools/bmr-calculator'
+      preLoaderRoute: typeof ToolsBmrCalculatorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout/return': {
@@ -451,17 +591,24 @@ const CheckoutRouteWithChildren = CheckoutRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
+  ContactRoute: ContactRoute,
   DisclaimerRoute: DisclaimerRoute,
   FaqRoute: FaqRoute,
   HowItWorksRoute: HowItWorksRoute,
   McpRoute: McpRoute,
+  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ToolsBmrCalculatorRoute: ToolsBmrCalculatorRoute,
+  ToolsCalorieCounterRoute: ToolsCalorieCounterRoute,
+  ToolsMacroCalculatorRoute: ToolsMacroCalculatorRoute,
+  ToolsIndexRoute: ToolsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
