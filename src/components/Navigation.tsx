@@ -3,7 +3,6 @@ import {
   LogOut,
   Menu,
   X,
-  User as UserIcon,
   Home,
   Wrench,
   Crown,
@@ -28,7 +27,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import logoUrl from "@/assets/smartydiet-logo.png";
 
 export function Navigation() {
@@ -50,26 +48,33 @@ export function Navigation() {
     navigate({ to: "/", replace: true });
   }
 
+  const initial = (user?.email ?? "?").slice(0, 1).toUpperCase();
+
   return (
     <header
       className="sticky top-0 z-40 w-full bg-background"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="flex h-11 items-center justify-between gap-2 px-3">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary hover:bg-primary/10"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-primary hover:bg-primary/10"
           >
-            <Menu className="h-7 w-7" strokeWidth={2.5} />
+            <Menu className="h-5 w-5" />
           </button>
-
-          <Link to="/" className="flex items-center gap-2" aria-label="SmartyDiet home">
-            <img src={logoUrl} alt="" width={36} height={36} className="h-9 w-9" />
-            <span className="text-lg font-extrabold tracking-tight text-foreground">
-              SMARTY <span className="text-primary">DIET</span>
+          <Link
+            to="/"
+            aria-label="SmartyDiet home"
+            className="flex items-center gap-1.5 text-lg font-extrabold tracking-tight leading-none"
+            style={{ textDecoration: "none" }}
+          >
+            <img src={logoUrl} alt="" width={22} height={22} className="h-[22px] w-[22px]" />
+            <span>
+              <span className="text-primary">SMARTY</span>
+              <span className="text-foreground"> DIET</span>
             </span>
           </Link>
         </div>
@@ -78,10 +83,13 @@ export function Navigation() {
           {loading ? null : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <UserIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline max-w-[140px] truncate">{user.email}</span>
-                </Button>
+                <button
+                  type="button"
+                  aria-label="Account"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary text-xs font-bold text-primary-foreground"
+                >
+                  {initial}
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
@@ -99,9 +107,23 @@ export function Navigation() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button asChild size="sm">
-              <Link to="/auth">Sign in</Link>
-            </Button>
+            <>
+              <Link
+                to="/auth"
+                className="inline-flex h-7 items-center justify-center rounded-full px-3 text-xs font-semibold text-foreground/80 hover:text-primary"
+                style={{ textDecoration: "none" }}
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/auth"
+                search={{ mode: "signup" } as never}
+                className="inline-flex h-7 items-center justify-center rounded-full border-2 border-primary px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+                style={{ textDecoration: "none" }}
+              >
+                Sign up
+              </Link>
+            </>
           )}
         </div>
       </div>
@@ -158,9 +180,10 @@ function NavDrawer({ onClose, isAuthed }: { onClose: () => void; isAuthed: boole
       >
         <div className="flex h-12 items-center justify-between px-4">
           <div className="flex items-center gap-2 text-base font-extrabold">
-            <img src={logoUrl} alt="" width={24} height={24} className="h-6 w-6" />
+            <img src={logoUrl} alt="" width={22} height={22} className="h-[22px] w-[22px]" />
             <span>
-              SMARTY <span className="text-primary">DIET</span>
+              <span className="text-primary">SMARTY</span>
+              <span className="text-foreground"> DIET</span>
             </span>
           </div>
           <button
