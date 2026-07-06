@@ -68,8 +68,8 @@ export function Navigation() {
                     key={l.to}
                     to={l.to}
                     onClick={() => setMenuOpen(false)}
-                    className="rounded-md px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-                    activeProps={{ className: "bg-accent text-primary" }}
+                    className="rounded-md px-3 py-3 text-sm font-medium text-foreground transition-colors hover:text-primary"
+                    activeProps={{ className: "text-primary font-semibold" }}
                     activeOptions={{ exact: true }}
                   >
                     {l.label}
