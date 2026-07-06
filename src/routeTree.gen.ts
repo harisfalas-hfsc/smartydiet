@@ -24,6 +24,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
 import { Route as ToolsMacroCalculatorRouteImport } from './routes/tools.macro-calculator'
+import { Route as ToolsCalorieCounterRouteImport } from './routes/tools.calorie-counter'
 import { Route as ToolsBmrCalculatorRouteImport } from './routes/tools.bmr-calculator'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
 import { Route as AuthenticatedQuestionnaireRouteImport } from './routes/_authenticated/questionnaire'
@@ -109,6 +110,11 @@ const ToolsMacroCalculatorRoute = ToolsMacroCalculatorRouteImport.update({
   path: '/tools/macro-calculator',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsCalorieCounterRoute = ToolsCalorieCounterRouteImport.update({
+  id: '/tools/calorie-counter',
+  path: '/tools/calorie-counter',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsBmrCalculatorRoute = ToolsBmrCalculatorRouteImport.update({
   id: '/tools/bmr-calculator',
   path: '/tools/bmr-calculator',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
+  '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
+  '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/tools': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/_authenticated/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
+  '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/questionnaire'
     | '/checkout/return'
     | '/tools/bmr-calculator'
+    | '/tools/calorie-counter'
     | '/tools/macro-calculator'
     | '/tools/'
     | '/.lovable/oauth/consent'
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/questionnaire'
     | '/checkout/return'
     | '/tools/bmr-calculator'
+    | '/tools/calorie-counter'
     | '/tools/macro-calculator'
     | '/tools'
     | '/.lovable/oauth/consent'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/_authenticated/questionnaire'
     | '/checkout/return'
     | '/tools/bmr-calculator'
+    | '/tools/calorie-counter'
     | '/tools/macro-calculator'
     | '/tools/'
     | '/.lovable/oauth/consent'
@@ -345,6 +357,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ToolsBmrCalculatorRoute: typeof ToolsBmrCalculatorRoute
+  ToolsCalorieCounterRoute: typeof ToolsCalorieCounterRoute
   ToolsMacroCalculatorRoute: typeof ToolsMacroCalculatorRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -457,6 +470,13 @@ declare module '@tanstack/react-router' {
       path: '/tools/macro-calculator'
       fullPath: '/tools/macro-calculator'
       preLoaderRoute: typeof ToolsMacroCalculatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/calorie-counter': {
+      id: '/tools/calorie-counter'
+      path: '/tools/calorie-counter'
+      fullPath: '/tools/calorie-counter'
+      preLoaderRoute: typeof ToolsCalorieCounterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/bmr-calculator': {
@@ -586,6 +606,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ToolsBmrCalculatorRoute: ToolsBmrCalculatorRoute,
+  ToolsCalorieCounterRoute: ToolsCalorieCounterRoute,
   ToolsMacroCalculatorRoute: ToolsMacroCalculatorRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
