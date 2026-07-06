@@ -23,6 +23,8 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
+import { Route as ToolsMacroCalculatorRouteImport } from './routes/tools.macro-calculator'
+import { Route as ToolsBmrCalculatorRouteImport } from './routes/tools.bmr-calculator'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
 import { Route as AuthenticatedQuestionnaireRouteImport } from './routes/_authenticated/questionnaire'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
@@ -102,6 +104,16 @@ const ToolsIndexRoute = ToolsIndexRouteImport.update({
   path: '/tools/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsMacroCalculatorRoute = ToolsMacroCalculatorRouteImport.update({
+  id: '/tools/macro-calculator',
+  path: '/tools/macro-calculator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsBmrCalculatorRoute = ToolsBmrCalculatorRouteImport.update({
+  id: '/tools/bmr-calculator',
+  path: '/tools/bmr-calculator',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/return',
   path: '/return',
@@ -172,6 +184,8 @@ export interface FileRoutesByFullPath {
   '/plans': typeof AuthenticatedPlansRouteWithChildren
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
+  '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -196,6 +210,8 @@ export interface FileRoutesByTo {
   '/plans': typeof AuthenticatedPlansRouteWithChildren
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
+  '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/tools': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -222,6 +238,8 @@ export interface FileRoutesById {
   '/_authenticated/plans': typeof AuthenticatedPlansRouteWithChildren
   '/_authenticated/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
+  '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -248,6 +266,8 @@ export interface FileRouteTypes {
     | '/plans'
     | '/questionnaire'
     | '/checkout/return'
+    | '/tools/bmr-calculator'
+    | '/tools/macro-calculator'
     | '/tools/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -272,6 +292,8 @@ export interface FileRouteTypes {
     | '/plans'
     | '/questionnaire'
     | '/checkout/return'
+    | '/tools/bmr-calculator'
+    | '/tools/macro-calculator'
     | '/tools'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -297,6 +319,8 @@ export interface FileRouteTypes {
     | '/_authenticated/plans'
     | '/_authenticated/questionnaire'
     | '/checkout/return'
+    | '/tools/bmr-calculator'
+    | '/tools/macro-calculator'
     | '/tools/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -320,6 +344,8 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ToolsBmrCalculatorRoute: typeof ToolsBmrCalculatorRoute
+  ToolsMacroCalculatorRoute: typeof ToolsMacroCalculatorRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -424,6 +450,20 @@ declare module '@tanstack/react-router' {
       path: '/tools'
       fullPath: '/tools/'
       preLoaderRoute: typeof ToolsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/macro-calculator': {
+      id: '/tools/macro-calculator'
+      path: '/tools/macro-calculator'
+      fullPath: '/tools/macro-calculator'
+      preLoaderRoute: typeof ToolsMacroCalculatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/bmr-calculator': {
+      id: '/tools/bmr-calculator'
+      path: '/tools/bmr-calculator'
+      fullPath: '/tools/bmr-calculator'
+      preLoaderRoute: typeof ToolsBmrCalculatorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout/return': {
@@ -545,6 +585,8 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ToolsBmrCalculatorRoute: ToolsBmrCalculatorRoute,
+  ToolsMacroCalculatorRoute: ToolsMacroCalculatorRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
