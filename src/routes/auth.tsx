@@ -85,17 +85,6 @@ function Auth() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={handleGoogle} variant="outline" className="w-full" disabled={busy}>
-            Continue with Google
-          </Button>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">or</span>
-            </div>
-          </div>
           <form onSubmit={handleEmail} className="space-y-3">
             <div>
               <Label htmlFor="email">Email</Label>
