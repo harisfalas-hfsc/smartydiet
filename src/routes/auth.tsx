@@ -10,6 +10,9 @@ import { toast } from "sonner";
 import { Apple, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — SmartyDiet" },
@@ -22,32 +25,40 @@ export const Route = createFileRoute("/auth")({
 
 function Auth() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const goNext = () => {
+    if (next) window.location.href = next;
+    else navigate({ to: "/questionnaire", replace: true });
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/questionnaire", replace: true });
+      if (data.session) goNext();
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      if (s) navigate({ to: "/questionnaire", replace: true });
+      if (s) goNext();
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, next]);
 
   async function handleGoogle() {
     setBusy(true);
+    const redirectTarget = next ? `${window.location.origin}${next}` : window.location.origin;
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: redirectTarget,
     });
     if (result.error) {
       toast.error(result.error.message ?? "Google sign-in failed");
       setBusy(false);
       return;
     }
-    if (!result.redirected) navigate({ to: "/questionnaire", replace: true });
+    if (!result.redirected) goNext();
   }
 
   async function handleEmail(e: React.FormEvent) {
