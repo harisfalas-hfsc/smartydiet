@@ -44,7 +44,11 @@ export function Navigation() {
         <div className="flex items-center gap-2">
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Open menu">
+              <Button
+                size="icon"
+                aria-label="Open menu"
+                className="bg-primary text-primary-foreground hover:bg-primary-hover"
+              >
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
