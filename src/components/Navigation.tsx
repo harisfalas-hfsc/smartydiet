@@ -46,8 +46,9 @@ export function Navigation() {
             <SheetTrigger asChild>
               <Button
                 size="icon"
+                variant="ghost"
                 aria-label="Open menu"
-                className="bg-primary text-primary-foreground hover:bg-primary-hover"
+                className="bg-transparent text-primary hover:bg-transparent hover:text-primary"
               >
                 <Menu className="h-5 w-5" />
               </Button>
