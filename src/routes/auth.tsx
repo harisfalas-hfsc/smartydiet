@@ -1,13 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Apple, Loader2 } from "lucide-react";
+
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): { next?: string } => {
@@ -48,19 +48,6 @@ function Auth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, next]);
 
-  async function handleGoogle() {
-    setBusy(true);
-    const redirectTarget = next ? `${window.location.origin}${next}` : window.location.origin;
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: redirectTarget,
-    });
-    if (result.error) {
-      toast.error(result.error.message ?? "Google sign-in failed");
-      setBusy(false);
-      return;
-    }
-    if (!result.redirected) goNext();
-  }
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
@@ -98,17 +85,6 @@ function Auth() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={handleGoogle} variant="outline" className="w-full" disabled={busy}>
-            Continue with Google
-          </Button>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">or</span>
-            </div>
-          </div>
           <form onSubmit={handleEmail} className="space-y-3">
             <div>
               <Label htmlFor="email">Email</Label>
