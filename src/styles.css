@@ -132,6 +132,7 @@
 
 @layer utilities {
   .gradient-primary { background: var(--gradient-primary); }
+  .brand-gradient-soft { background-image: var(--gradient-brand-soft); }
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-primary { box-shadow: var(--shadow-primary); }
   .transition-smooth { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
