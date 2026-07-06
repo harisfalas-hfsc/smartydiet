@@ -104,11 +104,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "SmartyDiet" },
-      { property: "og:image", content: "https://smartydiet.com/__l5e/assets-v1/29f97184-fb57-410f-b081-fae36ebc10f0/smartydiet-social.jpg" },
+      { property: "og:image", content: "https://smartydiet.com/__l5e/assets-v1/d1e59921-5974-44b4-96d8-9bfbec15c871/smartydiet-social.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:alt", content: "SmartyDiet — Your personalized AI diet plan" },
-      { name: "twitter:image", content: "https://smartydiet.com/__l5e/assets-v1/29f97184-fb57-410f-b081-fae36ebc10f0/smartydiet-social.jpg" },
+      { name: "twitter:image", content: "https://smartydiet.com/__l5e/assets-v1/d1e59921-5974-44b4-96d8-9bfbec15c871/smartydiet-social.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
