@@ -15,6 +15,7 @@ import { Navigation } from "../components/Navigation";
 import { SiteFooter } from "../components/SiteFooter";
 import { PaymentTestModeBanner } from "../components/PaymentTestModeBanner";
 import { Toaster } from "../components/ui/sonner";
+import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
 
 function NotFoundComponent() {
   return (
@@ -150,6 +151,7 @@ function RootComponent() {
         </main>
         <SiteFooter />
         <Toaster />
+        <SisterAppsPopup />
       </div>
     </QueryClientProvider>
   );
