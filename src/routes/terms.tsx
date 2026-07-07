@@ -195,9 +195,13 @@ function Terms() {
       <h2>11. Intellectual Property</h2>
       <p>
         All content, branding, methodology, source code, and copy in SmartyDiet are the intellectual
-        property of SmartyDiet and its operator and are protected by copyright, trademark, and other
-        intellectual property laws. You receive a limited, personal, non-transferable, non-exclusive
-        license to use SmartyDiet for personal, non-commercial purposes only.
+        property of <strong>SmartyDiet</strong> and its parent,{" "}
+        <a href="https://smartywellness.com" target="_blank" rel="noopener noreferrer">
+          Smarty Wellness
+        </a>
+        , and are protected by copyright, trademark, and other intellectual property laws. You
+        receive a limited, personal, non-transferable, non-exclusive license to use SmartyDiet for
+        personal, non-commercial purposes only.
       </p>
 
       <h2>12. Account Deletion</h2>
