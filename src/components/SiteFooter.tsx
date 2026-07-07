@@ -38,7 +38,6 @@ export function SiteFooter() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-            <span>Part of the Smarty Wellness family:</span>
             <a href="https://smartygym.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Smarty Gym</a>
             <span className="text-muted-foreground/40">·</span>
             <a href="https://smartymove.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Smarty Move</a>
