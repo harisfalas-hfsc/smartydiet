@@ -74,6 +74,19 @@ function Terms() {
         is <strong>not a substitute for medical, nutritional, or dietetic advice</strong>, diagnosis,
         or treatment.
       </p>
+      <p>
+        SmartyDiet is one of three pillars in the Smarty Wellness ecosystem:{" "}
+        <a href="https://smartygym.com" target="_blank" rel="noopener noreferrer">
+          SmartyGym
+        </a>{" "}
+        (train),{" "}
+        <a href="https://smartymove.com" target="_blank" rel="noopener noreferrer">
+          SmartyMove
+        </a>{" "}
+        (assess), and SmartyDiet (fuel). Each brand is a{" "}
+        <strong>separate app with a separate account</strong> — your SmartyDiet account does not
+        grant access to SmartyGym or SmartyMove, and vice versa.
+      </p>
 
       <h2>4. Account Registration</h2>
       <ul>
