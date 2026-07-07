@@ -6,9 +6,9 @@ const socialClass =
 
 export function SiteFooter() {
   return (
-    <footer className="bg-background w-full pt-6 pb-4 px-4">
+    <footer className="bg-background w-full pt-4 pb-4 px-4">
       <div className="container mx-auto max-w-7xl">
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-3">
           <div className="flex items-center gap-4">
             <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className={socialClass}>
               <Facebook className="h-5 w-5" />
