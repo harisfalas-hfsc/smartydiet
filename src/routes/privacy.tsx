@@ -28,10 +28,24 @@ function Privacy() {
     <LegalLayout title="Privacy Policy" icon={<Shield className="h-5 w-5" />} lastUpdated="July 2026">
       <p>
         At <strong>SmartyDiet</strong> (smartydiet.com) we value your privacy and are committed to
-        protecting your personal data. This Privacy Policy explains how SmartyDiet collects, uses,
-        stores, and protects your information when you use our AI-generated personalized nutrition
-        service. Our practices comply with the General Data Protection Regulation (GDPR) (EU)
-        2016/679, the ePrivacy Directive 2002/58/EC, and applicable data protection laws worldwide.
+        protecting your personal data. SmartyDiet is part of the{" "}
+        <a href="https://smartywellness.com" target="_blank" rel="noopener noreferrer">
+          Smarty Wellness
+        </a>{" "}
+        family of brands — a science-based ecosystem for everyday human wellness — alongside our
+        sister brands{" "}
+        <a href="https://smartygym.com" target="_blank" rel="noopener noreferrer">
+          SmartyGym
+        </a>{" "}
+        (train) and{" "}
+        <a href="https://smartymove.com" target="_blank" rel="noopener noreferrer">
+          SmartyMove
+        </a>{" "}
+        (assess), while SmartyDiet focuses on fuel. This Privacy Policy explains how SmartyDiet
+        collects, uses, stores, and protects your information when you use our AI-generated
+        personalized nutrition service. Our practices comply with the General Data Protection
+        Regulation (GDPR) (EU) 2016/679, the ePrivacy Directive 2002/58/EC, and applicable data
+        protection laws worldwide.
       </p>
 
       <h2>1. Data We Collect</h2>
@@ -204,8 +218,19 @@ function Privacy() {
 
       <h2>12. Contact</h2>
       <p>
-        Data Controller: <strong>SmartyDiet</strong> (smartydiet.com). Contact{" "}
-        <a href="mailto:smartydiet@outlook.com">smartydiet@outlook.com</a>.
+        Data Controller: <strong>SmartyDiet</strong> (smartydiet.com), part of{" "}
+        <a href="https://smartywellness.com" target="_blank" rel="noopener noreferrer">
+          Smarty Wellness
+        </a>
+        , alongside sister brands{" "}
+        <a href="https://smartygym.com" target="_blank" rel="noopener noreferrer">
+          SmartyGym
+        </a>{" "}
+        and{" "}
+        <a href="https://smartymove.com" target="_blank" rel="noopener noreferrer">
+          SmartyMove
+        </a>
+        . Contact <a href="mailto:smartydiet@outlook.com">smartydiet@outlook.com</a>.
       </p>
     </LegalLayout>
   );

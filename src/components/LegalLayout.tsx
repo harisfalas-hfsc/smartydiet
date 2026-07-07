@@ -41,7 +41,34 @@ export function LegalLayout({
         }}
       >
         <strong className="text-foreground">Last updated:</strong> {lastUpdated} ·{" "}
-        <strong className="text-foreground">Operator:</strong> SmartyDiet (smartydiet.com), part of the Smarty family ·{" "}
+        <strong className="text-foreground">Operator:</strong> SmartyDiet (smartydiet.com), part of the{" "}
+        <a
+          href="https://smartywellness.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary font-semibold hover:underline"
+        >
+          Smarty Wellness
+        </a>{" "}
+        family of brands (with{" "}
+        <a
+          href="https://smartygym.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary font-semibold hover:underline"
+        >
+          SmartyGym
+        </a>{" "}
+        and{" "}
+        <a
+          href="https://smartymove.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary font-semibold hover:underline"
+        >
+          SmartyMove
+        </a>
+        ) ·{" "}
         <strong className="text-foreground">Contact:</strong>{" "}
         <a href="mailto:smartydiet@outlook.com" className="text-primary font-semibold hover:underline">
           smartydiet@outlook.com

@@ -27,9 +27,21 @@ function Terms() {
   return (
     <LegalLayout title="Terms & Conditions" icon={<FileText className="h-5 w-5" />} lastUpdated="July 2026">
       <p>
-        Welcome to <strong>SmartyDiet</strong> (smartydiet.com). By accessing or using our AI-generated
-        personalized nutrition planning service, you agree to comply with and be bound by the
-        following Terms &amp; Conditions. Please read them carefully before using SmartyDiet.
+        Welcome to <strong>SmartyDiet</strong> (smartydiet.com), part of the{" "}
+        <a href="https://smartywellness.com" target="_blank" rel="noopener noreferrer">
+          Smarty Wellness
+        </a>{" "}
+        family of brands, alongside our sister brands{" "}
+        <a href="https://smartygym.com" target="_blank" rel="noopener noreferrer">
+          SmartyGym
+        </a>{" "}
+        (train) and{" "}
+        <a href="https://smartymove.com" target="_blank" rel="noopener noreferrer">
+          SmartyMove
+        </a>{" "}
+        (assess). By accessing or using our AI-generated personalized nutrition planning service,
+        you agree to comply with and be bound by the following Terms &amp; Conditions. Please read
+        them carefully before using SmartyDiet.
       </p>
 
       <h2>1. Acceptance of Terms</h2>
@@ -61,6 +73,19 @@ function Terms() {
         SmartyDiet is intended for <strong>personal educational and wellness purposes only</strong> and
         is <strong>not a substitute for medical, nutritional, or dietetic advice</strong>, diagnosis,
         or treatment.
+      </p>
+      <p>
+        SmartyDiet is one of three pillars in the Smarty Wellness ecosystem:{" "}
+        <a href="https://smartygym.com" target="_blank" rel="noopener noreferrer">
+          SmartyGym
+        </a>{" "}
+        (train),{" "}
+        <a href="https://smartymove.com" target="_blank" rel="noopener noreferrer">
+          SmartyMove
+        </a>{" "}
+        (assess), and SmartyDiet (fuel). Each brand is a{" "}
+        <strong>separate app with a separate account</strong> — your SmartyDiet account does not
+        grant access to SmartyGym or SmartyMove, and vice versa.
       </p>
 
       <h2>4. Account Registration</h2>
@@ -170,9 +195,13 @@ function Terms() {
       <h2>11. Intellectual Property</h2>
       <p>
         All content, branding, methodology, source code, and copy in SmartyDiet are the intellectual
-        property of SmartyDiet and its operator and are protected by copyright, trademark, and other
-        intellectual property laws. You receive a limited, personal, non-transferable, non-exclusive
-        license to use SmartyDiet for personal, non-commercial purposes only.
+        property of <strong>SmartyDiet</strong> and its parent,{" "}
+        <a href="https://smartywellness.com" target="_blank" rel="noopener noreferrer">
+          Smarty Wellness
+        </a>
+        , and are protected by copyright, trademark, and other intellectual property laws. You
+        receive a limited, personal, non-transferable, non-exclusive license to use SmartyDiet for
+        personal, non-commercial purposes only.
       </p>
 
       <h2>12. Account Deletion</h2>
@@ -215,8 +244,11 @@ function Terms() {
 
       <h2>16. Contact</h2>
       <p>
-        For questions about these Terms, contact us at{" "}
-        <a href="mailto:smartydiet@outlook.com">smartydiet@outlook.com</a>.
+        For questions about these Terms, contact <strong>SmartyDiet</strong> (part of{" "}
+        <a href="https://smartywellness.com" target="_blank" rel="noopener noreferrer">
+          Smarty Wellness
+        </a>
+        ) at <a href="mailto:smartydiet@outlook.com">smartydiet@outlook.com</a>.
       </p>
     </LegalLayout>
   );
