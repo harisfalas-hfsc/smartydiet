@@ -165,12 +165,12 @@ function NavDrawer({ onClose, isAuthed }: { onClose: () => void; isAuthed: boole
       heading: "SmartyDiet",
       items: [
         { to: "/", label: "Home", Icon: Home },
-        { to: "/how-it-works", label: "How it works", Icon: BookOpen },
-        { to: "/tools", label: "Tools", Icon: Wrench },
-        { to: "/pricing", label: "Pricing", Icon: Crown },
         { to: "/about", label: "About", Icon: Info },
-        { to: "/contact", label: "Contact us", Icon: Mail },
-        { to: "/faq", label: "FAQ", Icon: HelpCircle },
+        { to: "/how-it-works", label: "How It Works", Icon: BookOpen },
+        { to: "/pricing", label: "Pricing", Icon: Crown },
+        { to: "/tools", label: "Tools", Icon: Wrench },
+        { to: "/faq", label: "Frequently Asked Questions", Icon: HelpCircle },
+        { to: "/contact", label: "Contact", Icon: Mail },
       ],
     },
     {
