@@ -244,8 +244,11 @@ function Terms() {
 
       <h2>16. Contact</h2>
       <p>
-        For questions about these Terms, contact us at{" "}
-        <a href="mailto:smartydiet@outlook.com">smartydiet@outlook.com</a>.
+        For questions about these Terms, contact <strong>SmartyDiet</strong> (part of{" "}
+        <a href="https://smartywellness.com" target="_blank" rel="noopener noreferrer">
+          Smarty Wellness
+        </a>
+        ) at <a href="mailto:smartydiet@outlook.com">smartydiet@outlook.com</a>.
       </p>
     </LegalLayout>
   );
