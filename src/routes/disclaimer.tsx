@@ -39,9 +39,21 @@ function Disclaimer() {
       </div>
 
       <p>
-        The information provided by <strong>SmartyDiet</strong> (smartydiet.com) is intended solely
-        for <strong>general educational and wellness purposes</strong>. SmartyDiet does not provide
-        medical, nutritional-therapy, or dietetic advice, diagnosis, or treatment.
+        The information provided by <strong>SmartyDiet</strong> (smartydiet.com), part of the{" "}
+        <a href="https://smartywellness.com" target="_blank" rel="noopener noreferrer">
+          Smarty Wellness
+        </a>{" "}
+        family of brands (alongside{" "}
+        <a href="https://smartygym.com" target="_blank" rel="noopener noreferrer">
+          SmartyGym
+        </a>{" "}
+        and{" "}
+        <a href="https://smartymove.com" target="_blank" rel="noopener noreferrer">
+          SmartyMove
+        </a>
+        ), is intended solely for <strong>general educational and wellness purposes</strong>.
+        SmartyDiet does not provide medical, nutritional-therapy, or dietetic advice, diagnosis, or
+        treatment.
       </p>
 
       <h2>1. Not Medical or Nutritional Advice</h2>
