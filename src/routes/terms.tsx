@@ -27,9 +27,21 @@ function Terms() {
   return (
     <LegalLayout title="Terms & Conditions" icon={<FileText className="h-5 w-5" />} lastUpdated="July 2026">
       <p>
-        Welcome to <strong>SmartyDiet</strong> (smartydiet.com). By accessing or using our AI-generated
-        personalized nutrition planning service, you agree to comply with and be bound by the
-        following Terms &amp; Conditions. Please read them carefully before using SmartyDiet.
+        Welcome to <strong>SmartyDiet</strong> (smartydiet.com), part of the{" "}
+        <a href="https://smartywellness.com" target="_blank" rel="noopener noreferrer">
+          Smarty Wellness
+        </a>{" "}
+        family of brands, alongside our sister brands{" "}
+        <a href="https://smartygym.com" target="_blank" rel="noopener noreferrer">
+          SmartyGym
+        </a>{" "}
+        (train) and{" "}
+        <a href="https://smartymove.com" target="_blank" rel="noopener noreferrer">
+          SmartyMove
+        </a>{" "}
+        (assess). By accessing or using our AI-generated personalized nutrition planning service,
+        you agree to comply with and be bound by the following Terms &amp; Conditions. Please read
+        them carefully before using SmartyDiet.
       </p>
 
       <h2>1. Acceptance of Terms</h2>
