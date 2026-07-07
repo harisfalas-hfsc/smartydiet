@@ -218,8 +218,19 @@ function Privacy() {
 
       <h2>12. Contact</h2>
       <p>
-        Data Controller: <strong>SmartyDiet</strong> (smartydiet.com). Contact{" "}
-        <a href="mailto:smartydiet@outlook.com">smartydiet@outlook.com</a>.
+        Data Controller: <strong>SmartyDiet</strong> (smartydiet.com), part of{" "}
+        <a href="https://smartywellness.com" target="_blank" rel="noopener noreferrer">
+          Smarty Wellness
+        </a>
+        , alongside sister brands{" "}
+        <a href="https://smartygym.com" target="_blank" rel="noopener noreferrer">
+          SmartyGym
+        </a>{" "}
+        and{" "}
+        <a href="https://smartymove.com" target="_blank" rel="noopener noreferrer">
+          SmartyMove
+        </a>
+        . Contact <a href="mailto:smartydiet@outlook.com">smartydiet@outlook.com</a>.
       </p>
     </LegalLayout>
   );
