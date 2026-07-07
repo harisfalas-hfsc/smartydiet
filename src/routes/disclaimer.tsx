@@ -102,9 +102,10 @@ function Disclaimer() {
         <li>
           <strong>Complete release:</strong> By using SmartyDiet, you voluntarily and knowingly assume
           all risks associated with changing your nutrition and hereby <strong>RELEASE, WAIVE,
-          DISCHARGE, AND COVENANT NOT TO SUE</strong> SmartyDiet, its operator, owners, contributors,
-          employees, contractors, affiliates, and agents from any and all liability arising from your
-          use of SmartyDiet.
+          DISCHARGE, AND COVENANT NOT TO SUE</strong> SmartyDiet, its parent Smarty Wellness, its
+          affiliated brands (SmartyGym and SmartyMove), and their respective operators, owners,
+          contributors, employees, contractors, affiliates, and agents from any and all liability
+          arising from your use of SmartyDiet.
         </li>
         <li>
           <strong>No liability:</strong> SmartyDiet and its representatives <strong>shall not be held
