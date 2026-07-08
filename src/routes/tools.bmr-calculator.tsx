@@ -12,6 +12,47 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const BMR_URL = "https://smartydiet.com/tools/bmr-calculator";
+const BMR_JSONLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": `${BMR_URL}#app`,
+      name: "SmartyDiet BMR Calculator",
+      url: BMR_URL,
+      applicationCategory: "HealthApplication",
+      operatingSystem: "Web",
+      isPartOf: { "@id": "https://smartydiet.com/#website" },
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      description:
+        "Free BMR calculator using the Mifflin-St Jeor equation to estimate basal metabolic rate and daily calorie needs.",
+    },
+    {
+      "@type": "HowTo",
+      name: "How to calculate your BMR with SmartyDiet",
+      description:
+        "Use the Mifflin-St Jeor equation to estimate basal metabolic rate and total daily calorie needs.",
+      step: [
+        { "@type": "HowToStep", name: "Enter age", text: "Enter your age in years." },
+        { "@type": "HowToStep", name: "Enter weight", text: "Enter your weight in kilograms." },
+        { "@type": "HowToStep", name: "Enter height", text: "Enter your height in centimeters." },
+        { "@type": "HowToStep", name: "Select gender", text: "Select your biological sex for the equation." },
+        { "@type": "HowToStep", name: "Choose activity", text: "Pick your activity level to see TDEE." },
+        { "@type": "HowToStep", name: "Read result", text: "Read your BMR and estimated daily calories." },
+      ],
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://smartydiet.com/" },
+        { "@type": "ListItem", position: 2, name: "Tools", item: "https://smartydiet.com/tools" },
+        { "@type": "ListItem", position: 3, name: "BMR Calculator", item: BMR_URL },
+      ],
+    },
+  ],
+};
+
 export const Route = createFileRoute("/tools/bmr-calculator")({
   head: () => ({
     meta: [
@@ -26,7 +67,10 @@ export const Route = createFileRoute("/tools/bmr-calculator")({
         property: "og:description",
         content: "Estimate your BMR and daily calorie needs — free tool by SmartyDiet.",
       },
+      { property: "og:url", content: BMR_URL },
     ],
+    links: [{ rel: "canonical", href: BMR_URL }],
+    scripts: [{ type: "application/ld+json", children: JSON.stringify(BMR_JSONLD) }],
   }),
   component: BMRCalculatorPage,
 });
