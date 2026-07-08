@@ -32,7 +32,6 @@ const SISTER_APPS: SisterApp[] = [
     tagline: "Train smart. Get stronger. Feel younger.",
     url: "https://smartygym.com",
     image: logoGym,
-    darkImage: true,
   },
   {
     id: "move",
