@@ -34,6 +34,7 @@ export const Route = createFileRoute("/contact")({
       { property: "og:url", content: "https://smartydiet.com/contact" },
     ],
     links: [{ rel: "canonical", href: "https://smartydiet.com/contact" }],
+    links: [{ rel: "canonical", href: "https://smartydiet.com/contact" }],
   }),
   component: Contact,
 });
