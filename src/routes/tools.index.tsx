@@ -4,18 +4,20 @@ import { Flame, PieChart, Calculator, ArrowRight } from "lucide-react";
 export const Route = createFileRoute("/tools/")({
   head: () => ({
     meta: [
-      { title: "SmartyDiet Tools — Free nutrition calculators" },
+      { title: "SmartyDiet Tools — Free nutrition calculators (BMR, TDEE, macros, calories)" },
       {
         name: "description",
         content:
-          "Free SmartyDiet nutrition tools: BMR calculator (Mifflin-St Jeor), macro calculator and calorie & macro lookup. No signup required.",
+          "Free SmartyDiet nutrition tools: BMR calculator (Mifflin-St Jeor), TDEE, macro calculator and USDA-powered calorie counter. Part of the AI Nutrition Intelligence Platform.",
       },
       { property: "og:title", content: "SmartyDiet Tools — Free nutrition calculators" },
       {
         property: "og:description",
-        content: "BMR, macros and calorie lookup — free tools by SmartyDiet.",
+        content: "BMR, TDEE, macros and calorie lookup — free tools by SmartyDiet.",
       },
+      { property: "og:url", content: "https://smartydiet.com/tools" },
     ],
+    links: [{ rel: "canonical", href: "https://smartydiet.com/tools" }],
   }),
   component: ToolsPage,
 });

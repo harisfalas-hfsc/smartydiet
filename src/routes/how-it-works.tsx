@@ -4,13 +4,20 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
-      { title: "How SmartyDiet works — from questionnaire to your personalized plan" },
+      { title: "How SmartyDiet works — from questionnaire to your Smarty Meal Plan™" },
       {
         name: "description",
         content:
-          "See exactly what SmartyDiet asks, how we build your plan, and what you get back — meals, macros, grocery list and PDF export.",
+          "See exactly what SmartyDiet asks, how the Smarty Calorie Engine™ builds your plan, and what you get back — meals, macros, grocery list and PDF export.",
       },
+      { property: "og:title", content: "How SmartyDiet works" },
+      {
+        property: "og:description",
+        content: "From smart questionnaire to a personalized Smarty Meal Plan™ in minutes.",
+      },
+      { property: "og:url", content: "https://smartydiet.com/how-it-works" },
     ],
+    links: [{ rel: "canonical", href: "https://smartydiet.com/how-it-works" }],
   }),
   component: HowItWorks,
 });

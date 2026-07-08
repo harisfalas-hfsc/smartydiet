@@ -5,18 +5,21 @@ import { CheckCircle2 } from "lucide-react";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About SmartyDiet — Personalized nutrition, built on science" },
+      { title: "About SmartyDiet — The AI Nutrition Intelligence Platform" },
       {
         name: "description",
         content:
-          "SmartyDiet builds fully personalized diet plans and free nutrition tools based on established sports-science methods. Part of the Smarty family.",
+          "SmartyDiet is the AI Nutrition Intelligence Platform — a pocket dietitian and diet coach that builds personalized plans based on established sports-science methods.",
       },
-      { property: "og:title", content: "About SmartyDiet" },
+      { property: "og:title", content: "About SmartyDiet — AI Nutrition Intelligence Platform" },
       {
         property: "og:description",
-        content: "Personalized nutrition plans and free tools, based on established sports-science methods.",
+        content:
+          "The AI Nutrition Intelligence Platform: pocket dietitian, nutrition consultant and diet coach, powered by science.",
       },
+      { property: "og:url", content: "https://smartydiet.com/about" },
     ],
+    links: [{ rel: "canonical", href: "https://smartydiet.com/about" }],
   }),
   component: AboutPage,
 });

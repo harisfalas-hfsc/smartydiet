@@ -5,18 +5,20 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — SmartyDiet personalized diet plan for $4.99" },
+      { title: "Pricing — SmartyDiet AI diet plan for $4.99, one-time" },
       {
         name: "description",
         content:
-          "One personalized diet plan for $4.99. Includes 1, 2 or 4-week meal plan, macros, grocery list, 2 free refinements and PDF export. No subscription.",
+          "One personalized Smarty Meal Plan™ for $4.99. Includes 1, 2 or 4-week meal plan, macros, grocery list, 2 free refinements and PDF export. No subscription.",
       },
       { property: "og:title", content: "SmartyDiet Pricing — $4.99 one-time" },
       {
         property: "og:description",
-        content: "One personalized plan. Yours to keep. No subscription.",
+        content: "One personalized Smarty Meal Plan™. Yours to keep. No subscription.",
       },
+      { property: "og:url", content: "https://smartydiet.com/pricing" },
     ],
+    links: [{ rel: "canonical", href: "https://smartydiet.com/pricing" }],
   }),
   component: PricingPage,
 });

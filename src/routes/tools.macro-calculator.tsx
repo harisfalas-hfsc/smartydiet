@@ -12,6 +12,45 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const MACRO_URL = "https://smartydiet.com/tools/macro-calculator";
+const MACRO_JSONLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": `${MACRO_URL}#app`,
+      name: "SmartyDiet Macro Calculator",
+      url: MACRO_URL,
+      applicationCategory: "HealthApplication",
+      operatingSystem: "Web",
+      isPartOf: { "@id": "https://smartydiet.com/#website" },
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      description:
+        "Free macro calculator for personalized calories, protein, carbs, fats, fiber and water targets.",
+    },
+    {
+      "@type": "HowTo",
+      name: "How to calculate your macros with SmartyDiet",
+      description:
+        "Compute personalized calorie and macronutrient targets based on body, activity and goal.",
+      step: [
+        { "@type": "HowToStep", name: "Enter body stats", text: "Enter age, gender, height and weight." },
+        { "@type": "HowToStep", name: "Set activity", text: "Choose your weekly activity level." },
+        { "@type": "HowToStep", name: "Choose goal", text: "Pick weight loss, maintenance or muscle gain." },
+        { "@type": "HowToStep", name: "Read targets", text: "Read your calorie, protein, carb, fat, fiber and water targets." },
+      ],
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://smartydiet.com/" },
+        { "@type": "ListItem", position: 2, name: "Tools", item: "https://smartydiet.com/tools" },
+        { "@type": "ListItem", position: 3, name: "Macro Calculator", item: MACRO_URL },
+      ],
+    },
+  ],
+};
+
 export const Route = createFileRoute("/tools/macro-calculator")({
   head: () => ({
     meta: [
@@ -26,7 +65,10 @@ export const Route = createFileRoute("/tools/macro-calculator")({
         property: "og:description",
         content: "Personalized calorie & macro targets for your goal — free tool by SmartyDiet.",
       },
+      { property: "og:url", content: MACRO_URL },
     ],
+    links: [{ rel: "canonical", href: MACRO_URL }],
+    scripts: [{ type: "application/ld+json", children: JSON.stringify(MACRO_JSONLD) }],
   }),
   component: MacroCalculatorPage,
 });

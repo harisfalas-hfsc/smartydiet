@@ -17,6 +17,44 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { searchFood, type FoodItem } from "@/lib/food-search.functions";
 
+const CC_URL = "https://smartydiet.com/tools/calorie-counter";
+const CC_JSONLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": `${CC_URL}#app`,
+      name: "SmartyDiet Calorie Counter",
+      url: CC_URL,
+      applicationCategory: "HealthApplication",
+      operatingSystem: "Web",
+      isPartOf: { "@id": "https://smartydiet.com/#website" },
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      description:
+        "Free calorie counter powered by the USDA FoodData Central database — 300,000+ foods.",
+    },
+    {
+      "@type": "HowTo",
+      name: "How to look up calories and macros with SmartyDiet",
+      description: "Search any food and see calories, protein, carbs, fat and fiber for your portion.",
+      step: [
+        { "@type": "HowToStep", name: "Search a food", text: "Type any food name — e.g. chicken breast, feta, oats." },
+        { "@type": "HowToStep", name: "Pick a match", text: "Select the closest food from the USDA results." },
+        { "@type": "HowToStep", name: "Enter portion", text: "Enter the grams you plan to eat." },
+        { "@type": "HowToStep", name: "Read nutrition", text: "See calories, protein, carbs, fat and fiber for that portion." },
+      ],
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://smartydiet.com/" },
+        { "@type": "ListItem", position: 2, name: "Tools", item: "https://smartydiet.com/tools" },
+        { "@type": "ListItem", position: 3, name: "Calorie Counter", item: CC_URL },
+      ],
+    },
+  ],
+};
+
 export const Route = createFileRoute("/tools/calorie-counter")({
   head: () => ({
     meta: [
@@ -32,7 +70,10 @@ export const Route = createFileRoute("/tools/calorie-counter")({
         content:
           "Search 300,000+ foods and instantly see calories, protein, carbs, fat and fiber per portion.",
       },
+      { property: "og:url", content: CC_URL },
     ],
+    links: [{ rel: "canonical", href: CC_URL }],
+    scripts: [{ type: "application/ld+json", children: JSON.stringify(CC_JSONLD) }],
   }),
   component: CalorieCounterPage,
 });

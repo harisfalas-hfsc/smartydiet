@@ -9,13 +9,38 @@ import logoUrl from "@/assets/smartydiet-logo.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SmartyDiet — Your personalized nutrition plan in minutes" },
+      {
+        title:
+          "SmartyDiet — AI Nutrition Intelligence Platform | Your Pocket Dietitian & Diet Coach",
+      },
       {
         name: "description",
         content:
-          "Answer a smart questionnaire, get a fully personalized diet plan built around your body, goals, food preferences and constraints. Just $4.99, one time.",
+          "SmartyDiet is the AI Nutrition Intelligence Platform. Get a personalized Smarty Meal Plan™, Smarty Nutrition Score™ and Metabolic Age™, plus free BMR, TDEE, macro and calorie tools. $4.99 one-time.",
+      },
+      {
+        property: "og:title",
+        content:
+          "SmartyDiet — AI Nutrition Intelligence Platform | Your Pocket Dietitian & Diet Coach",
+      },
+      {
+        property: "og:description",
+        content:
+          "Personalized AI meal plans, Smarty Nutrition Score™, Metabolic Age™ and free nutrition tools.",
+      },
+      { property: "og:url", content: "https://smartydiet.com/" },
+      {
+        property: "og:image",
+        content:
+          "https://smartydiet.com/__l5e/assets-v1/d1e59921-5974-44b4-96d8-9bfbec15c871/smartydiet-social.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://smartydiet.com/__l5e/assets-v1/d1e59921-5974-44b4-96d8-9bfbec15c871/smartydiet-social.png",
       },
     ],
+    links: [{ rel: "canonical", href: "https://smartydiet.com/" }],
   }),
   component: Home,
 });

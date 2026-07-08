@@ -35,6 +35,12 @@ export function SiteFooter() {
             </Link>
             <span className="text-muted-foreground/40">·</span>
             <Link to="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>
+            <span className="text-muted-foreground/40">·</span>
+            <Link to="/nutrition-intelligence" className="hover:text-primary transition-colors">Nutrition Intelligence</Link>
+            <span className="text-muted-foreground/40">·</span>
+            <Link to="/glossary" className="hover:text-primary transition-colors">Glossary</Link>
+            <span className="text-muted-foreground/40">·</span>
+            <Link to="/research" className="hover:text-primary transition-colors">Research</Link>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground">
