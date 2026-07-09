@@ -488,7 +488,7 @@ function StepGoal({ data, upd }: StepProps) {
 function StepEating({ data, upd }: StepProps) {
   const isFasting = data.eating.dietStyle === "intermittent_fasting";
   const isOMAD = isFasting && data.eating.fasting?.window === "OMAD";
-  const minMeals = isOMAD ? 1 : 2;
+  const minMeals = 1;
 
   function toggleFood(kind: "likedFoods" | "dislikedFoods", food: string) {
     const cur = new Set(data.eating[kind]);
@@ -606,7 +606,7 @@ function StepEating({ data, upd }: StepProps) {
             value={data.eating.mealsPerDay}
             onChange={(e) =>
               upd("eating", {
-                mealsPerDay: Math.max(minMeals, Math.min(6, Number(e.target.value) || 3)),
+                mealsPerDay: Math.max(minMeals, Math.min(6, Number(e.target.value) || minMeals)),
               })
             }
           />
