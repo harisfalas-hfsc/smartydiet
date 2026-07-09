@@ -3,13 +3,9 @@ import { useEffect, useState } from "react";
 import {
   Sparkles,
   Utensils,
-  ClipboardList,
   Calculator,
   ShieldCheck,
   Target,
-  Leaf,
-  FileDown,
-  BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
