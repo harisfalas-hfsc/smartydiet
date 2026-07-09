@@ -158,12 +158,12 @@ function Home() {
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <SmartyCard
           tone="purple"
-          eyebrow="Assess"
-          eyebrowIcon="📊"
-          cornerIcon={Activity}
-          title="Smarty"
-          accent="Score"
-          description="Your Smarty Nutrition Score™ and Metabolic Age™ — a clear read on where your diet stands today and where it can go."
+          eyebrow="Safety First"
+          eyebrowIcon="🛡️"
+          cornerIcon={ShieldCheck}
+          title="Allergy-safe"
+          accent="by design."
+          description="Every allergen you list is excluded from your plan. The AI is instructed to never include something you can't eat."
         >
           <div className="space-y-3">
             <SmartyRow
@@ -181,19 +181,12 @@ function Home() {
             <SmartyRow
               tone="purple"
               icon={ShieldCheck}
-              title="Allergy-safe by design"
-              subtitle="Every allergen you list is excluded from your plan."
+              title="Respects your constraints"
+              subtitle="Cooking time, cuisines, budget and schedule."
             />
           </div>
-          <div className="mt-6">
-            <Link
-              to="/nutrition-intelligence"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-500"
-            >
-              Learn more about the science →
-            </Link>
-          </div>
         </SmartyCard>
+
 
         <SmartyCard
           tone="cyan"
