@@ -250,14 +250,14 @@ export function SmartyPill({ tone = "cyan", icon, children }: SmartyPillProps) {
   return (
     <div
       className={cn(
-        "grid grid-cols-[2rem_minmax(0,1fr)] items-center gap-4 rounded-xl border bg-card p-4",
+        "grid h-14 grid-cols-[2rem_minmax(0,1fr)] items-center gap-4 rounded-xl border bg-card px-4",
         t.softBorder,
       )}
     >
       <div className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg", t.softBg, t.text)}>
         {icon && <IconOrEmoji icon={icon} className="h-4 w-4 text-sm" />}
       </div>
-      <span className="text-sm font-medium leading-5 text-foreground">{children}</span>
+      <span className="truncate text-sm font-medium leading-5 text-foreground">{children}</span>
     </div>
   );
 }
