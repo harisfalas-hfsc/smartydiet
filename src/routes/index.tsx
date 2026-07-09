@@ -7,7 +7,6 @@ import {
   Calculator,
   ShieldCheck,
   Target,
-  Activity,
   Leaf,
   FileDown,
   BadgeCheck,
@@ -15,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import logoUrl from "@/assets/smartydiet-logo.png";
 import { SmartyCard, SmartyRow, SmartyPill } from "@/components/SmartyCard";
 
 export const Route = createFileRoute("/")({
@@ -23,23 +21,24 @@ export const Route = createFileRoute("/")({
     meta: [
       {
         title:
-          "SmartyDiet — AI Nutrition Intelligence Platform | Your Pocket Dietitian & Diet Coach",
+          "SmartyDiet — Personalized AI diet plans | Your pocket dietitian",
       },
       {
         name: "description",
         content:
-          "SmartyDiet is the AI Nutrition Intelligence Platform. Get a personalized Smarty Meal Plan™, Smarty Nutrition Score™ and Metabolic Age™, plus free BMR, TDEE, macro and calorie tools. $4.99 one-time.",
+          "SmartyDiet builds a personalized 1, 2 or 4-week meal plan tailored to your body, goals, allergies and food preferences. Includes free BMR, TDEE, macro and calorie tools. $4.99 one-time.",
       },
       {
         property: "og:title",
         content:
-          "SmartyDiet — AI Nutrition Intelligence Platform | Your Pocket Dietitian & Diet Coach",
+          "SmartyDiet — Personalized AI diet plans | Your pocket dietitian",
       },
       {
         property: "og:description",
         content:
-          "Personalized AI meal plans, Smarty Nutrition Score™, Metabolic Age™ and free nutrition tools.",
+          "Personalized AI meal plans with grocery list, macros and PDF export. Plus free BMR, TDEE, macro and calorie tools.",
       },
+
       { property: "og:url", content: "https://smartydiet.com/" },
       {
         property: "og:image",
@@ -124,20 +123,11 @@ function Home() {
           description="Your pocket dietitian, in-app."
           className="lg:col-span-2"
         >
-          <div className="mb-2 flex items-center gap-3">
-            <img
-              src={logoUrl}
-              alt="SmartyDiet"
-              width={56}
-              height={56}
-              className="h-14 w-14"
-            />
-            <p className="text-sm text-muted-foreground">
-              A full 1, 2 or 4-week diet plan tailored to your body, goals and food
-              preferences.
-            </p>
-          </div>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <p className="text-sm text-muted-foreground">
+            A full 1, 2 or 4-week diet plan tailored to your body, goals and food
+            preferences.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             {primary}
             <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
               <Link to="/how-it-works">How it works</Link>
@@ -150,28 +140,31 @@ function Home() {
           )}
         </SmartyCard>
 
+
         <SmartyCard
           tone="orange"
-          eyebrow="Best Experience"
+          eyebrow="How it works"
           eyebrowIcon="⚡"
-          title="SMARTY"
-          accent="DIET"
-          description="Answer a smart questionnaire and the Smarty Calorie Engine™ builds a plan tuned to your body, allergies, schedule and food preferences."
-          ctaLabel="Get started"
+          cornerIcon={Sparkles}
+          title="Answer."
+          accent="Cook. Eat."
+          description="Fill in a smart questionnaire, get your plan with meals, portions and macros — plus a grocery list ready to shop."
+          ctaLabel="See the steps"
           ctaTo="/how-it-works"
         />
+
       </div>
 
       {/* Second row: three feature cards */}
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <SmartyCard
           tone="purple"
-          eyebrow="Assess"
-          eyebrowIcon="📊"
-          cornerIcon={Activity}
-          title="Smarty"
-          accent="Score"
-          description="Your Smarty Nutrition Score™ and Metabolic Age™ — a clear read on where your diet stands today and where it can go."
+          eyebrow="Safety First"
+          eyebrowIcon="🛡️"
+          cornerIcon={ShieldCheck}
+          title="Allergy-safe"
+          accent="by design."
+          description="Every allergen you list is excluded from your plan. The AI is instructed to never include something you can't eat."
         >
           <div className="space-y-3">
             <SmartyRow
@@ -189,19 +182,12 @@ function Home() {
             <SmartyRow
               tone="purple"
               icon={ShieldCheck}
-              title="Allergy-safe by design"
-              subtitle="Every allergen you list is excluded from your plan."
+              title="Respects your constraints"
+              subtitle="Cooking time, cuisines, budget and schedule."
             />
           </div>
-          <div className="mt-6">
-            <Link
-              to="/nutrition-intelligence"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-500"
-            >
-              Learn more about the science →
-            </Link>
-          </div>
         </SmartyCard>
+
 
         <SmartyCard
           tone="cyan"

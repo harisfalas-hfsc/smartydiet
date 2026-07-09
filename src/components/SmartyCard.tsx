@@ -116,24 +116,37 @@ export function SmartyCard({
         className,
       )}
     >
-      {cornerIcon && (
-        <div className={cn("absolute right-5 top-5", t.text)}>
-          <IconOrEmoji icon={cornerIcon} className="h-6 w-6 text-2xl" />
+      {(eyebrow || cornerIcon) && (
+        <div className="flex items-start justify-between gap-3">
+          {eyebrow ? (
+            <div
+              className={cn(
+                "inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider",
+                t.softBorder,
+                t.text,
+              )}
+            >
+              {eyebrowIcon && <IconOrEmoji icon={eyebrowIcon} className="h-3.5 w-3.5" />}
+              {eyebrow}
+            </div>
+          ) : (
+            <span />
+          )}
+          {cornerIcon && (
+            <div
+              className={cn(
+                "grid h-9 w-9 flex-none place-items-center rounded-xl border",
+                t.softBorder,
+                t.softBg,
+                t.text,
+              )}
+            >
+              <IconOrEmoji icon={cornerIcon} className="h-4 w-4 text-lg" />
+            </div>
+          )}
         </div>
       )}
 
-      {eyebrow && (
-        <div
-          className={cn(
-            "inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider",
-            t.softBorder,
-            t.text,
-          )}
-        >
-          {eyebrowIcon && <IconOrEmoji icon={eyebrowIcon} className="h-3.5 w-3.5" />}
-          {eyebrow}
-        </div>
-      )}
 
       {title && (
         <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
