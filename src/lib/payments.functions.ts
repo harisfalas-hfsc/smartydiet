@@ -92,7 +92,7 @@ export const createDietCheckout = createServerFn({ method: "POST" })
         return_url: data.returnUrl,
         customer: customerId,
         payment_intent_data: { description: product.name },
-        metadata: { userId, generationSessionId: session.id },
+        metadata: { userId, generationSessionId: session.id, questionnaireId: data.questionnaireId },
       });
 
       // Store stripe session id
@@ -128,11 +128,14 @@ export const markSessionPaid = createServerFn({ method: "POST" })
         })
         .eq("id", genSessionId)
         .eq("user_id", userId);
-      await supabase
-        .from("questionnaires")
-        .update({ status: "paid" })
-        .eq("id", cs.metadata?.questionnaireId ?? "")
-        .eq("user_id", userId);
+      const questionnaireId = cs.metadata?.questionnaireId;
+      if (questionnaireId) {
+        await supabase
+          .from("questionnaires")
+          .update({ status: "paid" })
+          .eq("id", questionnaireId)
+          .eq("user_id", userId);
+      }
       return { paid: true, generationSessionId: genSessionId };
     } catch (err) {
       return { paid: false, error: getStripeErrorMessage(err) };
