@@ -79,6 +79,16 @@ export function Navigation() {
           >
             <Menu className="h-5 w-5" />
           </button>
+          {canGoBack && (
+            <button
+              type="button"
+              onClick={() => router.history.back()}
+              aria-label="Go back"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-primary text-primary hover:bg-primary/10"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
           <Link
             to="/"
             aria-label="SmartyDiet home"
