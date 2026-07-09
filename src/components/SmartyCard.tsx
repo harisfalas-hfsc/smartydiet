@@ -108,26 +108,29 @@ export function SmartyCard({
   className,
 }: SmartyCardProps) {
   const t = TONE[tone];
+  const hasHeader = Boolean(eyebrow || cornerIcon);
   return (
     <div
       className={cn(
-        "relative flex flex-col rounded-3xl border-2 bg-card p-6 shadow-soft sm:p-8",
+        "relative flex flex-col overflow-hidden rounded-3xl border-2 bg-card p-6 shadow-soft sm:p-8",
         t.border,
         className,
       )}
     >
-      {(eyebrow || cornerIcon) && (
-        <div className="flex items-start justify-between gap-3">
+      {hasHeader && (
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-6 gap-y-4">
           {eyebrow ? (
             <div
               className={cn(
-                "inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider",
+                "inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider",
                 t.softBorder,
                 t.text,
               )}
             >
-              {eyebrowIcon && <IconOrEmoji icon={eyebrowIcon} className="h-3.5 w-3.5" />}
-              {eyebrow}
+              {eyebrowIcon && (
+                <IconOrEmoji icon={eyebrowIcon} className="h-3.5 w-3.5 shrink-0" />
+              )}
+              <span className="min-w-0 truncate">{eyebrow}</span>
             </div>
           ) : (
             <span />
@@ -135,31 +138,35 @@ export function SmartyCard({
           {cornerIcon && (
             <div
               className={cn(
-                "grid h-9 w-9 flex-none place-items-center rounded-xl border",
+                "grid h-11 w-11 shrink-0 place-items-center rounded-2xl border",
                 t.softBorder,
                 t.softBg,
                 t.text,
               )}
             >
-              <IconOrEmoji icon={cornerIcon} className="h-4 w-4 text-lg" />
+              <IconOrEmoji icon={cornerIcon} className="h-5 w-5 text-lg" />
             </div>
           )}
         </div>
       )}
 
-
       {title && (
-        <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+        <h2
+          className={cn(
+            "text-2xl font-extrabold leading-tight tracking-tight text-foreground sm:text-3xl",
+            hasHeader ? "mt-7" : "mt-0",
+          )}
+        >
           {title}
           {accent && <span className={cn(" ", t.text)}> {accent}</span>}
         </h2>
       )}
 
       {description && (
-        <p className="mt-3 text-sm text-muted-foreground sm:text-base">{description}</p>
+        <p className="mt-4 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">{description}</p>
       )}
 
-      {children && <div className="mt-5">{children}</div>}
+      {children && <div className="mt-6">{children}</div>}
 
       {ctaLabel && (ctaTo || ctaHref) && (
         <div className="mt-6">
