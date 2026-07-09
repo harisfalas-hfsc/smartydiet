@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { BadgeCheck, Sparkles, HandCoins } from "lucide-react";
-import { SmartyCard, SmartyPill, SmartyRow } from "@/components/SmartyCard";
+import { HandCoins } from "lucide-react";
+import { SmartyCard, SmartyPill, toneClasses } from "@/components/SmartyCard";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -33,7 +34,14 @@ const INCLUDES: { icon: string; label: string }[] = [
   { icon: "☁️", label: "Saved to your account" },
 ];
 
+const FREE_TOOLS: { icon: string; label: string }[] = [
+  { icon: "🔥", label: "BMR Calculator" },
+  { icon: "🥧", label: "Macro Calculator" },
+  { icon: "🍎", label: "Calorie Counter" },
+];
+
 function PricingPage() {
+  const t = toneClasses("pink");
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       <div className="mb-8 text-center">
@@ -48,74 +56,71 @@ function PricingPage() {
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <SmartyCard
-          tone="pink"
-          eyebrow="One-time payment"
-          eyebrowIcon="💳"
-          cornerIcon={HandCoins}
-          title="$4.99"
-          accent="once."
-          description="One personalized plan. Yours to keep."
-          className="lg:col-span-2"
-        >
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {INCLUDES.map((it) => (
-              <SmartyPill tone="pink" key={it.label} icon={it.icon}>
-                {it.label}
-              </SmartyPill>
-            ))}
+      <SmartyCard
+        tone="pink"
+        eyebrow="One-time payment"
+        eyebrowIcon="💳"
+        cornerIcon={HandCoins}
+        title="$4.99"
+        accent="once."
+        description="One personalized plan. Yours to keep. No subscription, no hidden add-ons, no monthly fee."
+      >
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div
+            className={cn(
+              "rounded-2xl border p-4",
+              t.softBorder,
+              t.softBg,
+            )}
+          >
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground">
+              Your plan includes
+            </h3>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {INCLUDES.map((it) => (
+                <SmartyPill tone="pink" key={it.label} icon={it.icon}>
+                  {it.label}
+                </SmartyPill>
+              ))}
+            </div>
           </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg">
-              <Link to="/questionnaire">Create my diet plan — $4.99</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/how-it-works">How it works</Link>
-            </Button>
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Not medical advice. Consult a professional for medical conditions.
-          </p>
-        </SmartyCard>
 
-        <SmartyCard
-          className="hidden md:flex"
-          tone="green"
-          eyebrow="What's included"
-          eyebrowIcon="✅"
-          cornerIcon={BadgeCheck}
-          title="Everything"
-          accent="in one price."
-          description="No hidden add-ons. No upsell. No monthly fee."
-        >
-          <div className="space-y-3">
-            <SmartyRow tone="green" icon="🧠" title="Smart questionnaire" subtitle="8 short steps." />
-            <SmartyRow tone="green" icon="⚙️" title="Smarty Calorie Engine™" subtitle="Personalized targets." />
-            <SmartyRow tone="green" icon="🍽️" title="Full meal plan" subtitle="Portions + macros." />
-            <SmartyRow tone="green" icon="🛒" title="Grocery list" subtitle="Sorted by category." />
+          <div
+            className={cn(
+              "rounded-2xl border p-4",
+              t.softBorder,
+              t.softBg,
+            )}
+          >
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground">
+              Free tools
+            </h3>
+            <div className="grid gap-2">
+              {FREE_TOOLS.map((it) => (
+                <SmartyPill tone="pink" key={it.label} icon={it.icon}>
+                  {it.label}
+                </SmartyPill>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Use BMR, TDEE, macro and calorie counter — no account required.
+            </p>
           </div>
-        </SmartyCard>
+        </div>
 
-        <SmartyCard
-          tone="cyan"
-          eyebrow="Free tools"
-          eyebrowIcon="🧮"
-          cornerIcon={Sparkles}
-          title="Bonus:"
-          accent="free calculators."
-          description="Use our BMR, TDEE, macro and calorie counter — no account required."
-          ctaLabel="Open free tools"
-          ctaTo="/tools"
-          className="hidden lg:col-span-3 md:flex"
-        >
-          <div className="grid gap-3 sm:grid-cols-3">
-            <SmartyPill tone="cyan" icon="🔥">BMR Calculator</SmartyPill>
-            <SmartyPill tone="cyan" icon="🥧">Macro Calculator</SmartyPill>
-            <SmartyPill tone="cyan" icon="🍎">Calorie Counter</SmartyPill>
-          </div>
-        </SmartyCard>
-      </div>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <Button asChild size="lg">
+            <Link to="/questionnaire">Create my diet plan — $4.99</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link to="/how-it-works">How it works</Link>
+          </Button>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Not medical advice. Consult a professional for medical conditions.
+        </p>
+      </SmartyCard>
     </div>
   );
 }
+
