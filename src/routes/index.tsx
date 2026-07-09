@@ -142,6 +142,7 @@ function Home() {
 
 
         <SmartyCard
+          className="hidden md:flex"
           tone="orange"
           eyebrow="How it works"
           eyebrowIcon="⚡"
