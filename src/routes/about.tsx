@@ -75,6 +75,7 @@ function AboutPage() {
         </SmartyCard>
 
         <SmartyCard
+          className="hidden md:flex"
           tone="purple"
           eyebrow="Our approach"
           eyebrowIcon="🧠"
