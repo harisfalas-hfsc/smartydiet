@@ -67,7 +67,7 @@ function ToolsPage() {
           ctaLabel="Open macro calculator"
           ctaTo="/tools/macro-calculator"
         >
-          <div className="space-y-3">
+          <div className="hidden space-y-3 md:block">
             <SmartyRow tone="purple" icon="🎯" title="Goal-aware" subtitle="Lose, maintain, recomp or gain." />
             <SmartyRow tone="purple" icon="💧" title="Hydration & fiber" subtitle="Complete daily targets." />
           </div>
