@@ -164,7 +164,7 @@ function HowItWorks() {
       </div>
 
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {STEPS.map((s) => (
+        {STEPS.map((s, i) => (
           <SmartyCard
             key={s.n}
             tone={s.tone}
@@ -174,6 +174,7 @@ function HowItWorks() {
             title={s.title}
             accent={s.accent}
             description={s.body}
+            className={i === 0 ? "" : "hidden md:flex"}
           >
             <div className="space-y-3">
               {s.rows.map((r) => (

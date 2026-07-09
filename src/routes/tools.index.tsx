@@ -50,7 +50,7 @@ function ToolsPage() {
           ctaLabel="Open BMR calculator"
           ctaTo="/tools/bmr-calculator"
         >
-          <div className="space-y-3">
+          <div className="hidden space-y-3 md:block">
             <SmartyRow tone="orange" icon="🧬" title="Mifflin-St Jeor equation" subtitle="The standard for BMR estimates." />
             <SmartyRow tone="orange" icon="🏃" title="Activity levels" subtitle="Sedentary → very active." />
           </div>
@@ -67,7 +67,7 @@ function ToolsPage() {
           ctaLabel="Open macro calculator"
           ctaTo="/tools/macro-calculator"
         >
-          <div className="space-y-3">
+          <div className="hidden space-y-3 md:block">
             <SmartyRow tone="purple" icon="🎯" title="Goal-aware" subtitle="Lose, maintain, recomp or gain." />
             <SmartyRow tone="purple" icon="💧" title="Hydration & fiber" subtitle="Complete daily targets." />
           </div>
@@ -84,7 +84,7 @@ function ToolsPage() {
           ctaLabel="Open calorie counter"
           ctaTo="/tools/calorie-counter"
         >
-          <div className="space-y-3">
+          <div className="hidden space-y-3 md:block">
             <SmartyRow tone="green" icon="🔎" title="USDA-powered" subtitle="Standardized food data." />
             <SmartyRow tone="green" icon="⚖️" title="Any portion size" subtitle="Grams, ounces, servings." />
           </div>

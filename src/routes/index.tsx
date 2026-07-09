@@ -120,7 +120,7 @@ function Home() {
           cornerIcon={Sparkles}
           title="Know What You Eat."
           accent="Eat Smarter."
-          description="Your pocket dietitian, in-app."
+          description="Smart diet plans, built around you."
           className="lg:col-span-2"
         >
           <p className="text-sm text-muted-foreground">
@@ -142,6 +142,7 @@ function Home() {
 
 
         <SmartyCard
+          className="hidden md:flex"
           tone="orange"
           eyebrow="How it works"
           eyebrowIcon="⚡"
@@ -156,7 +157,7 @@ function Home() {
       </div>
 
       {/* Second row: three feature cards */}
-      <div className="mt-8 grid gap-8 lg:grid-cols-3">
+      <div className="mt-8 hidden gap-8 md:grid lg:grid-cols-3">
         <SmartyCard
           tone="purple"
           eyebrow="Safety First"
@@ -256,7 +257,7 @@ function Home() {
 
       {/* Pricing / includes — hide when has active */}
       {cta.kind !== "has-active" && (
-        <div className="mt-8 grid gap-8 lg:grid-cols-2">
+        <div className="mt-8 hidden gap-8 md:grid lg:grid-cols-2">
           <SmartyCard
             tone="pink"
             eyebrow="One-time payment"

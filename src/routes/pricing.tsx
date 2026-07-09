@@ -80,6 +80,7 @@ function PricingPage() {
         </SmartyCard>
 
         <SmartyCard
+          className="hidden md:flex"
           tone="green"
           eyebrow="What's included"
           eyebrowIcon="✅"
@@ -106,7 +107,7 @@ function PricingPage() {
           description="Use our BMR, TDEE, macro and calorie counter — no account required."
           ctaLabel="Open free tools"
           ctaTo="/tools"
-          className="lg:col-span-3"
+          className="hidden lg:col-span-3 md:flex"
         >
           <div className="grid gap-3 sm:grid-cols-3">
             <SmartyPill tone="cyan" icon="🔥">BMR Calculator</SmartyPill>
