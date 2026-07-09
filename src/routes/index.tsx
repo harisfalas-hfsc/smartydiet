@@ -157,7 +157,7 @@ function Home() {
       </div>
 
       {/* Second row: three feature cards */}
-      <div className="mt-8 grid gap-8 lg:grid-cols-3">
+      <div className="mt-8 hidden gap-8 md:grid lg:grid-cols-3">
         <SmartyCard
           tone="purple"
           eyebrow="Safety First"
