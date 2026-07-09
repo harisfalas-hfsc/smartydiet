@@ -114,11 +114,10 @@ function Home() {
     if (cta.kind === "has-active")
       return (
         <Button asChild size="lg" className="w-full sm:w-auto">
-          <Link to="/plans/$sessionId" params={{ sessionId: cta.sessionId }}>
-            View my diet plan
-          </Link>
+          <Link to="/plans">View my diet plans</Link>
         </Button>
       );
+
     return (
       <Button asChild size="lg" className="w-full sm:w-auto">
         <Link to="/questionnaire">Get started</Link>
