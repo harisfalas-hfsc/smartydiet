@@ -121,7 +121,7 @@ function FAQ() {
           The answers we get most often. Still unsure? Reach out via the footer.
         </p>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {ITEMS.map((it, i) => (
           <SmartyCard
             key={i}
