@@ -112,7 +112,7 @@ function Home() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       {/* Top row: hero + best experience + score */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-8 lg:grid-cols-3">
         <SmartyCard
           tone="green"
           eyebrow="Nutrition Diagnostic"
@@ -156,7 +156,7 @@ function Home() {
       </div>
 
       {/* Second row: three feature cards */}
-      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+      <div className="mt-8 grid gap-8 lg:grid-cols-3">
         <SmartyCard
           tone="purple"
           eyebrow="Safety First"
@@ -256,7 +256,7 @@ function Home() {
 
       {/* Pricing / includes — hide when has active */}
       {cta.kind !== "has-active" && (
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <div className="mt-8 grid gap-8 lg:grid-cols-2">
           <SmartyCard
             tone="pink"
             eyebrow="One-time payment"

@@ -94,7 +94,7 @@ function PlansList() {
         </SmartyCard>
       ) : (
         <>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {rows.map((r, i) => {
               const active = (r.credits_used ?? 0) < (r.credits_total ?? 0);
               const tone = active ? "green" : TONES[i % TONES.length];

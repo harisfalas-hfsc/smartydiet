@@ -102,12 +102,12 @@ export const Route = createFileRoute("/faq")({
   component: FAQ,
 });
 
+import { CircleHelp } from "lucide-react";
 import { SmartyCard } from "@/components/SmartyCard";
 
 const TONES: Array<
   "cyan" | "green" | "orange" | "purple" | "yellow" | "pink" | "blue"
 > = ["cyan", "green", "orange", "purple", "yellow", "pink", "blue"];
-const EMOJIS = ["💡", "🧠", "📊", "⚙️", "🍽️", "🩺", "🤖", "📐", "🔁", "💳", "🩹", "⚠️", "↩️", "🔒"];
 
 function FAQ() {
   return (
@@ -121,16 +121,17 @@ function FAQ() {
           The answers we get most often. Still unsure? Reach out via the footer.
         </p>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {ITEMS.map((it, i) => (
           <SmartyCard
             key={i}
             tone={TONES[i % TONES.length]}
             eyebrow={`Q${String(i + 1).padStart(2, "0")}`}
-            eyebrowIcon={EMOJIS[i % EMOJIS.length]}
+            eyebrowIcon="?"
+            cornerIcon={CircleHelp}
             title={it.q}
           >
-            <p className="text-sm text-muted-foreground">{it.a}</p>
+            <p className="text-sm leading-6 text-muted-foreground">{it.a}</p>
           </SmartyCard>
         ))}
       </div>

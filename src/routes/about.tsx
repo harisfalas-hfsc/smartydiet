@@ -39,7 +39,7 @@ function AboutPage() {
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-8 lg:grid-cols-3">
         <SmartyCard
           tone="green"
           eyebrow="Our mission"
