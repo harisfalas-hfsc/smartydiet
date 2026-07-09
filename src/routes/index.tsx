@@ -120,7 +120,7 @@ function Home() {
           cornerIcon={Sparkles}
           title="Know What You Eat."
           accent="Eat Smarter."
-          description="Your pocket dietitian, in-app."
+          description="Smart diet plans, built around you."
           className="lg:col-span-2"
         >
           <p className="text-sm text-muted-foreground">
