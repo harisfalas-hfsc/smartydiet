@@ -1,10 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+
 
 const URL = "https://smartydiet.com/faq";
 const TITLE =
