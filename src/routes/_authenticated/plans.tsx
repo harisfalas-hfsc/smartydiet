@@ -143,10 +143,10 @@ function PlansList() {
                 cornerIcon={Sparkles}
                 title="Want a"
                 accent="new plan?"
-                description="You've used all refinements on your current plans. Create a brand new personalized diet plan for $4.99."
+                description="You've used all refinements on your current plans. Create a brand new personalized diet plan for €9.99."
               >
                 <Button asChild size="lg">
-                  <Link to="/questionnaire">Create a new diet plan — $4.99</Link>
+                  <Link to="/questionnaire">Create a new diet plan — €9.99</Link>
                 </Button>
               </SmartyCard>
             </div>

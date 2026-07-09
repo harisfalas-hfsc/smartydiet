@@ -30,7 +30,7 @@ const ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "How is SmartyDiet different from a human dietitian?",
-    a: "A human dietitian can diagnose and treat medical conditions; SmartyDiet cannot. What SmartyDiet does do is package the assessment, calculation and planning work of a dietitian into an always-available AI, at a one-time price of $4.99 instead of a per-session fee.",
+    a: "A human dietitian can diagnose and treat medical conditions; SmartyDiet cannot. What SmartyDiet does do is package the assessment, calculation and planning work of a dietitian into an always-available AI, at a one-time price of €9.99 instead of a per-session fee.",
   },
   {
     q: "How does the AI meal planner work?",
@@ -47,7 +47,7 @@ const ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "How much does it cost?",
-    a: "$4.99 as a one-time payment. That includes your initial personalized plan and 2 refinement credits (3 AI generations in total). There is no subscription.",
+    a: "€9.99 as a one-time payment. That includes your initial personalized plan and 2 refinement credits (3 AI generations in total). There is no subscription.",
   },
   {
     q: "Is SmartyDiet medical advice?",

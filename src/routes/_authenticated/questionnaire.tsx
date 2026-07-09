@@ -121,7 +121,7 @@ function QuestionnairePage() {
           </p>
           <h1 className="text-2xl font-bold">{STEP_LABELS[step]}</h1>
         </div>
-        <p className="text-sm text-muted-foreground">$4.99 at checkout</p>
+        <p className="text-sm text-muted-foreground">€9.99 at checkout</p>
       </div>
       <Progress value={progress} className="mb-6" />
 

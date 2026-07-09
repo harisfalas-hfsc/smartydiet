@@ -100,7 +100,7 @@ function Terms() {
       <ul>
         <li>
           SmartyDiet operates on a <strong>pay-per-plan</strong> model. There is no subscription and
-          no recurring billing. Each plan is purchased as a one-time payment (currently $4.99 per
+          no recurring billing. Each plan is purchased as a one-time payment (currently €9.99 per
           plan).
         </li>
         <li>

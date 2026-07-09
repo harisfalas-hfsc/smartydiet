@@ -53,7 +53,7 @@ function AboutPage() {
         cornerIcon={Compass}
         title="Nutrition made"
         accent="personal."
-        description="We package the assessment, calculation and planning work of a dietitian into an always-available AI — accessible for one $4.99 payment."
+        description="We package the assessment, calculation and planning work of a dietitian into an always-available AI — accessible for one €9.99 payment."
       >
         <div className="grid gap-6 lg:grid-cols-2">
           <div className={cn("rounded-2xl border p-4", t.softBorder, t.softBg)}>
