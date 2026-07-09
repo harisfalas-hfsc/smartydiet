@@ -124,20 +124,11 @@ function Home() {
           description="Your pocket dietitian, in-app."
           className="lg:col-span-2"
         >
-          <div className="mb-2 flex items-center gap-3">
-            <img
-              src={logoUrl}
-              alt="SmartyDiet"
-              width={56}
-              height={56}
-              className="h-14 w-14"
-            />
-            <p className="text-sm text-muted-foreground">
-              A full 1, 2 or 4-week diet plan tailored to your body, goals and food
-              preferences.
-            </p>
-          </div>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <p className="text-sm text-muted-foreground">
+            A full 1, 2 or 4-week diet plan tailored to your body, goals and food
+            preferences.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             {primary}
             <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
               <Link to="/how-it-works">How it works</Link>
@@ -149,6 +140,7 @@ function Home() {
             </p>
           )}
         </SmartyCard>
+
 
         <SmartyCard
           tone="orange"
