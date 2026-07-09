@@ -33,7 +33,17 @@ import logoUrl from "@/assets/smartydiet-logo.png";
 export function Navigation() {
   const { user, displayName, loading } = useAuth();
   const navigate = useNavigate();
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [navCount, setNavCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const unsub = router.subscribe("onResolved", () => {
+      setNavCount((n) => n + 1);
+    });
+    return unsub;
+  }, [router]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -43,6 +53,8 @@ export function Navigation() {
       document.body.style.overflow = prev;
     };
   }, [menuOpen]);
+
+  const canGoBack = navCount > 0 && pathname !== "/";
 
   async function handleSignOut() {
     await supabase.auth.signOut();
