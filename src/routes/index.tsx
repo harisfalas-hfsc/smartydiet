@@ -146,11 +146,11 @@ function Home() {
           eyebrowIcon="⚡"
           cornerIcon={Sparkles}
           title={
-            <>
+            <span className="block whitespace-nowrap text-[clamp(1.25rem,2vw,1.75rem)] leading-none">
               <span className="text-sky-500">Answer.</span>{" "}
               <span className="text-emerald-500">Cook.</span>{" "}
               <span className="text-amber-500">Eat.</span>
-            </>
+            </span>
           }
           description="Fill in a smart questionnaire, get your plan with meals, portions and macros — plus a grocery list ready to shop."
           ctaLabel="See the steps"
