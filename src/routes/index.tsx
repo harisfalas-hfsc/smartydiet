@@ -199,10 +199,10 @@ function Home() {
           description="A full personalized plan with daily meals, portions, calories & macros — plus a weekly grocery list."
         >
           <div className="space-y-2">
-            <SmartyPill tone="cyan" icon="🥑">Breakfast, lunch, dinner & snacks</SmartyPill>
+            <SmartyPill tone="cyan" icon="🥑">Meals & snacks daily</SmartyPill>
             <SmartyPill tone="cyan" icon="🛒">Weekly grocery list</SmartyPill>
             <SmartyPill tone="cyan" icon="✏️">2 refinements included</SmartyPill>
-            <SmartyPill tone="cyan" icon="📄">PDF export + printable list</SmartyPill>
+            <SmartyPill tone="cyan" icon="📄">PDF export + printable</SmartyPill>
           </div>
           <div className="mt-6">
             <Link
