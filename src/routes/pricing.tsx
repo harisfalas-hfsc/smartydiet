@@ -80,6 +80,7 @@ function PricingPage() {
         </SmartyCard>
 
         <SmartyCard
+          className="hidden md:flex"
           tone="green"
           eyebrow="What's included"
           eyebrowIcon="✅"
