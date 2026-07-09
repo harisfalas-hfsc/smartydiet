@@ -105,7 +105,12 @@ function Home() {
   }, [user, loading]);
 
   const primary = (() => {
-    if (cta.kind === "loading") return null;
+    if (cta.kind === "loading")
+      return (
+        <Button size="lg" disabled className="w-full sm:w-auto">
+          Get started
+        </Button>
+      );
     if (cta.kind === "has-active")
       return (
         <Button asChild size="lg" className="w-full sm:w-auto">
@@ -120,6 +125,7 @@ function Home() {
       </Button>
     );
   })();
+
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col px-4 py-8 sm:py-12">
