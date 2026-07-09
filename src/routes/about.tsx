@@ -59,6 +59,7 @@ function AboutPage() {
         </SmartyCard>
 
         <SmartyCard
+          className="hidden md:flex"
           tone="orange"
           eyebrow="Smarty family"
           eyebrowIcon="✨"
