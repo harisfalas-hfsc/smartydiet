@@ -50,7 +50,7 @@ function ToolsPage() {
           ctaLabel="Open BMR calculator"
           ctaTo="/tools/bmr-calculator"
         >
-          <div className="space-y-3">
+          <div className="hidden space-y-3 md:block">
             <SmartyRow tone="orange" icon="🧬" title="Mifflin-St Jeor equation" subtitle="The standard for BMR estimates." />
             <SmartyRow tone="orange" icon="🏃" title="Activity levels" subtitle="Sedentary → very active." />
           </div>
