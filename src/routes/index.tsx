@@ -118,8 +118,7 @@ function Home() {
           eyebrow="Nutrition Diagnostic"
           eyebrowIcon="🥗"
           cornerIcon={Sparkles}
-          title="Know What You Eat."
-          accent="Eat Smarter."
+          title="Your personal nutrition plan, built in minutes."
           description="Smart diet plans, built around you."
           className="lg:col-span-2"
         >
@@ -140,15 +139,19 @@ function Home() {
           )}
         </SmartyCard>
 
-
         <SmartyCard
           className="hidden md:flex"
           tone="orange"
           eyebrow="How it works"
           eyebrowIcon="⚡"
           cornerIcon={Sparkles}
-          title="Answer."
-          accent="Cook. Eat."
+          title={
+            <>
+              <span className="text-sky-500">Answer.</span>{" "}
+              <span className="text-emerald-500">Cook.</span>{" "}
+              <span className="text-amber-500">Eat.</span>
+            </>
+          }
           description="Fill in a smart questionnaire, get your plan with meals, portions and macros — plus a grocery list ready to shop."
           ctaLabel="See the steps"
           ctaTo="/how-it-works"
