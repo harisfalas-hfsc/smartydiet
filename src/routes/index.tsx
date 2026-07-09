@@ -16,7 +16,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Answer a smart questionnaire, get a fully personalized diet plan built around your body, goals, food preferences and constraints. Just $4.99, one time.",
+          "Answer a smart questionnaire, get a fully personalized diet plan built around your body, goals, food preferences and constraints. Just €9.99, one time.",
       },
       {
         property: "og:title",
@@ -145,7 +145,7 @@ function Home() {
           <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
             Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan
             tailored to your body, goals, food preferences and constraints.
-            $4.99 — one-time payment.
+            €9.99 — one-time payment.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             {primary}
@@ -215,7 +215,7 @@ function Home() {
               One-time payment
             </p>
             <p className="mt-2 text-5xl font-extrabold tracking-tight">
-              $4.99
+              €9.99
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               One personalized plan. Yours to keep.

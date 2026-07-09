@@ -35,7 +35,7 @@ const STEPS = [
     n: 2,
     color: "text-orange-500",
     title: "Pay once",
-    desc: "$4.99. No subscription.",
+    desc: "€9.99. No subscription.",
   },
   {
     n: 3,
@@ -88,7 +88,7 @@ function HowItWorks() {
 
       <div className="mt-8 flex justify-center">
         <Button asChild size="lg">
-          <Link to="/questionnaire">Start my plan — $4.99</Link>
+          <Link to="/questionnaire">Start my plan — €9.99</Link>
         </Button>
       </div>
     </div>
