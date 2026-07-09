@@ -143,14 +143,16 @@ function Home() {
 
         <SmartyCard
           tone="orange"
-          eyebrow="Best Experience"
+          eyebrow="How it works"
           eyebrowIcon="⚡"
-          title="SMARTY"
-          accent="DIET"
-          description="Answer a smart questionnaire and the Smarty Calorie Engine™ builds a plan tuned to your body, allergies, schedule and food preferences."
-          ctaLabel="Get started"
+          cornerIcon={Sparkles}
+          title="Answer."
+          accent="Cook. Eat."
+          description="Fill in a smart questionnaire, get your plan with meals, portions and macros — plus a grocery list ready to shop."
+          ctaLabel="See the steps"
           ctaTo="/how-it-works"
         />
+
       </div>
 
       {/* Second row: three feature cards */}
