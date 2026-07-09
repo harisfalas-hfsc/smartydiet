@@ -99,7 +99,7 @@ function AboutPage() {
           title="What we"
           accent="stand for."
           description="Four commitments we don't compromise on."
-          className="lg:col-span-2"
+          className="hidden lg:col-span-2 md:flex"
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <SmartyRow tone="cyan" icon="🎯" title="Personalization first" subtitle="Plans built around your body and preferences." />
