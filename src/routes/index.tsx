@@ -257,6 +257,6 @@ function Home() {
           </div>
         </SmartyCard>
       </div>
-
+    </div>
   );
 }
