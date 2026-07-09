@@ -257,7 +257,7 @@ function Home() {
 
       {/* Pricing / includes — hide when has active */}
       {cta.kind !== "has-active" && (
-        <div className="mt-8 grid gap-8 lg:grid-cols-2">
+        <div className="mt-8 hidden gap-8 md:grid lg:grid-cols-2">
           <SmartyCard
             tone="pink"
             eyebrow="One-time payment"
