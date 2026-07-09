@@ -84,7 +84,7 @@ function ToolsPage() {
           ctaLabel="Open calorie counter"
           ctaTo="/tools/calorie-counter"
         >
-          <div className="space-y-3">
+          <div className="hidden space-y-3 md:block">
             <SmartyRow tone="green" icon="🔎" title="USDA-powered" subtitle="Standardized food data." />
             <SmartyRow tone="green" icon="⚖️" title="Any portion size" subtitle="Grams, ounces, servings." />
           </div>
