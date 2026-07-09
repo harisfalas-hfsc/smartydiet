@@ -412,10 +412,11 @@ export const generatePlan = createServerFn({ method: "POST" })
         .limit(1)
         .maybeSingle();
       if (existingPlan?.plan) {
+        const savedPlan = existingPlan.plan as any;
         return {
-          plan: existingPlan.plan,
-          rationale: existingPlan.rationale ?? existingPlan.plan?.rationale,
-          warnings: existingPlan.plan?._warnings ?? [],
+          plan: savedPlan,
+          rationale: existingPlan.rationale ?? savedPlan?.rationale,
+          warnings: savedPlan?._warnings ?? [],
         };
       }
     }
