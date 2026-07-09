@@ -7,7 +7,6 @@ import {
   Calculator,
   ShieldCheck,
   Target,
-  Activity,
   Leaf,
   FileDown,
   BadgeCheck,
@@ -15,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import logoUrl from "@/assets/smartydiet-logo.png";
 import { SmartyCard, SmartyRow, SmartyPill } from "@/components/SmartyCard";
 
 export const Route = createFileRoute("/")({
@@ -23,23 +21,24 @@ export const Route = createFileRoute("/")({
     meta: [
       {
         title:
-          "SmartyDiet — AI Nutrition Intelligence Platform | Your Pocket Dietitian & Diet Coach",
+          "SmartyDiet — Personalized AI diet plans | Your pocket dietitian",
       },
       {
         name: "description",
         content:
-          "SmartyDiet is the AI Nutrition Intelligence Platform. Get a personalized Smarty Meal Plan™, Smarty Nutrition Score™ and Metabolic Age™, plus free BMR, TDEE, macro and calorie tools. $4.99 one-time.",
+          "SmartyDiet builds a personalized 1, 2 or 4-week meal plan tailored to your body, goals, allergies and food preferences. Includes free BMR, TDEE, macro and calorie tools. $4.99 one-time.",
       },
       {
         property: "og:title",
         content:
-          "SmartyDiet — AI Nutrition Intelligence Platform | Your Pocket Dietitian & Diet Coach",
+          "SmartyDiet — Personalized AI diet plans | Your pocket dietitian",
       },
       {
         property: "og:description",
         content:
-          "Personalized AI meal plans, Smarty Nutrition Score™, Metabolic Age™ and free nutrition tools.",
+          "Personalized AI meal plans with grocery list, macros and PDF export. Plus free BMR, TDEE, macro and calorie tools.",
       },
+
       { property: "og:url", content: "https://smartydiet.com/" },
       {
         property: "og:image",
