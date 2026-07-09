@@ -63,8 +63,8 @@ function AboutPage() {
           eyebrow="Smarty family"
           eyebrowIcon="✨"
           cornerIcon={Users}
-          title="One family."
-          accent="Many tools."
+          title="Smarty"
+          accent="family."
           description="SmartyDiet is part of a growing ecosystem of Smarty products focused on health, fitness and smart everyday tools — designed to work together."
         >
           <div className="space-y-3">
