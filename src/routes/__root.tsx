@@ -189,8 +189,8 @@ const JSONLD_GRAPH = {
       keywords: KEYWORDS,
       offers: {
         "@type": "Offer",
-        price: "4.99",
-        priceCurrency: "USD",
+        price: "9.99",
+        priceCurrency: "EUR",
         availability: "https://schema.org/InStock",
       },
     },
