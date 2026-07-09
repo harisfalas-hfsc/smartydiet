@@ -40,7 +40,7 @@ function Auth() {
 
   const goNext = () => {
     if (next) window.location.href = next;
-    else navigate({ to: "/questionnaire", replace: true });
+    else navigate({ to: "/", replace: true });
   };
 
   useEffect(() => {

@@ -401,6 +401,26 @@ export const generatePlan = createServerFn({ method: "POST" })
       .single();
     if (sErr || !session) return { error: "Session not found" };
     if (session.status !== "paid") return { error: "Session not paid yet" };
+
+    if (!data.refinement) {
+      const { data: existingPlan } = await supabase
+        .from("diet_plans")
+        .select("plan,rationale")
+        .eq("session_id", session.id)
+        .eq("user_id", userId)
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (existingPlan?.plan) {
+        const savedPlan = existingPlan.plan as any;
+        return {
+          plan: savedPlan,
+          rationale: existingPlan.rationale ?? savedPlan?.rationale,
+          warnings: savedPlan?._warnings ?? [],
+        };
+      }
+    }
+
     if ((session.credits_used ?? 0) >= (session.credits_total ?? 3))
       return { error: "No credits remaining" };
 

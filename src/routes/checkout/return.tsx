@@ -45,14 +45,20 @@ function Return() {
           setMessage("We could not confirm your payment yet. Please contact support.");
           return;
         }
-        // Navigate to the plan page immediately — it self-heals by generating
-        // the plan if it doesn't exist yet. This avoids losing paid sessions
-        // when the AI call is slow or the browser tab loses focus.
+        setMessage("Payment confirmed. Building your plan… this can take up to 2 minutes.");
+        const planRes = await generate({ data: { sessionId: paidRes.generationSessionId } });
+        if (planRes.error && planRes.error !== "No credits remaining") {
+          setStatus("error");
+          setMessage(planRes.error);
+          return;
+        }
         setStatus("done");
-        setMessage("Payment confirmed. Opening your plan…");
-        navigate({ to: "/plans/$sessionId", params: { sessionId: paidRes.generationSessionId } });
-        // Kick off generation in the background as well (best-effort).
-        generate({ data: { sessionId: paidRes.generationSessionId } }).catch(() => {});
+        setMessage("Your plan is ready. Opening it now…");
+        navigate({
+          to: "/plans/$sessionId",
+          params: { sessionId: paidRes.generationSessionId },
+          replace: true,
+        });
       } catch (err: any) {
         setStatus("error");
         setMessage(err?.message ?? "Something went wrong");

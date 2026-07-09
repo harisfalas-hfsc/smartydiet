@@ -46,6 +46,7 @@ function PlanView() {
   const [refineText, setRefineText] = useState("");
   const [busy, setBusy] = useState(false);
   const [autoGenerating, setAutoGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data: s } = await supabase
@@ -65,20 +66,41 @@ function PlanView() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (!autoGenerating) return;
+    const interval = window.setInterval(() => {
+      void load();
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [autoGenerating, load]);
+
+  useEffect(() => {
+    if (autoGenerating && versions.length > 0) {
+      setAutoGenerating(false);
+      setGenerationError(null);
+    }
+  }, [autoGenerating, versions.length]);
+
   // Recovery: paid, no plan → auto-generate.
   useEffect(() => {
     if (!session || versions.length > 0 || autoGenerating) return;
     if (session.status !== "paid") return;
     if ((session.credits_used ?? 0) > 0) return;
     setAutoGenerating(true);
+    setGenerationError(null);
     (async () => {
       try {
         const res = await generate({ data: { sessionId } });
-        if (res.error) toast.error(res.error);
+        if (res.error) {
+          setGenerationError(res.error);
+          toast.error(res.error);
+        }
         else toast.success("Your plan is ready");
         await load();
       } catch (e: any) {
-        toast.error(e?.message ?? "Generation failed");
+        const message = e?.message ?? "Generation failed";
+        setGenerationError(message);
+        toast.error(message);
       } finally {
         setAutoGenerating(false);
       }
@@ -177,7 +199,35 @@ function PlanView() {
             {autoGenerating ? (
               <>
                 <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
-                Building your plan… this takes 20–40 seconds.
+                Building your plan… this can take up to 2 minutes.
+              </>
+            ) : generationError ? (
+              <>
+                <p className="mb-4 text-destructive">{generationError}</p>
+                <Button
+                  onClick={async () => {
+                    setAutoGenerating(true);
+                    setGenerationError(null);
+                    try {
+                      const res = await generate({ data: { sessionId } });
+                      if (res.error) {
+                        setGenerationError(res.error);
+                        toast.error(res.error);
+                      } else {
+                        toast.success("Your plan is ready");
+                      }
+                      await load();
+                    } catch (e: any) {
+                      const message = e?.message ?? "Generation failed";
+                      setGenerationError(message);
+                      toast.error(message);
+                    } finally {
+                      setAutoGenerating(false);
+                    }
+                  }}
+                >
+                  Try again
+                </Button>
               </>
             ) : session.status === "paid" ? (
               <>
@@ -185,13 +235,20 @@ function PlanView() {
                 <Button
                   onClick={async () => {
                     setAutoGenerating(true);
+                    setGenerationError(null);
                     try {
                       const res = await generate({ data: { sessionId } });
-                      if (res.error) toast.error(res.error);
-                      else toast.success("Your plan is ready");
+                      if (res.error) {
+                        setGenerationError(res.error);
+                        toast.error(res.error);
+                      } else {
+                        toast.success("Your plan is ready");
+                      }
                       await load();
                     } catch (e: any) {
-                      toast.error(e?.message ?? "Generation failed");
+                      const message = e?.message ?? "Generation failed";
+                      setGenerationError(message);
+                      toast.error(message);
                     } finally {
                       setAutoGenerating(false);
                     }
