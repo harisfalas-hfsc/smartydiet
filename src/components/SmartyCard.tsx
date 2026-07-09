@@ -218,7 +218,7 @@ interface SmartyRowProps {
 export function SmartyRow({ icon, title, subtitle, tone = "cyan" }: SmartyRowProps) {
   const t = TONE[tone];
   return (
-    <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-4">
+    <div className="grid min-h-14 grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-4">
       {icon && (
         <div
           className={cn(
@@ -231,9 +231,9 @@ export function SmartyRow({ icon, title, subtitle, tone = "cyan" }: SmartyRowPro
           <IconOrEmoji icon={icon} className="h-4 w-4 text-base" />
         </div>
       )}
-      <div className="min-w-0 pt-0.5">
-        <p className="text-sm font-semibold leading-5 text-foreground">{title}</p>
-        {subtitle && <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{subtitle}</p>}
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold leading-5 text-foreground">{title}</p>
+        {subtitle && <p className="mt-0.5 truncate text-xs leading-5 text-muted-foreground">{subtitle}</p>}
       </div>
     </div>
   );
@@ -250,14 +250,14 @@ export function SmartyPill({ tone = "cyan", icon, children }: SmartyPillProps) {
   return (
     <div
       className={cn(
-        "grid grid-cols-[2rem_minmax(0,1fr)] items-center gap-4 rounded-xl border bg-card p-4",
+        "grid h-14 grid-cols-[2rem_minmax(0,1fr)] items-center gap-4 rounded-xl border bg-card px-4",
         t.softBorder,
       )}
     >
       <div className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg", t.softBg, t.text)}>
         {icon && <IconOrEmoji icon={icon} className="h-4 w-4 text-sm" />}
       </div>
-      <span className="text-sm font-medium leading-5 text-foreground">{children}</span>
+      <span className="truncate text-sm font-medium leading-5 text-foreground">{children}</span>
     </div>
   );
 }

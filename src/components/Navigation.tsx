@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import {
   LogOut,
   Menu,
@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Sparkles,
   BookOpen,
+  ChevronLeft,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,7 +33,17 @@ import logoUrl from "@/assets/smartydiet-logo.png";
 export function Navigation() {
   const { user, displayName, loading } = useAuth();
   const navigate = useNavigate();
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [navCount, setNavCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const unsub = router.subscribe("onResolved", () => {
+      setNavCount((n) => n + 1);
+    });
+    return unsub;
+  }, [router]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -42,6 +53,8 @@ export function Navigation() {
       document.body.style.overflow = prev;
     };
   }, [menuOpen]);
+
+  const canGoBack = navCount > 0 && pathname !== "/";
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -66,6 +79,16 @@ export function Navigation() {
           >
             <Menu className="h-5 w-5" />
           </button>
+          {canGoBack && (
+            <button
+              type="button"
+              onClick={() => router.history.back()}
+              aria-label="Go back"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-primary text-primary hover:bg-primary/10"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
           <Link
             to="/"
             aria-label="SmartyDiet home"
