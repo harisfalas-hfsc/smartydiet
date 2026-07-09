@@ -152,7 +152,7 @@ export function SmartyCard({
         <div className="mt-6">
           {ctaTo ? (
             <Link
-              to={ctaTo}
+              to={ctaTo as never}
               className={cn(
                 "inline-flex items-center gap-1.5 text-sm font-semibold",
                 t.text,
