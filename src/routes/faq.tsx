@@ -2,16 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 
 
 const URL = "https://smartydiet.com/faq";
-const TITLE =
-  "SmartyDiet FAQ — AI Nutrition Intelligence Platform, pricing, privacy & accuracy";
+const TITLE = "SmartyDiet FAQ — plans, pricing, privacy & accuracy";
 const DESCRIPTION =
-  "Answers to common questions about SmartyDiet: what nutrition intelligence is, how the Smarty Nutrition Score™ and Smarty Metabolic Age™ work, pricing, privacy and accuracy.";
+  "Answers to common questions about SmartyDiet: what you get in a plan, how the AI meal planner works, pricing, privacy, allergies and accuracy.";
 
 const ITEMS: { q: string; a: string }[] = [
   {
     q: "What is SmartyDiet?",
-    a: "SmartyDiet is an AI Nutrition Intelligence Platform — a pocket dietitian, nutrition consultant and diet coach in one app. It turns a smart questionnaire into a fully personalized diet plan with calories, macros, portions and a weekly grocery list, plus free tools like BMR, TDEE, macro and calorie calculators.",
+    a: "SmartyDiet is a personalized AI diet planner. It turns a smart questionnaire into a fully personalized meal plan with calories, macros, portions and a weekly grocery list, plus free tools like BMR, TDEE, macro and calorie calculators.",
   },
+
   {
     q: "What do I get with a SmartyDiet plan?",
     a: "You get a full 1, 2 or 4-week personalized meal plan with daily meals, portions, calorie and macro totals, a weekly grocery list sorted by category, and a short rationale explaining why the plan fits your goal. You can export it as a PDF and download a printable grocery list.",
