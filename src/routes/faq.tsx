@@ -13,20 +13,12 @@ const ITEMS: { q: string; a: string }[] = [
     a: "SmartyDiet is an AI Nutrition Intelligence Platform — a pocket dietitian, nutrition consultant and diet coach in one app. It turns a smart questionnaire into a fully personalized diet plan with calories, macros, portions and a weekly grocery list, plus free tools like BMR, TDEE, macro and calorie calculators.",
   },
   {
-    q: "What is nutrition intelligence?",
-    a: "Nutrition intelligence is the ability to translate what you eat into actionable insight — calories, macros, micronutrients, patterns and habits. SmartyDiet packages that layer of intelligence into an AI-powered platform, so you get a personalized plan rather than just a tracker.",
-  },
-  {
-    q: "How does SmartyDiet calculate the Smarty Nutrition Score™?",
-    a: "The Smarty Nutrition Score™ is a composite 0–100 score of your current diet across four axes: macro balance, micronutrient coverage, food quality (whole vs ultra-processed) and behavior (portion control, meal timing, hydration).",
-  },
-  {
-    q: "What is Smarty Metabolic Age™?",
-    a: "Smarty Metabolic Age™ estimates the age your metabolism is behaving like, derived from BMR, body composition inputs, activity level and dietary patterns. It is a motivating summary metric — the aim is a metabolic age below your calendar age.",
+    q: "What do I get with a SmartyDiet plan?",
+    a: "You get a full 1, 2 or 4-week personalized meal plan with daily meals, portions, calorie and macro totals, a weekly grocery list sorted by category, and a short rationale explaining why the plan fits your goal. You can export it as a PDF and download a printable grocery list.",
   },
   {
     q: "How is SmartyDiet different from generic calorie trackers?",
-    a: "A calorie tracker gives you a number. SmartyDiet gives you a plan. It assesses your body, goals, allergies, food preferences and schedule, then generates a personalized Smarty Meal Plan™ with portions and a grocery list, and coaches you toward a higher Smarty Nutrition Score™.",
+    a: "A calorie tracker gives you a number. SmartyDiet gives you a plan. It assesses your body, goals, allergies, food preferences and schedule, then generates a personalized meal plan with portions and a grocery list — no manual logging required.",
   },
   {
     q: "How is SmartyDiet different from a human dietitian?",
@@ -34,8 +26,9 @@ const ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "How does the AI meal planner work?",
-    a: "You answer a smart questionnaire (body, goals, activity, food preferences, allergies, schedule). The Smarty Calorie Engine™ computes your calorie and macro targets, and the AI builds a Smarty Meal Plan™ that respects every constraint you entered. You get 2 refinements included.",
+    a: "You answer a smart questionnaire (body, goals, activity, food preferences, allergies, schedule). SmartyDiet computes your calorie and macro targets using the Mifflin-St Jeor equation, then the AI builds a meal plan that respects every constraint you entered. You get 2 refinements included.",
   },
+
   {
     q: "How accurate are the calorie, BMI, BMR and macro calculators?",
     a: "SmartyDiet uses the Mifflin-St Jeor equation for BMR and standard activity multipliers for TDEE — the same methods used by dietitians. Any equation is an estimate; biology varies. Treat the numbers as a strong starting point and adjust based on how you feel and respond.",
