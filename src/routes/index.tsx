@@ -1,10 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import {
+  Sparkles,
+  Utensils,
+  ClipboardList,
+  Calculator,
+  ShieldCheck,
+  Target,
+  Activity,
+  Leaf,
+  FileDown,
+  BadgeCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import logoUrl from "@/assets/smartydiet-logo.png";
+import { SmartyCard, SmartyRow, SmartyPill } from "@/components/SmartyCard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,15 +57,6 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const INCLUDES = [
-  "Calorie & macro targets",
-  "Full 1, 2 or 4-week meal plan with portions",
-  "Weekly grocery list",
-  "2 free refinements",
-  "PDF export + printable list",
-  "Saved to your account",
-];
-
 type CtaState =
   | { kind: "loading" }
   | { kind: "guest" }
@@ -76,7 +79,9 @@ function Home() {
         .select("id,credits_used,credits_total,created_at")
         .eq("status", "paid")
         .order("created_at", { ascending: false });
-      const active = (data ?? []).find((r) => (r.credits_used ?? 0) < (r.credits_total ?? 0));
+      const active = (data ?? []).find(
+        (r) => (r.credits_used ?? 0) < (r.credits_total ?? 0),
+      );
       if (active) setCta({ kind: "has-active", sessionId: active.id });
       else setCta({ kind: "no-active" });
     })();
@@ -106,19 +111,33 @@ function Home() {
   })();
 
   return (
-    <div className="flex flex-col">
-      {/* Hero */}
-      <section className="px-5 pt-12 pb-14 sm:pt-20 sm:pb-20">
-        <div className="mx-auto max-w-3xl text-center">
-          <img src={logoUrl} alt="SmartyDiet" width={72} height={72} className="mx-auto h-18 w-18" />
-
-          <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-            Your personal nutrition plan, built in minutes.
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
-            A full 1, 2 or 4-week diet plan tailored to your body, goals and food preferences.
-          </p>
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      {/* Top row: hero + best experience + score */}
+      <div className="grid gap-5 lg:grid-cols-3">
+        <SmartyCard
+          tone="green"
+          eyebrow="Nutrition Diagnostic"
+          eyebrowIcon="🥗"
+          cornerIcon={Sparkles}
+          title="Know What You Eat."
+          accent="Eat Smarter."
+          description="Your pocket dietitian, in-app."
+          className="lg:col-span-2"
+        >
+          <div className="mb-2 flex items-center gap-3">
+            <img
+              src={logoUrl}
+              alt="SmartyDiet"
+              width={56}
+              height={56}
+              className="h-14 w-14"
+            />
+            <p className="text-sm text-muted-foreground">
+              A full 1, 2 or 4-week diet plan tailored to your body, goals and food
+              preferences.
+            </p>
+          </div>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             {primary}
             <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
               <Link to="/how-it-works">How it works</Link>
@@ -129,46 +148,203 @@ function Home() {
               $4.99 one-time · 1 plan + 2 refinements · No subscription.
             </p>
           )}
-        </div>
-      </section>
+        </SmartyCard>
 
-      {/* What's included / Pricing — hidden for users with an active plan */}
+        <SmartyCard
+          tone="orange"
+          eyebrow="Best Experience"
+          eyebrowIcon="⚡"
+          title="SMARTY"
+          accent="DIET"
+          description="Answer a smart questionnaire and the Smarty Calorie Engine™ builds a plan tuned to your body, allergies, schedule and food preferences."
+          ctaLabel="Get started"
+          ctaTo="/how-it-works"
+        />
+      </div>
+
+      {/* Second row: three feature cards */}
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+        <SmartyCard
+          tone="purple"
+          eyebrow="Assess"
+          eyebrowIcon="📊"
+          cornerIcon={Activity}
+          title="Smarty"
+          accent="Score"
+          description="Your Smarty Nutrition Score™ and Metabolic Age™ — a clear read on where your diet stands today and where it can go."
+        >
+          <div className="space-y-3">
+            <SmartyRow
+              tone="purple"
+              icon={Target}
+              title="Personalized calorie target"
+              subtitle="Mifflin-St Jeor BMR + activity multipliers."
+            />
+            <SmartyRow
+              tone="purple"
+              icon={Utensils}
+              title="Macro split for your goal"
+              subtitle="Protein, carbs, fats and fiber tuned to you."
+            />
+            <SmartyRow
+              tone="purple"
+              icon={ShieldCheck}
+              title="Allergy-safe by design"
+              subtitle="Every allergen you list is excluded from your plan."
+            />
+          </div>
+          <div className="mt-6">
+            <Link
+              to="/nutrition-intelligence"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-500"
+            >
+              Learn more about the science →
+            </Link>
+          </div>
+        </SmartyCard>
+
+        <SmartyCard
+          tone="cyan"
+          eyebrow="Plan"
+          eyebrowIcon="🍽️"
+          cornerIcon={Utensils}
+          title="Smarty"
+          accent="Meal Plan™"
+          description="A full personalized plan with daily meals, portions, calories & macros — plus a weekly grocery list."
+        >
+          <div className="space-y-2">
+            <SmartyPill tone="cyan" icon="🥑">Breakfast, lunch, dinner & snacks</SmartyPill>
+            <SmartyPill tone="cyan" icon="🛒">Weekly grocery list</SmartyPill>
+            <SmartyPill tone="cyan" icon="✏️">2 refinements included</SmartyPill>
+            <SmartyPill tone="cyan" icon="📄">PDF export + printable list</SmartyPill>
+          </div>
+          <div className="mt-6">
+            <Link
+              to="/how-it-works"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-500"
+            >
+              See how it's built →
+            </Link>
+          </div>
+        </SmartyCard>
+
+        <SmartyCard
+          tone="yellow"
+          eyebrow="Free Tools"
+          eyebrowIcon="🧮"
+          cornerIcon={Calculator}
+          title="Nutrition"
+          accent="Calculators"
+          description="Free tools you can use without signing up — BMR, TDEE, macros and a calorie counter."
+        >
+          <div className="space-y-3">
+            <SmartyRow
+              tone="yellow"
+              icon="🔥"
+              title="BMR Calculator"
+              subtitle="Mifflin-St Jeor equation."
+            />
+            <SmartyRow
+              tone="yellow"
+              icon="🥧"
+              title="Macro Calculator"
+              subtitle="Calories, protein, carbs & fats by goal."
+            />
+            <SmartyRow
+              tone="yellow"
+              icon="🍎"
+              title="Calorie Counter"
+              subtitle="Look up common foods & portions."
+            />
+          </div>
+          <div className="mt-6">
+            <Link
+              to="/tools"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-500"
+            >
+              Explore free tools →
+            </Link>
+          </div>
+        </SmartyCard>
+      </div>
+
+      {/* Pricing / includes — hide when has active */}
       {cta.kind !== "has-active" && (
-        <section className="border-t border-border px-5 pt-10 pb-10 sm:pt-14 sm:pb-14">
-          <div className="mx-auto max-w-3xl">
-            <div className="rounded-3xl border-2 border-primary bg-card p-5 shadow-soft sm:p-10">
-              <div className="text-center">
-                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-                  One-time payment
-                </p>
-                <p className="mt-2 text-5xl font-extrabold tracking-tight">$4.99</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  One personalized plan. Yours to keep.
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <SmartyCard
+            tone="pink"
+            eyebrow="One-time payment"
+            eyebrowIcon="💳"
+            cornerIcon={BadgeCheck}
+            title="$4.99"
+            accent="once."
+            description="One personalized plan. Yours to keep. No subscription, ever."
+          >
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {[
+                { icon: "🎯", label: "Calorie & macro targets" },
+                { icon: "🗓️", label: "1, 2 or 4-week meal plan" },
+                { icon: "🛒", label: "Weekly grocery list" },
+                { icon: "✏️", label: "2 free refinements" },
+                { icon: "📄", label: "PDF + printable list" },
+                { icon: "☁️", label: "Saved to your account" },
+              ].map((it) => (
+                <SmartyPill tone="pink" key={it.label} icon={it.icon}>
+                  {it.label}
+                </SmartyPill>
+              ))}
+            </div>
+            {cta.kind === "guest" && (
+              <div className="mt-6">
+                <Button asChild size="lg">
+                  <Link to="/questionnaire">Create my diet plan — $4.99</Link>
+                </Button>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Not medical advice. Consult a professional for medical conditions.
                 </p>
               </div>
-              <ul className="mx-auto mt-6 max-w-md space-y-3">
-                {INCLUDES.map((it) => (
-                  <li key={it} className="flex items-center gap-3 text-xs sm:text-sm">
-                    <CheckCircle2 className="h-5 w-5 flex-none text-primary" />
-                    <span className="whitespace-nowrap">{it}</span>
-                  </li>
-                ))}
-              </ul>
-              {cta.kind === "guest" && (
-                <>
-                  <div className="mt-8 flex justify-center">
-                    <Button asChild size="lg">
-                      <Link to="/questionnaire">Create my diet plan</Link>
-                    </Button>
-                  </div>
-                  <p className="mt-3 text-center text-xs text-muted-foreground">
-                    Not medical advice. Consult a professional for medical conditions.
-                  </p>
-                </>
-              )}
+            )}
+          </SmartyCard>
+
+          <SmartyCard
+            tone="blue"
+            eyebrow="Why SmartyDiet"
+            eyebrowIcon="✨"
+            cornerIcon={Leaf}
+            title="Built like a"
+            accent="dietitian would."
+            description="Evidence-based methods, transparent numbers, and a plan that respects every constraint you tell us."
+          >
+            <div className="space-y-3">
+              <SmartyRow
+                tone="blue"
+                icon={ClipboardList}
+                title="Smart questionnaire"
+                subtitle="Body, goals, activity, allergies, schedule."
+              />
+              <SmartyRow
+                tone="blue"
+                icon={Sparkles}
+                title="Smarty Calorie Engine™"
+                subtitle="Mifflin-St Jeor + macro splits by goal."
+              />
+              <SmartyRow
+                tone="blue"
+                icon={FileDown}
+                title="Your plan, portable"
+                subtitle="Download, print, or open on any device."
+              />
             </div>
-          </div>
-        </section>
+            <div className="mt-6">
+              <Link
+                to="/about"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-500"
+              >
+                About SmartyDiet →
+              </Link>
+            </div>
+          </SmartyCard>
+        </div>
       )}
     </div>
   );
