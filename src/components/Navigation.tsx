@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Sparkles,
   BookOpen,
+  ChevronLeft,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
