@@ -87,10 +87,19 @@ function IconOrEmoji({
   className?: string;
 }) {
   if (typeof icon === "string") {
-    return <span className={cn("text-lg leading-none", className)}>{icon}</span>;
+    return (
+      <span
+        className={cn(
+          "inline-flex h-5 w-5 shrink-0 items-center justify-center text-center text-lg leading-none",
+          className,
+        )}
+      >
+        {icon}
+      </span>
+    );
   }
   const Comp = icon;
-  return <Comp className={cn("h-4 w-4", className)} />;
+  return <Comp className={cn("h-4 w-4 shrink-0", className)} />;
 }
 
 export function SmartyCard({
@@ -122,13 +131,13 @@ export function SmartyCard({
           {eyebrow ? (
             <div
               className={cn(
-                "inline-flex max-w-full min-w-0 items-center gap-2.5 rounded-full border px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider sm:text-[11px]",
+                "inline-flex max-w-full min-w-0 items-center gap-4 rounded-full border px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider sm:text-[11px]",
                 t.softBorder,
                 t.text,
               )}
             >
               {eyebrowIcon && (
-                <IconOrEmoji icon={eyebrowIcon} className="h-3.5 w-3.5 shrink-0" />
+                <IconOrEmoji icon={eyebrowIcon} className="h-4 w-4 shrink-0 text-sm" />
               )}
               <span className="min-w-0 truncate">{eyebrow}</span>
             </div>
@@ -209,7 +218,7 @@ interface SmartyRowProps {
 export function SmartyRow({ icon, title, subtitle, tone = "cyan" }: SmartyRowProps) {
   const t = TONE[tone];
   return (
-    <div className="flex items-start gap-4">
+    <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-4">
       {icon && (
         <div
           className={cn(
@@ -222,7 +231,7 @@ export function SmartyRow({ icon, title, subtitle, tone = "cyan" }: SmartyRowPro
           <IconOrEmoji icon={icon} className="h-4 w-4 text-base" />
         </div>
       )}
-      <div className="min-w-0">
+      <div className="min-w-0 pt-0.5">
         <p className="text-sm font-semibold leading-5 text-foreground">{title}</p>
         {subtitle && <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{subtitle}</p>}
       </div>
@@ -241,15 +250,13 @@ export function SmartyPill({ tone = "cyan", icon, children }: SmartyPillProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-xl border bg-card p-4",
+        "grid grid-cols-[2rem_minmax(0,1fr)] items-center gap-4 rounded-xl border bg-card p-4",
         t.softBorder,
       )}
     >
-      {icon && (
-        <div className={cn("grid h-8 w-8 flex-none place-items-center rounded-lg", t.softBg, t.text)}>
-          <IconOrEmoji icon={icon} className="h-3.5 w-3.5 text-sm" />
-        </div>
-      )}
+      <div className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg", t.softBg, t.text)}>
+        {icon && <IconOrEmoji icon={icon} className="h-4 w-4 text-sm" />}
+      </div>
       <span className="text-sm font-medium leading-5 text-foreground">{children}</span>
     </div>
   );

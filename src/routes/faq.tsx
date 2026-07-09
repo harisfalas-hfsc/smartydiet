@@ -1,4 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CircleHelp } from "lucide-react";
+import { SmartyCard } from "@/components/SmartyCard";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 
 const URL = "https://smartydiet.com/faq";
@@ -102,13 +110,6 @@ export const Route = createFileRoute("/faq")({
   component: FAQ,
 });
 
-import { CircleHelp } from "lucide-react";
-import { SmartyCard } from "@/components/SmartyCard";
-
-const TONES: Array<
-  "cyan" | "green" | "orange" | "purple" | "yellow" | "pink" | "blue"
-> = ["cyan", "green", "orange", "purple", "yellow", "pink", "blue"];
-
 function FAQ() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
@@ -121,20 +122,39 @@ function FAQ() {
           The answers we get most often. Still unsure? Reach out via the footer.
         </p>
       </div>
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {ITEMS.map((it, i) => (
-          <SmartyCard
-            key={i}
-            tone={TONES[i % TONES.length]}
-            eyebrow={`Q${String(i + 1).padStart(2, "0")}`}
-            eyebrowIcon="?"
-            cornerIcon={CircleHelp}
-            title={it.q}
-          >
-            <p className="text-sm leading-6 text-muted-foreground">{it.a}</p>
-          </SmartyCard>
-        ))}
-      </div>
+      <SmartyCard
+        tone="cyan"
+        eyebrow="FAQ"
+        eyebrowIcon="?"
+        cornerIcon={CircleHelp}
+        title="Frequently asked"
+        accent="questions."
+        description="Tap a question to open the answer."
+      >
+        <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
+          {ITEMS.map((it, i) => (
+            <AccordionItem
+              key={it.q}
+              value={`item-${i}`}
+              className="border-sky-100 last:border-b-0"
+            >
+              <AccordionTrigger className="gap-4 py-5 text-left hover:no-underline">
+                <span className="grid min-w-0 flex-1 grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-4 pr-4">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-sky-200 bg-sky-50 text-xs font-extrabold text-sky-500">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="min-w-0 text-base font-extrabold leading-6 text-foreground sm:text-lg">
+                    {it.q}
+                  </span>
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-5 pl-[3.25rem] pr-10 pt-0 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+                {it.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </SmartyCard>
     </div>
   );
 }
