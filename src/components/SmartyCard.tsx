@@ -112,17 +112,17 @@ export function SmartyCard({
   return (
     <div
       className={cn(
-        "relative flex flex-col overflow-hidden rounded-3xl border-2 bg-card p-6 shadow-soft sm:p-8",
+        "relative flex flex-col overflow-hidden rounded-3xl border-2 bg-card p-7 shadow-soft sm:p-9",
         t.border,
         className,
       )}
     >
       {hasHeader && (
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-6 gap-y-4">
+        <div className="grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-8 gap-y-5">
           {eyebrow ? (
             <div
               className={cn(
-                "inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider",
+                "inline-flex max-w-full min-w-0 items-center gap-2.5 rounded-full border px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider sm:text-[11px]",
                 t.softBorder,
                 t.text,
               )}
@@ -138,7 +138,7 @@ export function SmartyCard({
           {cornerIcon && (
             <div
               className={cn(
-                "grid h-11 w-11 shrink-0 place-items-center rounded-2xl border",
+                "grid h-12 w-12 shrink-0 place-items-center rounded-2xl border",
                 t.softBorder,
                 t.softBg,
                 t.text,
@@ -154,7 +154,7 @@ export function SmartyCard({
         <h2
           className={cn(
             "text-2xl font-extrabold leading-tight tracking-tight text-foreground sm:text-3xl",
-            hasHeader ? "mt-7" : "mt-0",
+            hasHeader ? "mt-10" : "mt-0",
           )}
         >
           {title}
@@ -163,10 +163,10 @@ export function SmartyCard({
       )}
 
       {description && (
-        <p className="mt-4 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">{description}</p>
+        <p className="mt-5 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">{description}</p>
       )}
 
-      {children && <div className="mt-6">{children}</div>}
+      {children && <div className="mt-7">{children}</div>}
 
       {ctaLabel && (ctaTo || ctaHref) && (
         <div className="mt-6">
@@ -209,11 +209,11 @@ interface SmartyRowProps {
 export function SmartyRow({ icon, title, subtitle, tone = "cyan" }: SmartyRowProps) {
   const t = TONE[tone];
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-4">
       {icon && (
         <div
           className={cn(
-            "grid h-9 w-9 flex-none place-items-center rounded-lg border",
+            "grid h-10 w-10 flex-none place-items-center rounded-xl border",
             t.softBorder,
             t.softBg,
             t.text,
@@ -223,8 +223,8 @@ export function SmartyRow({ icon, title, subtitle, tone = "cyan" }: SmartyRowPro
         </div>
       )}
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-foreground">{title}</p>
-        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+        <p className="text-sm font-semibold leading-5 text-foreground">{title}</p>
+        {subtitle && <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{subtitle}</p>}
       </div>
     </div>
   );
@@ -241,16 +241,16 @@ export function SmartyPill({ tone = "cyan", icon, children }: SmartyPillProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-xl border bg-card p-3",
+        "flex items-center gap-3 rounded-xl border bg-card p-4",
         t.softBorder,
       )}
     >
       {icon && (
-        <div className={cn("grid h-7 w-7 flex-none place-items-center rounded-lg", t.softBg, t.text)}>
+        <div className={cn("grid h-8 w-8 flex-none place-items-center rounded-lg", t.softBg, t.text)}>
           <IconOrEmoji icon={icon} className="h-3.5 w-3.5 text-sm" />
         </div>
       )}
-      <span className="text-sm font-medium text-foreground">{children}</span>
+      <span className="text-sm font-medium leading-5 text-foreground">{children}</span>
     </div>
   );
 }
