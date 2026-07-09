@@ -1,10 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+
 
 const URL = "https://smartydiet.com/faq";
 const TITLE =
@@ -114,21 +109,39 @@ export const Route = createFileRoute("/faq")({
   component: FAQ,
 });
 
+import { SmartyCard } from "@/components/SmartyCard";
+
+const TONES: Array<
+  "cyan" | "green" | "orange" | "purple" | "yellow" | "pink" | "blue"
+> = ["cyan", "green", "orange", "purple", "yellow", "pink", "blue"];
+const EMOJIS = ["💡", "🧠", "📊", "⚙️", "🍽️", "🩺", "🤖", "📐", "🔁", "💳", "🩹", "⚠️", "↩️", "🔒"];
+
 function FAQ() {
   return (
-    <div className="mx-auto max-w-3xl px-5 py-12 sm:py-16">
-      <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">FAQ</h1>
-      <p className="mt-3 text-muted-foreground">
-        The answers to the questions we get most often. Still unsure? Reach out via the footer.
-      </p>
-      <Accordion type="single" collapsible className="mt-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      <div className="mb-8 text-center">
+        <p className="text-xs font-semibold uppercase tracking-wider text-primary">FAQ</p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+          Your <span className="text-primary">questions</span>, answered
+        </h1>
+        <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
+          The answers we get most often. Still unsure? Reach out via the footer.
+        </p>
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {ITEMS.map((it, i) => (
-          <AccordionItem key={i} value={`i${i}`}>
-            <AccordionTrigger className="text-left">{it.q}</AccordionTrigger>
-            <AccordionContent className="text-muted-foreground">{it.a}</AccordionContent>
-          </AccordionItem>
+          <SmartyCard
+            key={i}
+            tone={TONES[i % TONES.length]}
+            eyebrow={`Q${String(i + 1).padStart(2, "0")}`}
+            eyebrowIcon={EMOJIS[i % EMOJIS.length]}
+            title={it.q}
+          >
+            <p className="text-sm text-muted-foreground">{it.a}</p>
+          </SmartyCard>
         ))}
-      </Accordion>
+      </div>
     </div>
   );
 }
+

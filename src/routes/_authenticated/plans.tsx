@@ -1,9 +1,9 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText } from "lucide-react";
+import { Loader2, FileText, Sparkles, ClipboardList } from "lucide-react";
+import { SmartyCard, SmartyRow } from "@/components/SmartyCard";
 
 export const Route = createFileRoute("/_authenticated/plans")({
   head: () => ({
@@ -24,6 +24,16 @@ interface Row {
   created_at: string;
 }
 
+const TONES: Array<"cyan" | "green" | "orange" | "purple" | "yellow" | "pink" | "blue"> = [
+  "cyan",
+  "green",
+  "orange",
+  "purple",
+  "yellow",
+  "pink",
+  "blue",
+];
+
 function PlansList() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -41,74 +51,105 @@ function PlansList() {
 
   if (pathname !== "/plans") return <Outlet />;
 
-  const hasActive = (rows ?? []).some((r) => (r.credits_used ?? 0) < (r.credits_total ?? 0));
+  const hasActive = (rows ?? []).some(
+    (r) => (r.credits_used ?? 0) < (r.credits_total ?? 0),
+  );
   const showNewPlanCard = rows !== null && rows.length > 0 && !hasActive;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">My plans</h1>
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      <div className="mb-8 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+            Your plans
+          </p>
+          <h1 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
+            My <span className="text-primary">Smarty Meal Plans™</span>
+          </h1>
+        </div>
         {rows !== null && rows.length > 0 && (
           <Button asChild size="sm" variant={hasActive ? "outline" : "default"}>
             <Link to="/questionnaire">New plan</Link>
           </Button>
         )}
       </div>
+
       {rows === null ? (
         <div className="flex justify-center py-10">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : rows.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
-            <FileText className="mx-auto mb-3 h-8 w-8 text-primary" />
-            You don't have any plans yet.
-            <div className="mt-4">
-              <Button asChild>
-                <Link to="/questionnaire">Build my first plan</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <SmartyCard
+          tone="cyan"
+          eyebrow="Get started"
+          eyebrowIcon="🚀"
+          cornerIcon={FileText}
+          title="No plans"
+          accent="yet."
+          description="Build your first personalized Smarty Meal Plan™ in a few minutes."
+        >
+          <Button asChild size="lg">
+            <Link to="/questionnaire">Build my first plan</Link>
+          </Button>
+        </SmartyCard>
       ) : (
         <>
-          <div className="space-y-3">
-            {rows.map((r) => (
-              <Link
-                key={r.id}
-                to="/plans/$sessionId"
-                params={{ sessionId: r.id }}
-                className="block rounded-lg border bg-card p-4 transition-colors hover:border-primary"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold">{r.duration_weeks}-week plan</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(r.created_at).toLocaleDateString()} · {r.credits_used}/
-                      {r.credits_total} credits used
-                    </p>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {rows.map((r, i) => {
+              const active = (r.credits_used ?? 0) < (r.credits_total ?? 0);
+              const tone = active ? "green" : TONES[i % TONES.length];
+              return (
+                <SmartyCard
+                  key={r.id}
+                  tone={tone}
+                  eyebrow={active ? "Active" : "Completed"}
+                  eyebrowIcon={active ? "✅" : "📁"}
+                  cornerIcon={ClipboardList}
+                  title={`${r.duration_weeks}-week`}
+                  accent="plan"
+                >
+                  <div className="space-y-3">
+                    <SmartyRow
+                      tone={tone}
+                      icon="📅"
+                      title="Created"
+                      subtitle={new Date(r.created_at).toLocaleDateString()}
+                    />
+                    <SmartyRow
+                      tone={tone}
+                      icon="✏️"
+                      title="Credits"
+                      subtitle={`${r.credits_used}/${r.credits_total} used`}
+                    />
                   </div>
-                  <span className="text-sm text-primary">View →</span>
-                </div>
-              </Link>
-            ))}
+                  <div className="mt-6">
+                    <Button asChild size="sm">
+                      <Link to="/plans/$sessionId" params={{ sessionId: r.id }}>
+                        View plan →
+                      </Link>
+                    </Button>
+                  </div>
+                </SmartyCard>
+              );
+            })}
           </div>
 
           {showNewPlanCard && (
-            <Card className="mt-8 border-2 border-primary">
-              <CardContent className="p-6 text-center">
-                <h2 className="text-lg font-semibold">Want a fresh start?</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  You've used all refinements on your current plans. Create a brand new
-                  personalized diet plan for $4.99.
-                </p>
-                <div className="mt-4">
-                  <Button asChild size="lg">
-                    <Link to="/questionnaire">Create a new diet plan — $4.99</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="mt-8">
+              <SmartyCard
+                tone="pink"
+                eyebrow="Fresh start"
+                eyebrowIcon="✨"
+                cornerIcon={Sparkles}
+                title="Want a"
+                accent="new plan?"
+                description="You've used all refinements on your current plans. Create a brand new personalized diet plan for $4.99."
+              >
+                <Button asChild size="lg">
+                  <Link to="/questionnaire">Create a new diet plan — $4.99</Link>
+                </Button>
+              </SmartyCard>
+            </div>
           )}
         </>
       )}
