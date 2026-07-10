@@ -20,6 +20,7 @@ import {
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdminEmail } from "@/lib/admin";
 import {
   DropdownMenu,
   DropdownMenuContent,
