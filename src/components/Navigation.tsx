@@ -177,7 +177,7 @@ export function Navigation() {
   );
 }
 
-function NavDrawer({ onClose, isAuthed }: { onClose: () => void; isAuthed: boolean }) {
+function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuthed: boolean; isAdmin: boolean }) {
   const sections: {
     heading: string;
     items: { to: string; label: string; Icon: typeof Home }[];
@@ -189,6 +189,7 @@ function NavDrawer({ onClose, isAuthed }: { onClose: () => void; isAuthed: boole
             items: [
               { to: "/plans", label: "My plans", Icon: ClipboardList },
               { to: "/questionnaire", label: "New plan", Icon: Sparkles },
+              ...(isAdmin ? [{ to: "/admin", label: "Admin", Icon: Shield }] : []),
             ],
           },
         ]
