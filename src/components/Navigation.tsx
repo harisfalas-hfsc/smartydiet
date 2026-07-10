@@ -172,7 +172,7 @@ export function Navigation() {
         </div>
       </div>
 
-      {menuOpen && <NavDrawer onClose={() => setMenuOpen(false)} isAuthed={!!user} />}
+      {menuOpen && <NavDrawer onClose={() => setMenuOpen(false)} isAuthed={!!user} isAdmin={isAdmin} />}
     </header>
   );
 }
