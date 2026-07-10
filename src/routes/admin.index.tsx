@@ -91,7 +91,7 @@ function AdminPage() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-[100dvh] w-full flex-col bg-background text-foreground">
-      <Navigation />
+      
       <main className="mx-auto w-full max-w-[1100px] px-4 pb-16 pt-4 lg:px-8">{children}</main>
     </div>
   );
