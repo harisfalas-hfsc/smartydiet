@@ -28,6 +28,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ToolsMacroCalculatorRouteImport } from './routes/tools.macro-calculator'
 import { Route as ToolsCalorieCounterRouteImport } from './routes/tools.calorie-counter'
 import { Route as ToolsBmrCalculatorRouteImport } from './routes/tools.bmr-calculator'
@@ -135,6 +136,11 @@ const ToolsIndexRoute = ToolsIndexRouteImport.update({
   path: '/tools/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsMacroCalculatorRoute = ToolsMacroCalculatorRouteImport.update({
   id: '/tools/macro-calculator',
   path: '/tools/macro-calculator',
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
+  '/admin/': typeof AdminIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
+  '/admin': typeof AdminIndexRoute
   '/tools': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
+  '/admin/': typeof AdminIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/tools/bmr-calculator'
     | '/tools/calorie-counter'
     | '/tools/macro-calculator'
+    | '/admin/'
     | '/tools/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -360,6 +370,7 @@ export interface FileRouteTypes {
     | '/tools/bmr-calculator'
     | '/tools/calorie-counter'
     | '/tools/macro-calculator'
+    | '/admin'
     | '/tools'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/tools/bmr-calculator'
     | '/tools/calorie-counter'
     | '/tools/macro-calculator'
+    | '/admin/'
     | '/tools/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -424,6 +436,7 @@ export interface RootRouteChildren {
   ToolsBmrCalculatorRoute: typeof ToolsBmrCalculatorRoute
   ToolsCalorieCounterRoute: typeof ToolsCalorieCounterRoute
   ToolsMacroCalculatorRoute: typeof ToolsMacroCalculatorRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -563,6 +576,13 @@ declare module '@tanstack/react-router' {
       path: '/tools'
       fullPath: '/tools/'
       preLoaderRoute: typeof ToolsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/macro-calculator': {
@@ -713,6 +733,7 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsBmrCalculatorRoute: ToolsBmrCalculatorRoute,
   ToolsCalorieCounterRoute: ToolsCalorieCounterRoute,
   ToolsMacroCalculatorRoute: ToolsMacroCalculatorRoute,
+  AdminIndexRoute: AdminIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
