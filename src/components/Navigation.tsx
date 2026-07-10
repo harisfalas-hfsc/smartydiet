@@ -64,6 +64,7 @@ export function Navigation() {
 
   const accountName = displayName || user?.email || "Account";
   const initial = accountName.slice(0, 1).toUpperCase();
+  const isAdmin = isAdminEmail(user?.email);
 
   return (
     <header
