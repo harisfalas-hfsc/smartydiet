@@ -20,6 +20,7 @@ import {
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdminEmail } from "@/lib/admin";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,6 +64,7 @@ export function Navigation() {
 
   const accountName = displayName || user?.email || "Account";
   const initial = accountName.slice(0, 1).toUpperCase();
+  const isAdmin = isAdminEmail(user?.email);
 
   return (
     <header
@@ -135,6 +137,13 @@ export function Navigation() {
                 <DropdownMenuItem asChild>
                   <Link to="/questionnaire">New plan</Link>
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin">
+                      <Shield className="h-4 w-4 mr-2" /> Admin
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" /> Sign out
@@ -163,12 +172,12 @@ export function Navigation() {
         </div>
       </div>
 
-      {menuOpen && <NavDrawer onClose={() => setMenuOpen(false)} isAuthed={!!user} />}
+      {menuOpen && <NavDrawer onClose={() => setMenuOpen(false)} isAuthed={!!user} isAdmin={isAdmin} />}
     </header>
   );
 }
 
-function NavDrawer({ onClose, isAuthed }: { onClose: () => void; isAuthed: boolean }) {
+function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuthed: boolean; isAdmin: boolean }) {
   const sections: {
     heading: string;
     items: { to: string; label: string; Icon: typeof Home }[];
@@ -180,6 +189,7 @@ function NavDrawer({ onClose, isAuthed }: { onClose: () => void; isAuthed: boole
             items: [
               { to: "/plans", label: "My plans", Icon: ClipboardList },
               { to: "/questionnaire", label: "New plan", Icon: Sparkles },
+              ...(isAdmin ? [{ to: "/admin", label: "Admin", Icon: Shield }] : []),
             ],
           },
         ]
