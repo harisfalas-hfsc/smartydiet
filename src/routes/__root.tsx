@@ -308,6 +308,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         type: "application/ld+json",
         children: JSON.stringify(JSONLD_GRAPH),
       },
+      {
+        async: true,
+        src: "https://www.googletagmanager.com/gtag/js?id=G-SLZPVQKPZT",
+      },
+      {
+        children:
+          "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-SLZPVQKPZT');",
+      },
     ],
   }),
   shellComponent: RootShell,
