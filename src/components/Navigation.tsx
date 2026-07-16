@@ -29,7 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import logoUrl from "@/assets/smartydiet-logo.png";
+
 
 export function Navigation() {
   const { user, displayName, loading } = useAuth();
