@@ -226,8 +226,7 @@ function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuth
           <div className="flex items-center gap-2 text-base font-extrabold">
             <img src={logoUrl} alt="" width={22} height={22} className="h-[22px] w-[22px]" />
             <span>
-              <span className="text-primary">SMARTY</span>
-              <span className="text-foreground"> DIET</span>
+              <span className="text-primary">SMARTY</span><span className="text-green-500">DIET</span>
             </span>
           </div>
           <button
