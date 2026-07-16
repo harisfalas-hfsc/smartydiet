@@ -215,12 +215,10 @@ function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuth
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="flex h-12 items-center justify-between px-4">
-          <div className="flex items-center gap-2 text-base font-extrabold">
-            <img src={logoUrl} alt="" width={22} height={22} className="h-[22px] w-[22px]" />
-            <span>
-              <span className="text-primary">SMARTY</span><span className="text-green-500">DIET</span>
-            </span>
+          <div className="text-base font-extrabold">
+            <span className="text-primary">SMARTY</span><span className="text-green-500">DIET</span>
           </div>
+
           <button
             onClick={onClose}
             aria-label="Close menu"
