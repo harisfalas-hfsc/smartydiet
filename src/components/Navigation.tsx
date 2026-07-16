@@ -105,8 +105,7 @@ export function Navigation() {
               className="h-[22px] w-[22px] shrink-0"
             />
             <span className="whitespace-nowrap">
-              <span className="text-primary">SMARTY</span>
-              <span className="text-foreground"> DIET</span>
+              <span className="text-primary">SMARTY</span><span className="text-green-500">DIET</span>
             </span>
           </Link>
         </div>
