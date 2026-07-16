@@ -29,7 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import logoUrl from "@/assets/smartydiet-logo.png";
+
 
 export function Navigation() {
   const { user, displayName, loading } = useAuth();
@@ -94,20 +94,12 @@ export function Navigation() {
           <Link
             to="/"
             aria-label="SmartyDiet home"
-            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-base font-extrabold tracking-tight leading-none no-underline hover:no-underline"
+            className="text-lg font-extrabold tracking-tight leading-none no-underline hover:no-underline"
             style={{ textDecoration: "none" }}
           >
-            <img
-              src={logoUrl}
-              alt=""
-              width={22}
-              height={22}
-              className="h-[22px] w-[22px] shrink-0"
-            />
-            <span className="whitespace-nowrap">
-              <span className="text-primary">SMARTY</span><span className="text-green-500">DIET</span>
-            </span>
+            <span className="text-primary">SMARTY</span><span className="text-green-500">DIET</span>
           </Link>
+
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
@@ -223,12 +215,10 @@ function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuth
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="flex h-12 items-center justify-between px-4">
-          <div className="flex items-center gap-2 text-base font-extrabold">
-            <img src={logoUrl} alt="" width={22} height={22} className="h-[22px] w-[22px]" />
-            <span>
-              <span className="text-primary">SMARTY</span><span className="text-green-500">DIET</span>
-            </span>
+          <div className="text-base font-extrabold">
+            <span className="text-primary">SMARTY</span><span className="text-green-500">DIET</span>
           </div>
+
           <button
             onClick={onClose}
             aria-label="Close menu"
