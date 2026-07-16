@@ -126,8 +126,6 @@ export const SisterAppsPopup = () => {
         </div>
       </div>
 
-      {/* Unused import guard */}
-      <ChevronRight className="hidden" />
     </>
   );
 };
