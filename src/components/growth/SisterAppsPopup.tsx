@@ -38,7 +38,7 @@ const SISTER_APPS: SisterApp[] = [
   },
 ];
 
-const DELAY_MS = 10000;
+const DELAY_MS = 30000;
 
 export const SisterAppsPopup = () => {
   const [open, setOpen] = useState(false);
