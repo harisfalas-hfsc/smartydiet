@@ -35,8 +35,7 @@ export function SiteFooter() {
             </Link>
             <span className="text-muted-foreground/40">·</span>
             <Link to="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>
-            <span className="text-muted-foreground/40">·</span>
-            <Link to="/nutrition-intelligence" className="hover:text-primary transition-colors">Nutrition Intelligence</Link>
+
 
           </div>
 

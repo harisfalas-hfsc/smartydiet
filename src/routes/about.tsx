@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Compass, Sparkles, BookOpen } from "lucide-react";
+import { Compass, BookOpen, Brain } from "lucide-react";
 
 
 import { cn } from "@/lib/utils";
@@ -109,6 +109,25 @@ function AboutPage() {
 
       <div className="mt-8">
         <SmartyCard
+          tone="blue"
+          eyebrow="What powers SmartyDiet"
+          eyebrowIcon="🧠"
+          cornerIcon={Brain}
+          title="Nutrition"
+          accent="Intelligence"
+          description="An AI nutrition engine that assesses your body, activity and goals, then plans meals, macros and portions the way a dietitian would — instantly and transparently."
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SmartyRow tone="blue" icon="📊" title="Personal assessment" subtitle="Body, activity, goal, preferences & allergies." />
+            <SmartyRow tone="blue" icon="⚙️" title="Mifflin-St Jeor engine" subtitle="Standard BMR + TDEE multipliers." />
+            <SmartyRow tone="blue" icon="🍽️" title="Complete meal plan" subtitle="Meals, macros, portions, grocery list." />
+            <SmartyRow tone="blue" icon="🔎" title="Transparent numbers" subtitle="See the calories, macros and rationale." />
+          </div>
+        </SmartyCard>
+      </div>
+
+      <div className="mt-8">
+        <SmartyCard
           tone="cyan"
           eyebrow="Learn more"
           eyebrowIcon="🔬"
@@ -120,6 +139,7 @@ function AboutPage() {
           ctaTo="/diet-science"
         />
       </div>
+
 
 
       <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
