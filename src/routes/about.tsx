@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Compass, Sparkles } from "lucide-react";
+import { Compass, Sparkles, BookOpen } from "lucide-react";
+
+
 import { cn } from "@/lib/utils";
 import {
   SmartyCard,
@@ -104,6 +106,21 @@ function AboutPage() {
           </div>
         </div>
       </SmartyCard>
+
+      <div className="mt-8">
+        <SmartyCard
+          tone="cyan"
+          eyebrow="Learn more"
+          eyebrowIcon="🔬"
+          cornerIcon={BookOpen}
+          title="The Diet"
+          accent="Science"
+          description="Explore the evidence behind our approach: diet schedules decoded, the role of protein, carbs and fats, how human nutrition evolved, common myths, and the sources we rely on."
+          ctaLabel="Read The Diet Science"
+          ctaTo="/diet-science"
+        />
+      </div>
+
 
       <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Button asChild size="lg">
