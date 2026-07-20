@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ResearchRouteImport } from './routes/research'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as NutritionIntelligenceRouteImport } from './routes/nutrition-intelligence'
@@ -21,6 +20,7 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as GlossaryRouteImport } from './routes/glossary'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
+import { Route as DietScienceRouteImport } from './routes/diet-science'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -55,11 +55,6 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResearchRoute = ResearchRouteImport.update({
-  id: '/research',
-  path: '/research',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -100,6 +95,11 @@ const FaqRoute = FaqRouteImport.update({
 const DisclaimerRoute = DisclaimerRouteImport.update({
   id: '/disclaimer',
   path: '/disclaimer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DietScienceRoute = DietScienceRouteImport.update({
+  id: '/diet-science',
+  path: '/diet-science',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -214,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
+  '/diet-science': typeof DietScienceRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
   '/glossary': typeof GlossaryRoute
@@ -222,7 +223,6 @@ export interface FileRoutesByFullPath {
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
-  '/research': typeof ResearchRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -247,6 +247,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
+  '/diet-science': typeof DietScienceRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
   '/glossary': typeof GlossaryRoute
@@ -255,7 +256,6 @@ export interface FileRoutesByTo {
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
-  '/research': typeof ResearchRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -282,6 +282,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
+  '/diet-science': typeof DietScienceRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
   '/glossary': typeof GlossaryRoute
@@ -290,7 +291,6 @@ export interface FileRoutesById {
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
-  '/research': typeof ResearchRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -317,6 +317,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/contact'
+    | '/diet-science'
     | '/disclaimer'
     | '/faq'
     | '/glossary'
@@ -325,7 +326,6 @@ export interface FileRouteTypes {
     | '/nutrition-intelligence'
     | '/pricing'
     | '/privacy'
-    | '/research'
     | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
@@ -350,6 +350,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/contact'
+    | '/diet-science'
     | '/disclaimer'
     | '/faq'
     | '/glossary'
@@ -358,7 +359,6 @@ export interface FileRouteTypes {
     | '/nutrition-intelligence'
     | '/pricing'
     | '/privacy'
-    | '/research'
     | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
@@ -384,6 +384,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/contact'
+    | '/diet-science'
     | '/disclaimer'
     | '/faq'
     | '/glossary'
@@ -392,7 +393,6 @@ export interface FileRouteTypes {
     | '/nutrition-intelligence'
     | '/pricing'
     | '/privacy'
-    | '/research'
     | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
@@ -419,6 +419,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
   ContactRoute: typeof ContactRoute
+  DietScienceRoute: typeof DietScienceRoute
   DisclaimerRoute: typeof DisclaimerRoute
   FaqRoute: typeof FaqRoute
   GlossaryRoute: typeof GlossaryRoute
@@ -427,7 +428,6 @@ export interface RootRouteChildren {
   NutritionIntelligenceRoute: typeof NutritionIntelligenceRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
-  ResearchRoute: typeof ResearchRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
@@ -464,13 +464,6 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/research': {
-      id: '/research'
-      path: '/research'
-      fullPath: '/research'
-      preLoaderRoute: typeof ResearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -527,6 +520,13 @@ declare module '@tanstack/react-router' {
       path: '/disclaimer'
       fullPath: '/disclaimer'
       preLoaderRoute: typeof DisclaimerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diet-science': {
+      id: '/diet-science'
+      path: '/diet-science'
+      fullPath: '/diet-science'
+      preLoaderRoute: typeof DietScienceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -715,6 +715,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
   ContactRoute: ContactRoute,
+  DietScienceRoute: DietScienceRoute,
   DisclaimerRoute: DisclaimerRoute,
   FaqRoute: FaqRoute,
   GlossaryRoute: GlossaryRoute,
@@ -723,7 +724,6 @@ const rootRouteChildren: RootRouteChildren = {
   NutritionIntelligenceRoute: NutritionIntelligenceRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
-  ResearchRoute: ResearchRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,

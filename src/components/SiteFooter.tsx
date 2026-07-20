@@ -38,18 +38,11 @@ export function SiteFooter() {
             <span className="text-muted-foreground/40">·</span>
             <Link to="/nutrition-intelligence" className="hover:text-primary transition-colors">Nutrition Intelligence</Link>
             <span className="text-muted-foreground/40">·</span>
-            <Link to="/glossary" className="hover:text-primary transition-colors">Glossary</Link>
-            <span className="text-muted-foreground/40">·</span>
-            <Link to="/research" className="hover:text-primary transition-colors">Research</Link>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-            <a href="https://smartygym.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Smarty Gym</a>
-            <span className="text-muted-foreground/40">·</span>
-            <a href="https://smartymove.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Smarty Move</a>
+            <Link to="/diet-science" className="hover:text-primary transition-colors">The Diet Science</Link>
           </div>
 
           <div className="text-center text-sm text-muted-foreground">
+
             <p>
               © {new Date().getFullYear()}{" "}
               <span className="text-primary font-semibold">SmartyDiet</span>
