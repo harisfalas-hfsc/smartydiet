@@ -107,6 +107,21 @@ function AboutPage() {
         </div>
       </SmartyCard>
 
+      <div className="mt-8">
+        <SmartyCard
+          tone="cyan"
+          eyebrow="Learn more"
+          eyebrowIcon="🔬"
+          cornerIcon={BookOpen}
+          title="The Diet"
+          accent="Science"
+          description="Explore the evidence behind our approach: diet schedules decoded, the role of protein, carbs and fats, how human nutrition evolved, common myths, and the sources we rely on."
+          ctaLabel="Read The Diet Science"
+          ctaTo="/diet-science"
+        />
+      </div>
+
+
       <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Button asChild size="lg">
           <Link to="/questionnaire">Create my diet plan</Link>
