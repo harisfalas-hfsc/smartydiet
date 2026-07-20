@@ -1,4 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import {
+  Brain,
+  Sparkles,
+  Activity,
+  Gauge,
+  Salad,
+  Users,
+  Compass,
+} from "lucide-react";
+import { SmartyCard, SmartyRow, SmartyPill, toneClasses } from "@/components/SmartyCard";
+import { cn } from "@/lib/utils";
 
 const URL = "https://smartydiet.com/nutrition-intelligence";
 const TITLE =
@@ -56,141 +68,205 @@ export const Route = createFileRoute("/nutrition-intelligence")({
   component: NutritionIntelligencePage,
 });
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="mt-10">
-      <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
-      <div className="mt-3 space-y-3 text-muted-foreground">{children}</div>
-    </section>
-  );
-}
-
 function NutritionIntelligencePage() {
+  const blue = toneClasses("blue");
+  const purple = toneClasses("purple");
+  const green = toneClasses("green");
+
   return (
-    <article className="mx-auto max-w-3xl px-5 py-12 sm:py-16">
-      <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-        Pillar guide
-      </p>
-      <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-        Nutrition Intelligence: the AI Nutrition Intelligence Platform
-      </h1>
-      <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-        Nutrition intelligence is the ability to translate what you eat into
-        insight you can act on — calories, macros, micronutrients, patterns and
-        habits. SmartyDiet packages that intelligence into an AI-powered
-        platform that plays the role of your pocket dietitian, nutrition
-        consultant, and diet coach.
-      </p>
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      {/* Hero */}
+      <div className="mb-8 text-center">
+        <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+          🧠 Pillar guide
+        </p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+          <span className="text-primary">Nutrition</span>{" "}
+          <span className="text-green-500">Intelligence</span>
+        </h1>
+        <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
+          The layer of understanding above raw tracking. SmartyDiet turns your
+          body, goals and habits into a plan you can actually follow — instantly
+          and transparently.
+        </p>
+      </div>
 
-      <Section title="What is nutrition intelligence?">
-        <p>
-          Nutrition intelligence is the layer of understanding above raw
-          tracking. A calorie counter tells you a number. A nutrition
-          intelligence platform tells you what that number <em>means</em> for
-          your goal, your body, and your habits — and what to change next.
-        </p>
-        <p>
-          SmartyDiet combines classical dietetics (Mifflin-St Jeor BMR, TDEE,
-          macro splits, portion logic) with modern AI reasoning to score your
-          diet, personalize your plan, and adapt as your goals change.
-        </p>
-      </Section>
+      {/* What & Why */}
+      <SmartyCard
+        tone="blue"
+        eyebrow="The idea"
+        eyebrowIcon="💡"
+        cornerIcon={Brain}
+        title="What is nutrition"
+        accent="intelligence?"
+        description="A calorie counter tells you a number. A nutrition intelligence platform tells you what that number means for your goal, your body, and your habits — and what to change next."
+      >
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className={cn("rounded-2xl border p-4", blue.softBorder, blue.softBg)}>
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground">
+              🧬 What it is
+            </h3>
+            <div className="space-y-3">
+              <SmartyRow tone="blue" icon="📐" title="Classical dietetics" subtitle="Mifflin-St Jeor BMR, TDEE, macro splits, portions." />
+              <SmartyRow tone="blue" icon="🤖" title="Modern AI reasoning" subtitle="Scores your diet and personalizes your plan." />
+              <SmartyRow tone="blue" icon="🔄" title="Adaptive" subtitle="Refines as your goals and body change." />
+            </div>
+          </div>
 
-      <Section title="Why it matters">
-        <p>
-          Generic advice fails because bodies, goals and lifestyles are not
-          generic. A 65 kg endurance runner following a Mediterranean pattern
-          needs a different plan than a 90 kg lifter in a cutting phase, even
-          if they weigh the same in the morning.
-        </p>
-        <p>
-          Nutrition intelligence closes that gap: it turns your assessment into
-          a plan that respects your allergies, food preferences, culture,
-          budget and schedule.
-        </p>
-      </Section>
+          <div className={cn("rounded-2xl border p-4", blue.softBorder, blue.softBg)}>
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground">
+              🎯 Why it matters
+            </h3>
+            <div className="space-y-3">
+              <SmartyRow tone="blue" icon="🚫" title="Generic advice fails" subtitle="Bodies, goals and lifestyles aren't generic." />
+              <SmartyRow tone="blue" icon="👤" title="Respects you" subtitle="Allergies, preferences, culture, budget, schedule." />
+              <SmartyRow tone="blue" icon="📈" title="Closes the gap" subtitle="Turns assessment into an actionable plan." />
+            </div>
+          </div>
+        </div>
+      </SmartyCard>
 
-      <Section title="How the Smarty Nutrition Score™ works">
-        <p>
-          The <strong>Smarty Nutrition Score™</strong> is a composite score of
-          your current diet across four axes: macro balance, micronutrient
-          coverage, food quality (whole vs ultra-processed), and behavior
-          (portion control, meal timing, hydration).
-        </p>
-        <p>
-          Every plan raises the score you can realistically hit — no crash
-          diets, no impossible discipline.
-        </p>
-      </Section>
+      {/* Signature metrics */}
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <SmartyCard
+          tone="green"
+          eyebrow="Signature metric"
+          eyebrowIcon="🌟"
+          cornerIcon={Gauge}
+          title="Smarty Nutrition"
+          accent="Score™"
+          description="A composite score of your current diet across four axes — so progress isn't a vibe, it's a number."
+        >
+          <div className={cn("rounded-2xl border p-4", green.softBorder, green.softBg)}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <SmartyPill tone="green" icon="⚖️">Macro balance</SmartyPill>
+              <SmartyPill tone="green" icon="🥦">Micronutrient coverage</SmartyPill>
+              <SmartyPill tone="green" icon="🌾">Food quality</SmartyPill>
+              <SmartyPill tone="green" icon="⏱️">Behavior & timing</SmartyPill>
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Every plan raises the score you can realistically hit — no crash
+              diets, no impossible discipline.
+            </p>
+          </div>
+        </SmartyCard>
 
-      <Section title="What Smarty Metabolic Age™ tells you">
-        <p>
-          <strong>Smarty Metabolic Age™</strong> estimates the age your
-          metabolism is behaving like, based on your BMR, body composition
-          inputs, activity level, and dietary patterns. It's a motivating
-          summary metric — the aim is a metabolic age below your calendar age.
-        </p>
-      </Section>
+        <SmartyCard
+          tone="purple"
+          eyebrow="Signature metric"
+          eyebrowIcon="⏳"
+          cornerIcon={Activity}
+          title="Smarty Metabolic"
+          accent="Age™"
+          description="Estimates the age your metabolism is behaving like — from BMR, body composition, activity and dietary patterns."
+        >
+          <div className={cn("rounded-2xl border p-4", purple.softBorder, purple.softBg)}>
+            <div className="space-y-3">
+              <SmartyRow tone="purple" icon="🔥" title="BMR-based" subtitle="Grounded in your true resting burn." />
+              <SmartyRow tone="purple" icon="🏃" title="Activity-aware" subtitle="Adjusts for how you move day to day." />
+              <SmartyRow tone="purple" icon="🎯" title="Motivating goal" subtitle="Aim: metabolic age below your calendar age." />
+            </div>
+          </div>
+        </SmartyCard>
+      </div>
 
-      <Section title="From assessment to personalized meal plan">
-        <p>
-          You answer a smart questionnaire — body, goals, activity, food
-          preferences, allergies, schedule. SmartyDiet uses the{" "}
-          <strong>Smarty Calorie Engine™</strong> and{" "}
-          <strong>Smarty Macro Index™</strong> to build a{" "}
-          <strong>Smarty Meal Plan™</strong> with calories, macros, portions
-          and a weekly grocery list.
-        </p>
-        <p>
-          You get 2 refinements included, so the first plan is a starting
-          point, not a final verdict.
-        </p>
-      </Section>
+      {/* From assessment to plan */}
+      <div className="mt-8">
+        <SmartyCard
+          tone="cyan"
+          eyebrow="The engine"
+          eyebrowIcon="⚙️"
+          cornerIcon={Sparkles}
+          title="From assessment to your"
+          accent="meal plan"
+          description="You answer a smart questionnaire — body, goals, activity, preferences, allergies, schedule. Our engines do the rest."
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <SmartyRow tone="cyan" icon="🔥" title="Smarty Calorie Engine™" subtitle="Your daily target, calibrated to your goal." />
+            <SmartyRow tone="cyan" icon="🧮" title="Smarty Macro Index™" subtitle="Protein, carbs and fats split for your body." />
+            <SmartyRow tone="cyan" icon="🍽️" title="Smarty Meal Plan™" subtitle="Meals, portions & a weekly grocery list." />
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            ✨ You get 2 refinements included — the first plan is a starting
+            point, not a final verdict.
+          </p>
+        </SmartyCard>
+      </div>
 
-      <Section title="Macros, calories and micronutrients">
-        <p>
-          Calories decide weight direction. Macros — protein, carbs, fats —
-          decide body composition and performance. Micronutrients decide how
-          you <em>feel</em>. A good plan pays attention to all three.
-        </p>
-        <ul className="list-disc pl-5">
-          <li>Protein is prioritized to protect lean mass during a deficit.</li>
-          <li>Carbs are timed around activity where it matters.</li>
-          <li>Fats keep hormones and satiety in a healthy range.</li>
-          <li>Fiber, water and micronutrients are tracked as guardrails.</li>
-        </ul>
-      </Section>
+      {/* Macros */}
+      <div className="mt-8">
+        <SmartyCard
+          tone="orange"
+          eyebrow="The building blocks"
+          eyebrowIcon="🥗"
+          cornerIcon={Salad}
+          title="Macros, calories"
+          accent="& micronutrients"
+          description="Calories decide weight direction. Macros decide body composition. Micronutrients decide how you feel. A good plan pays attention to all three."
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SmartyRow tone="orange" icon="💪" title="Protein prioritized" subtitle="Protects lean mass during a deficit." />
+            <SmartyRow tone="orange" icon="🍚" title="Carbs, timed" subtitle="Around activity where it actually matters." />
+            <SmartyRow tone="orange" icon="🥑" title="Fats for hormones" subtitle="Keeps satiety and hormones in a healthy range." />
+            <SmartyRow tone="orange" icon="💧" title="Fiber & water" subtitle="Tracked as guardrails, not afterthoughts." />
+          </div>
+        </SmartyCard>
+      </div>
 
-      <Section title="Who nutrition intelligence is for">
-        <p>
-          People losing weight, people gaining muscle, people managing
-          conditions like insulin resistance or high blood pressure, and people
-          who simply want to eat better without a subscription trap.
-        </p>
-      </Section>
+      {/* Who it's for */}
+      <div className="mt-8">
+        <SmartyCard
+          tone="pink"
+          eyebrow="Who it's for"
+          eyebrowIcon="👥"
+          cornerIcon={Users}
+          title="Built for"
+          accent="everyone with a goal"
+          description="Whatever direction you're heading, nutrition intelligence gets you there faster — without the subscription trap."
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SmartyPill tone="pink" icon="⚖️">Losing weight</SmartyPill>
+            <SmartyPill tone="pink" icon="💪">Gaining muscle</SmartyPill>
+            <SmartyPill tone="pink" icon="🩺">Managing conditions</SmartyPill>
+            <SmartyPill tone="pink" icon="🌱">Eating better</SmartyPill>
+          </div>
+        </SmartyCard>
+      </div>
 
-      <Section title="Deeper topics">
-        <ul className="list-disc pl-5">
-          <li>
-            <Link to="/glossary" className="text-primary font-semibold hover:underline">
-              Glossary of nutrition terms
-            </Link>{" "}
-            — every metric and concept, defined.
-          </li>
-          <li>
-            <Link to="/research" className="text-primary font-semibold hover:underline">
-              Research digest
-            </Link>{" "}
-            — the evidence behind the platform.
-          </li>
-          <li>
-            <Link to="/tools" className="text-primary font-semibold hover:underline">
-              Free tools
-            </Link>{" "}
-            — BMR, macros, calorie counter.
-          </li>
-        </ul>
-      </Section>
-    </article>
+      {/* Deeper */}
+      <div className="mt-8">
+        <SmartyCard
+          tone="cyan"
+          eyebrow="Go deeper"
+          eyebrowIcon="🔬"
+          cornerIcon={Compass}
+          title="Related"
+          accent="reading"
+          description="Keep learning — the science, the terms, and the tools that back the platform."
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Link to="/diet-science" className="block">
+              <SmartyRow tone="cyan" icon="🔬" title="The Diet Science" subtitle="Evidence, myths & sources." />
+            </Link>
+            <Link to="/glossary" className="block">
+              <SmartyRow tone="cyan" icon="📖" title="Glossary" subtitle="Every metric and concept, defined." />
+            </Link>
+            <Link to="/tools" className="block">
+              <SmartyRow tone="cyan" icon="🛠️" title="Free tools" subtitle="BMR, macros, calorie counter." />
+            </Link>
+          </div>
+        </SmartyCard>
+      </div>
+
+      {/* CTA */}
+      <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <Button asChild size="lg">
+          <Link to="/questionnaire">Create my diet plan</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline">
+          <Link to="/about">About SmartyDiet</Link>
+        </Button>
+      </div>
+    </div>
   );
 }

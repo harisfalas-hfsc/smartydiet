@@ -116,6 +116,8 @@ function AboutPage() {
           title="Nutrition"
           accent="Intelligence"
           description="An AI nutrition engine that assesses your body, activity and goals, then plans meals, macros and portions the way a dietitian would — instantly and transparently."
+          ctaLabel="Learn more about Nutrition Intelligence"
+          ctaTo="/nutrition-intelligence"
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <SmartyRow tone="blue" icon="📊" title="Personal assessment" subtitle="Body, activity, goal, preferences & allergies." />
@@ -125,6 +127,7 @@ function AboutPage() {
           </div>
         </SmartyCard>
       </div>
+
 
       <div className="mt-8">
         <SmartyCard
