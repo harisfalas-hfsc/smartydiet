@@ -194,7 +194,9 @@ function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuth
         { to: "/pricing", label: "Pricing", Icon: Crown },
         { to: "/tools", label: "Tools", Icon: Wrench },
         { to: "/faq", label: "Frequently Asked Questions", Icon: HelpCircle },
+        { to: "/diet-science", label: "The Diet Science", Icon: BookOpen },
         { to: "/contact", label: "Contact", Icon: Mail },
+
       ],
     },
     {
