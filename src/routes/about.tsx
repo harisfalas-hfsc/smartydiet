@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Compass, Sparkles, BookOpen } from "lucide-react";
 
 
-import { Compass, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   SmartyCard,
