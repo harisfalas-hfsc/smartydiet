@@ -20,6 +20,7 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as GlossaryRouteImport } from './routes/glossary'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
+import { Route as DietScienceRouteImport } from './routes/diet-science'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -94,6 +95,11 @@ const FaqRoute = FaqRouteImport.update({
 const DisclaimerRoute = DisclaimerRouteImport.update({
   id: '/disclaimer',
   path: '/disclaimer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DietScienceRoute = DietScienceRouteImport.update({
+  id: '/diet-science',
+  path: '/diet-science',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
+  '/diet-science': typeof DietScienceRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
   '/glossary': typeof GlossaryRoute
@@ -240,6 +247,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
+  '/diet-science': typeof DietScienceRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
   '/glossary': typeof GlossaryRoute
@@ -274,6 +282,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
+  '/diet-science': typeof DietScienceRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
   '/glossary': typeof GlossaryRoute
@@ -308,6 +317,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/contact'
+    | '/diet-science'
     | '/disclaimer'
     | '/faq'
     | '/glossary'
@@ -340,6 +350,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/contact'
+    | '/diet-science'
     | '/disclaimer'
     | '/faq'
     | '/glossary'
@@ -373,6 +384,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/contact'
+    | '/diet-science'
     | '/disclaimer'
     | '/faq'
     | '/glossary'
@@ -407,6 +419,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
   ContactRoute: typeof ContactRoute
+  DietScienceRoute: typeof DietScienceRoute
   DisclaimerRoute: typeof DisclaimerRoute
   FaqRoute: typeof FaqRoute
   GlossaryRoute: typeof GlossaryRoute
@@ -507,6 +520,13 @@ declare module '@tanstack/react-router' {
       path: '/disclaimer'
       fullPath: '/disclaimer'
       preLoaderRoute: typeof DisclaimerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diet-science': {
+      id: '/diet-science'
+      path: '/diet-science'
+      fullPath: '/diet-science'
+      preLoaderRoute: typeof DietScienceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -695,6 +715,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
   ContactRoute: ContactRoute,
+  DietScienceRoute: DietScienceRoute,
   DisclaimerRoute: DisclaimerRoute,
   FaqRoute: FaqRoute,
   GlossaryRoute: GlossaryRoute,
