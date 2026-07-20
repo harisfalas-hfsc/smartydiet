@@ -24,8 +24,8 @@ const ENTRIES: SitemapEntry[] = [
   { path: "/faq", changefreq: "monthly", priority: "0.8" },
   { path: "/contact", changefreq: "yearly", priority: "0.5" },
   { path: "/nutrition-intelligence", changefreq: "monthly", priority: "0.95" },
-  { path: "/glossary", changefreq: "monthly", priority: "0.75" },
-  { path: "/research", changefreq: "monthly", priority: "0.7" },
+  { path: "/diet-science", changefreq: "monthly", priority: "0.85" },
+
   { path: "/tools", changefreq: "monthly", priority: "0.8" },
   { path: "/tools/bmr-calculator", changefreq: "monthly", priority: "0.8" },
   { path: "/tools/macro-calculator", changefreq: "monthly", priority: "0.8" },
