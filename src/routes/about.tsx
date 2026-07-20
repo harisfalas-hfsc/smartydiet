@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+
 import { Compass, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
