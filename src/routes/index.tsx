@@ -4,7 +4,7 @@ import { Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import logoUrl from "@/assets/smartydiet-logo.png";
+import heroNutrition from "@/assets/hero-nutrition.jpg";
 import { SmartyCard } from "@/components/SmartyCard";
 
 export const Route = createFileRoute("/")({
