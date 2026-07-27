@@ -148,9 +148,9 @@ function Home() {
         <img
           src="/favicon.png"
           alt="SmartyDiet apple icon"
-          width={48}
-          height={48}
-          className="pointer-events-none absolute left-1/2 top-6 h-9 w-9 -translate-x-1/2 opacity-90 sm:top-10 sm:h-12 sm:w-12"
+          width={82}
+          height={82}
+          className="pointer-events-none absolute left-1/2 top-6 h-[61px] w-[61px] -translate-x-1/2 opacity-90 sm:top-10 sm:h-[82px] sm:w-[82px]"
         />
         <div className="relative mx-auto w-full max-w-6xl px-5 py-16 lg:px-6 lg:py-36">
 
