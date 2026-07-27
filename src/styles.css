@@ -115,6 +115,7 @@
   --border: oklch(0.32 0 0);
   --input: oklch(0.32 0 0);
   --ring: oklch(0.745 0.131 220);
+  --gradient-brand-soft: linear-gradient(135deg, oklch(0.32 0.055 220), oklch(0.29 0.04 210));
 }
 
 @layer base {
