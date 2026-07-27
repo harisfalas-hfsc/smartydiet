@@ -126,44 +126,58 @@ function Home() {
   })();
 
 
+  const heroCtaLabel =
+    cta.kind === "has-active" ? "View my diet plans" : "Get started";
+  const heroCtaTo = cta.kind === "has-active" ? "/plans" : "/questionnaire";
+
   return (
-    <div className="mx-auto flex max-w-6xl flex-col px-4 py-8 sm:py-12">
-      {/* Hero */}
-      <section className="px-5 pb-10 pt-8 text-center sm:pb-14 sm:pt-12">
-        <div className="mx-auto max-w-3xl">
-          <img
-            src={logoUrl}
-            alt="SmartyDiet"
-            width={72}
-            height={72}
-            className="mx-auto h-18 w-18"
-          />
-          <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-            Your personal nutrition plan, built in minutes.
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
-            Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan
-            tailored to your body, goals, food preferences and constraints.
-            €9.99 — one-time payment.
-          </p>
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            {primary}
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto"
-            >
-              <Link to="/how-it-works">How it works</Link>
-            </Button>
-          </div>
-          {cta.kind === "guest" && (
-            <p className="mt-3 text-xs text-muted-foreground">
+    <div className="mx-auto flex max-w-6xl flex-col px-4 pb-8 pt-0 sm:pb-12">
+      {/* FULL-BLEED HERO — image with content on top (SmartyGym concept) */}
+      <section className="relative left-1/2 mb-8 w-screen -translate-x-1/2 overflow-hidden sm:mb-14">
+        <img
+          src={heroNutrition}
+          alt="Fresh healthy food ingredients arranged for a personalized nutrition plan"
+          width={1920}
+          height={1080}
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-[60%_center]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/92 via-black/75 to-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/25 to-transparent" />
+        <div className="relative mx-auto w-full max-w-6xl px-5 py-16 lg:px-6 lg:py-36">
+          <div className="max-w-xl">
+            <h1 className="text-[34px] font-extrabold leading-[1.05] tracking-tight text-white sm:text-[44px] lg:text-[60px]">
+              Your personal nutrition plan,
+              <br />
+              <span className="text-primary">built in minutes.</span>
+            </h1>
+            <p className="mt-5 text-base leading-relaxed text-white/80 lg:mt-6 lg:text-lg">
+              Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan
+              tailored to your body, goals, food preferences and constraints.
+              €9.99 — one-time payment.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Link
+                to={heroCtaTo}
+                className="inline-flex h-12 items-center rounded-full bg-primary px-8 text-base font-bold text-primary-foreground hover:opacity-95"
+              >
+                {heroCtaLabel}
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="inline-flex h-12 items-center rounded-full border-2 border-primary px-8 text-base font-bold text-primary hover:bg-primary/10"
+              >
+                How it works
+              </Link>
+            </div>
+            <p className="mt-4 text-sm text-white/60">
               Includes 1 initial plan + 2 refinements. No subscription.
             </p>
-          )}
+          </div>
         </div>
       </section>
+
 
       {/* Single info card */}
       <section className="mx-auto w-full max-w-4xl">
