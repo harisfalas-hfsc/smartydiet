@@ -62,12 +62,12 @@ export const SisterAppsPopup = () => {
         aria-hidden={!open}
         className={`fixed top-1/2 -translate-y-1/2 left-0 z-[60] flex items-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${open ? "translate-x-0" : "-translate-x-[calc(100%+10px)]"}`}
       >
-        <aside className="w-[260px] pl-4 pr-2 py-4 bg-card rounded-r-2xl shadow-[4px_0_24px_rgba(15,23,42,0.12)]">
+        <aside className="w-[260px] pl-4 pr-2 py-4 bg-white rounded-r-2xl shadow-[4px_0_24px_rgba(15,23,42,0.12)]">
           <div className="mb-4">
             <span className="inline-flex items-center gap-1.5 text-primary text-[11px] font-extrabold uppercase tracking-[0.2em]">
               <Sparkles className="w-3.5 h-3.5 text-primary" /> Smarty Family
             </span>
-            <h2 className="mt-1 text-[15px] font-bold text-foreground leading-tight">
+            <h2 className="mt-1 text-[15px] font-bold text-slate-900 leading-tight">
               Complete your wellness journey
             </h2>
           </div>
@@ -90,8 +90,8 @@ export const SisterAppsPopup = () => {
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-extrabold text-foreground leading-tight group-hover:text-primary transition-colors">{app.name}</h3>
-                  <p className="text-[11px] font-medium text-muted-foreground leading-snug line-clamp-2 mt-0.5">{app.tagline}</p>
+                  <h3 className="text-sm font-extrabold text-slate-900 leading-tight group-hover:text-primary transition-colors">{app.name}</h3>
+                  <p className="text-[11px] font-medium text-slate-700 leading-snug line-clamp-2 mt-0.5">{app.tagline}</p>
                 </div>
                 <ExternalLink className="w-3.5 h-3.5 text-primary shrink-0" />
               </a>
@@ -103,7 +103,7 @@ export const SisterAppsPopup = () => {
           type="button"
           onClick={() => setOpen(false)}
           aria-label="Hide panel"
-          className="h-12 w-6 rounded-r-full bg-card text-foreground flex items-center justify-center hover:bg-accent/10 transition-colors shadow-[4px_0_12px_rgba(15,23,42,0.08)]"
+          className="h-12 w-6 rounded-r-full bg-white text-slate-900 flex items-center justify-center hover:bg-slate-50 transition-colors shadow-[4px_0_12px_rgba(15,23,42,0.08)]"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
