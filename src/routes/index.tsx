@@ -132,8 +132,42 @@ function Home() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col px-4 pb-8 pt-0 sm:pb-12">
-      {/* FULL-BLEED HERO — image with content on top (SmartyGym concept) */}
-      <section className="relative left-1/2 mb-8 w-screen -translate-x-1/2 overflow-hidden sm:mb-14">
+      {/* MOBILE HERO CARD — matches SmartyMove mobile layout */}
+      <section
+        className="mt-4 mb-4 overflow-hidden rounded-[15px] border-[1.5px] border-sky-300/70 bg-cover bg-[68%_center] bg-no-repeat p-5 shadow-[0_12px_36px_-28px_rgba(0,0,0,0.8)] sm:hidden"
+        style={{
+          backgroundImage: `linear-gradient(to bottom, rgba(4,10,18,0.55), rgba(4,10,18,0.88)), url(${heroNutrition})`,
+        }}
+      >
+        <h1 className="text-[30px] font-black leading-[1.08] tracking-tight text-[#E8EEF7]">
+          Your personal nutrition plan,
+          <br />
+          <span className="text-primary">built in minutes.</span>
+        </h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-[rgba(232,238,247,0.82)]">
+          Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan
+          tailored to your body, goals, food preferences and constraints. €9.99
+          — one-time payment.
+        </p>
+        <Link
+          to={heroCtaTo}
+          className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-[15px] font-extrabold text-primary-foreground"
+        >
+          {heroCtaLabel}
+        </Link>
+        <Link
+          to="/how-it-works"
+          className="mt-2.5 flex h-[46px] w-full items-center justify-center rounded-full border-2 border-primary bg-[rgba(4,10,18,0.35)] text-[15px] font-extrabold text-primary"
+        >
+          How it works
+        </Link>
+        <p className="mt-3 text-center text-[13px] text-[rgba(232,238,247,0.6)]">
+          Includes 1 initial plan + 2 refinements. No subscription.
+        </p>
+      </section>
+
+      {/* FULL-BLEED HERO — desktop/tablet */}
+      <section className="relative left-1/2 mb-8 hidden w-screen -translate-x-1/2 overflow-hidden sm:mb-14 sm:block">
         <img
           src={heroNutrition}
           alt="Fresh healthy food ingredients arranged for a personalized nutrition plan"
@@ -178,6 +212,7 @@ function Home() {
           </div>
         </div>
       </section>
+
 
 
       {/* Single info card */}
