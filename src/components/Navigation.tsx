@@ -129,6 +129,9 @@ export function Navigation() {
                   <Link to="/plans">My plans</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link to="/notifications">Notifications</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link to="/questionnaire">New plan</Link>
                 </DropdownMenuItem>
                 {isAdmin && (
@@ -183,6 +186,7 @@ function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuth
             heading: "App",
             items: [
               { to: "/plans", label: "My plans", Icon: ClipboardList },
+              { to: "/notifications", label: "Notifications", Icon: Bell },
               { to: "/questionnaire", label: "New plan", Icon: Sparkles },
               ...(isAdmin ? [{ to: "/admin", label: "Admin", Icon: Shield }] : []),
             ],
