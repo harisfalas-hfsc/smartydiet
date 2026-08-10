@@ -104,6 +104,8 @@ export function Navigation() {
 
         <div className="flex shrink-0 items-center gap-2">
           {loading ? null : user ? (
+            <>
+            <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
