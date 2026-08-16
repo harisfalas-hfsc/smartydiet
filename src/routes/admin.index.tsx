@@ -215,7 +215,7 @@ function AdminInner() {
       )}
 
       <Tabs defaultValue="overview">
-        <TabsList className="mb-4 grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+        <TabsList className="mb-4 grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview">
             <TrendingUp className="mr-1 h-4 w-4" />
             Overview
@@ -223,6 +223,10 @@ function AdminInner() {
           <TabsTrigger value="users">
             <Users className="mr-1 h-4 w-4" />
             Users
+          </TabsTrigger>
+          <TabsTrigger value="messages">
+            <MessageSquare className="mr-1 h-4 w-4" />
+            Messages
           </TabsTrigger>
           <TabsTrigger value="subs">
             <Crown className="mr-1 h-4 w-4" />
@@ -233,6 +237,7 @@ function AdminInner() {
             Purchases
           </TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="overview">
           <OverviewTab
