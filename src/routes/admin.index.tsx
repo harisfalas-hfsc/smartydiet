@@ -803,7 +803,7 @@ function AdminThreadCard({
 
       {open && (
         <div className="mt-3 space-y-2">
-          {thread.messages.map((m) => (
+          {(thread.messages ?? []).map((m) => (
             <div
               key={m.id}
               className={
