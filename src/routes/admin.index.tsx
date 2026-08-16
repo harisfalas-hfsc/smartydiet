@@ -295,6 +295,10 @@ function AdminInner() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="messages">
+          <MessagesTab />
+        </TabsContent>
+
         <TabsContent value="subs">
           <Card>
             <CardHeader>
