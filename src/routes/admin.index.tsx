@@ -612,3 +612,245 @@ function UserTable({
     </div>
   );
 }
+
+function MessagesTab() {
+  const listThreads = useServerFn(adminListThreads);
+  const replyFn = useServerFn(adminReplyToThread);
+  const setThreads = useServerFn(adminSetThreads);
+  const broadcastFn = useServerFn(adminBroadcast);
+
+  const [threads, setThreadList] = useState<SupportThread[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const [bTitle, setBTitle] = useState("");
+  const [bBody, setBBody] = useState("");
+  const [bAudience, setBAudience] = useState<"all" | "subscribers">("all");
+  const [bBusy, setBBusy] = useState(false);
+  const [bResult, setBResult] = useState<string | null>(null);
+
+  const load = async (s: string) => {
+    setLoading(true);
+    const res = await listThreads({ data: { search: s } });
+    if ("threads" in res) {
+      setThreadList(res.threads);
+      setError(null);
+    } else setError(res.error);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    void load("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const unread = threads.filter((t) => t.admin_unread).length;
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Megaphone className="h-4 w-4 text-primary" /> Broadcast announcement
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input placeholder="Title" value={bTitle} onChange={(e) => setBTitle(e.target.value)} />
+          <Textarea
+            rows={3}
+            placeholder="Message body"
+            value={bBody}
+            onChange={(e) => setBBody(e.target.value)}
+            className="resize-none"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={bAudience === "all" ? "default" : "outline"}
+              onClick={() => setBAudience("all")}
+            >
+              All members
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={bAudience === "subscribers" ? "default" : "outline"}
+              onClick={() => setBAudience("subscribers")}
+            >
+              Paying customers
+            </Button>
+            <Button
+              size="sm"
+              disabled={bBusy || !bTitle.trim()}
+              onClick={async () => {
+                setBBusy(true);
+                const res = await broadcastFn({
+                  data: { title: bTitle, body: bBody, audience: bAudience },
+                });
+                setBResult("ok" in res ? `Sent to ${res.sent} member(s).` : res.error);
+                if ("ok" in res) {
+                  setBTitle("");
+                  setBBody("");
+                }
+                setBBusy(false);
+              }}
+            >
+              <Send className="mr-2 h-4 w-4" /> {bBusy ? "Sending…" : "Send"}
+            </Button>
+            {bResult && <span className="text-xs text-muted-foreground">{bResult}</span>}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Mail className="h-4 w-4 text-primary" /> Support inbox
+            {unread > 0 && <Badge variant="destructive">{unread} unread</Badge>}
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-8"
+                placeholder="Search name, email, subject"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && load(search)}
+              />
+            </div>
+            <Button size="sm" variant="outline" onClick={() => load(search)}>
+              Search
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            </div>
+          ) : threads.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No messages yet.</p>
+          ) : (
+            threads.map((t) => (
+              <AdminThreadCard
+                key={t.id}
+                thread={t}
+                onReply={async (message) => {
+                  const res = await replyFn({ data: { threadId: t.id, message } });
+                  await load(search);
+                  return "error" in res ? res.error : null;
+                }}
+                onToggleRead={async () => {
+                  await setThreads({ data: { threadIds: [t.id], read: t.admin_unread } });
+                  await load(search);
+                }}
+                onClose={async () => {
+                  await setThreads({ data: { threadIds: [t.id], status: "closed", read: true } });
+                  await load(search);
+                }}
+                onDelete={async () => {
+                  await setThreads({ data: { threadIds: [t.id], remove: true } });
+                  await load(search);
+                }}
+              />
+            ))
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function AdminThreadCard({
+  thread,
+  onReply,
+  onToggleRead,
+  onClose,
+  onDelete,
+}: {
+  thread: SupportThread;
+  onReply: (message: string) => Promise<string | null>;
+  onToggleRead: () => Promise<void>;
+  onClose: () => Promise<void>;
+  onDelete: () => Promise<void>;
+}) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(thread.admin_unread);
+
+  return (
+    <div className="rounded-2xl border p-3">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-start justify-between gap-3 text-left"
+      >
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold">
+            {thread.subject}{" "}
+            {thread.admin_unread && <Badge variant="destructive">New</Badge>}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {thread.name} · {thread.email} · {thread.status} ·{" "}
+            {new Date(thread.last_message_at).toLocaleString()}
+          </p>
+        </div>
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-2">
+          {thread.messages.map((m) => (
+            <div
+              key={m.id}
+              className={
+                m.sender === "admin"
+                  ? "rounded-xl bg-primary/10 p-2 text-sm"
+                  : "rounded-xl bg-secondary p-2 text-sm"
+              }
+            >
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                {m.sender === "admin" ? "SmartyDiet" : thread.name} ·{" "}
+                {new Date(m.created_at).toLocaleString()}
+              </p>
+              <p className="whitespace-pre-wrap">{m.body}</p>
+            </div>
+          ))}
+          <Textarea
+            rows={3}
+            placeholder="Write a reply…"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="resize-none"
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              disabled={busy || !text.trim()}
+              onClick={async () => {
+                setBusy(true);
+                await onReply(text);
+                setText("");
+                setBusy(false);
+              }}
+            >
+              <Send className="mr-2 h-4 w-4" /> Reply
+            </Button>
+            <Button size="sm" variant="outline" onClick={onToggleRead}>
+              Mark {thread.admin_unread ? "read" : "unread"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={onClose}>
+              Close
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onDelete}>
+              Delete
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
