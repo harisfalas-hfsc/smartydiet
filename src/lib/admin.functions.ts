@@ -255,3 +255,115 @@ export const adminGetStripeAnalytics = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(e) };
     }
   });
+
+export type AdminSessionRow = {
+  id: string;
+  user_id: string;
+  email: string | null;
+  status: string;
+  duration_weeks: number;
+  credits_total: number;
+  credits_used: number;
+  amount_cents: number;
+  currency: string;
+  created_at: string;
+};
+
+export const adminListSessions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { userId?: string; search?: string }) => data)
+  .handler(async ({ context, data }): Promise<{ sessions: AdminSessionRow[] } | { error: string }> => {
+    try {
+      await assertAdmin(context as any);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      let q = supabaseAdmin
+        .from("generation_sessions")
+        .select("id, user_id, status, duration_weeks, credits_total, credits_used, amount_cents, currency, created_at")
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (data.userId) q = q.eq("user_id", data.userId);
+      const { data: sessions, error } = await q;
+      if (error) return { error: error.message };
+
+      const emails = new Map<string, string | null>();
+      let page = 1;
+      for (let i = 0; i < 5; i++) {
+        const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+        const users = list?.users ?? [];
+        for (const u of users) emails.set(u.id, u.email ?? null);
+        if (users.length < 200) break;
+        page++;
+      }
+
+      let rows: AdminSessionRow[] = (sessions ?? []).map((s: any) => ({
+        id: s.id,
+        user_id: s.user_id,
+        email: emails.get(s.user_id) ?? null,
+        status: s.status,
+        duration_weeks: s.duration_weeks,
+        credits_total: s.credits_total,
+        credits_used: s.credits_used,
+        amount_cents: s.amount_cents,
+        currency: s.currency,
+        created_at: s.created_at,
+      }));
+
+      if (data.search) {
+        const term = data.search.trim().toLowerCase();
+        rows = rows.filter((r) => (r.email ?? "").toLowerCase().includes(term));
+      }
+      return { sessions: rows };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : "Failed to list plans" };
+    }
+  });
+
+export type AdminStats = {
+  members: number;
+  newMembers30d: number;
+  plansTotal: number;
+  plansCompleted: number;
+  paidSessions: number;
+  creditsOutstanding: number;
+  admins: number;
+  threads: number;
+};
+
+export const adminGetStats = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<AdminStats | { error: string }> => {
+    try {
+      await assertAdmin(context as any);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const [{ data: profiles }, { data: sessions }, { data: roles }, { count: threads }] =
+        await Promise.all([
+          supabaseAdmin.from("profiles").select("id, created_at, bonus_credits").limit(5000),
+          supabaseAdmin
+            .from("generation_sessions")
+            .select("status, credits_total, credits_used")
+            .limit(5000),
+          supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
+          supabaseAdmin.from("support_threads").select("id", { count: "exact", head: true }),
+        ]);
+
+      const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const all = (sessions ?? []) as any[];
+      return {
+        members: (profiles ?? []).length,
+        newMembers30d: (profiles ?? []).filter(
+          (p: any) => new Date(p.created_at).getTime() >= cutoff,
+        ).length,
+        plansTotal: all.length,
+        plansCompleted: all.filter((s) => s.status === "completed").length,
+        paidSessions: all.filter((s) => s.status === "paid" || s.status === "completed").length,
+        creditsOutstanding: all.reduce(
+          (sum, s) => sum + Math.max(0, (s.credits_total ?? 0) - (s.credits_used ?? 0)),
+          0,
+        ),
+        admins: (roles ?? []).length,
+        threads: threads ?? 0,
+      };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : "Failed to load stats" };
+    }
+  });
