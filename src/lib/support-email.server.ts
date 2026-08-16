@@ -1,6 +1,8 @@
 // Server-only email helpers for the support system.
 // All sends go through `safeSend` so an email failure never breaks a support action.
 
+import { sendTemplateEmail } from "@/lib/email-templates/send-email";
+
 export const SUPPORT_ADMIN_EMAIL = "smartydiet@outlook.com";
 
 export type SupportEmailTemplate =
@@ -16,41 +18,18 @@ type SendArgs = {
   templateData?: Record<string, unknown>;
 };
 
-/**
- * Lovable managed email is only available once a verified sender domain is
- * configured for this project. Until then this resolves to `false` and sends
- * are skipped (logged) instead of throwing.
- */
-function emailConfigured(): boolean {
-  return Boolean(process.env["SENDER_DOMAIN"]);
-}
-
-async function send(args: SendArgs): Promise<void> {
-  const origin =
-    process.env["PUBLIC_SITE_URL"] ??
-    process.env["SITE_URL"] ??
-    "https://smartydiet.com";
-
-  const res = await fetch(`${origin}/lovable/email/transactional/send`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env["SUPABASE_SERVICE_ROLE_KEY"] ?? ""}`,
-    },
-    body: JSON.stringify(args),
-  });
-  if (!res.ok) throw new Error(`email send failed: ${res.status}`);
-}
-
 export async function safeSend(args: SendArgs): Promise<void> {
   try {
-    if (!emailConfigured()) {
+    const result = await sendTemplateEmail(args.templateName, args.recipientEmail, {
+      templateData: args.templateData,
+      idempotencyKey: args.idempotencyKey,
+      replyTo: args.replyTo,
+    });
+    if (!result.sent) {
       console.warn(
-        `[support-email] skipped ${args.templateName} to ${args.recipientEmail} — no verified sender domain configured`,
+        `[support-email] skipped ${args.templateName} to ${args.recipientEmail} — ${result.reason}`,
       );
-      return;
     }
-    await send(args);
   } catch (e) {
     console.error("[support-email] send failed", args.templateName, e);
   }
