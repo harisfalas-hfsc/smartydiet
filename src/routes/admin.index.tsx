@@ -33,6 +33,10 @@ import {
   Plus,
   Minus,
   Crown,
+  MessageSquare,
+  Megaphone,
+  Send,
+  Mail,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { isAdminEmail } from "@/lib/admin";
@@ -44,6 +48,14 @@ import {
   type AdminUserRow,
   type AdminAnalytics,
 } from "@/lib/admin.functions";
+import {
+  adminListThreads,
+  adminReplyToThread,
+  adminSetThreads,
+  adminBroadcast,
+  type SupportThread,
+} from "@/lib/support.functions";
+import { Textarea } from "@/components/ui/textarea";
 import { getStripeEnvironment } from "@/lib/stripe";
 import type { StripeEnv } from "@/lib/stripe.server";
 
