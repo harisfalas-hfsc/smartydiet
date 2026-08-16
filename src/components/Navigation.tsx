@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdminEmail } from "@/lib/admin";
+import { NotificationBell } from "@/components/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -104,6 +105,8 @@ export function Navigation() {
 
         <div className="flex shrink-0 items-center gap-2">
           {loading ? null : user ? (
+            <>
+            <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -128,6 +131,9 @@ export function Navigation() {
                 <DropdownMenuItem asChild>
                   <Link to="/questionnaire">New plan</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/inbox">Inbox</Link>
+                </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin">
@@ -141,6 +147,8 @@ export function Navigation() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
+
 
           ) : (
             <>
@@ -181,6 +189,7 @@ function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuth
             items: [
               { to: "/plans", label: "My plans", Icon: ClipboardList },
               { to: "/questionnaire", label: "New plan", Icon: Sparkles },
+              { to: "/inbox", label: "Inbox", Icon: Mail },
               ...(isAdmin ? [{ to: "/admin", label: "Admin", Icon: Shield }] : []),
             ],
           },
