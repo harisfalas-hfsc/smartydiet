@@ -21,7 +21,7 @@ export type SupportThread = {
   admin_unread: boolean;
   user_unread: boolean;
   created_at: string;
-  messages: SupportMessage[];
+  messages?: SupportMessage[];
 };
 
 export type AppNotification = {
@@ -105,60 +105,61 @@ export const submitContactMessage = createServerFn({ method: "POST" })
 export const submitMemberMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { subject: string; message: string; name?: string }) => d)
-  .handler(async ({ data, context }): Promise<{ ok: true; threadId: string } | { error: string }> => {
-    const ctx = context as unknown as Ctx;
-    const email = clean(ctx.claims?.email, 200).toLowerCase();
-    const name = clean(data.name, 120) || email.split("@")[0] || "Member";
-    const subject = clean(data.subject, 200) || "Support request";
-    const message = clean(data.message, 8000);
-    if (!message) return { error: "Please write a message." };
+  .handler(
+    async ({ data, context }): Promise<{ ok: true; threadId: string } | { ok: false; error: string }> => {
+      const ctx = context as unknown as Ctx;
+      const email = clean(ctx.claims?.email, 200).toLowerCase();
+      const name = clean(data.name, 120) || email.split("@")[0] || "Member";
+      const subject = clean(data.subject, 200) || "Support request";
+      const message = clean(data.message, 8000);
+      if (!message) return { ok: false, error: "Please write a message." };
 
-    const { data: thread, error } = await ctx.supabase
-      .from("support_threads")
-      .insert({
-        user_id: ctx.userId,
+      const { data: thread, error } = await ctx.supabase
+        .from("support_threads")
+        .insert({
+          user_id: ctx.userId,
+          name,
+          email,
+          subject,
+          admin_unread: true,
+          status: "open",
+        })
+        .select("id")
+        .single();
+      if (error || !thread) return { ok: false, error: error?.message ?? "Could not send your message." };
+
+      const { data: msg } = await ctx.supabase
+        .from("support_messages")
+        .insert({ thread_id: thread.id, sender: "user", author_id: ctx.userId, body: message })
+        .select("id")
+        .single();
+
+      const { notifyAdminsOfInboundMessage } = await import("@/lib/support-notify.server");
+      await notifyAdminsOfInboundMessage({
+        threadId: thread.id,
+        messageId: msg?.id ?? thread.id,
         name,
         email,
         subject,
-        admin_unread: true,
-        status: "open",
-      })
-      .select("id")
-      .single();
-    if (error || !thread) return { error: error?.message ?? "Could not send your message." };
-
-    const { data: msg } = await ctx.supabase
-      .from("support_messages")
-      .insert({ thread_id: thread.id, sender: "user", author_id: ctx.userId, body: message })
-      .select("id")
-      .single();
-
-    const { notifyAdminsOfInboundMessage } = await import("@/lib/support-notify.server");
-    await notifyAdminsOfInboundMessage({
-      threadId: thread.id,
-      messageId: msg?.id ?? thread.id,
-      name,
-      email,
-      subject,
-      message,
-    });
-    return { ok: true, threadId: thread.id };
-  });
+        message,
+      });
+      return { ok: true, threadId: thread.id };
+    },
+  );
 
 export const listMyThreads = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ threads: SupportThread[] } | { error: string }> => {
+  .handler(async ({ context }): Promise<{ threads: SupportThread[] }> => {
     const ctx = context as unknown as Ctx;
-    const { data: threads, error } = await ctx.supabase
+    const { data: threads } = await ctx.supabase
       .from("support_threads")
       .select("*")
       .eq("user_id", ctx.userId)
       .eq("user_deleted", false)
       .order("last_message_at", { ascending: false })
       .limit(100);
-    if (error) return { error: error.message };
     const ids = (threads ?? []).map((t: any) => t.id);
-    let byThread = new Map<string, SupportMessage[]>();
+    const byThread = new Map<string, SupportMessage[]>();
     if (ids.length) {
       const { data: msgs } = await ctx.supabase
         .from("support_messages")
@@ -178,25 +179,25 @@ export const listMyThreads = createServerFn({ method: "POST" })
 
 export const replyToThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { threadId: string; message: string }) => d)
-  .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
+  .inputValidator((d: { threadId: string; body: string }) => d)
+  .handler(async ({ data, context }): Promise<{ ok: boolean; error?: string }> => {
     const ctx = context as unknown as Ctx;
-    const message = clean(data.message, 8000);
-    if (!message) return { error: "Please write a message." };
+    const message = clean(data.body, 8000);
+    if (!message) return { ok: false, error: "Please write a message." };
 
     const { data: thread } = await ctx.supabase
       .from("support_threads")
       .select("id, name, email, subject, user_id")
       .eq("id", data.threadId)
       .maybeSingle();
-    if (!thread || thread.user_id !== ctx.userId) return { error: "Conversation not found." };
+    if (!thread || thread.user_id !== ctx.userId) return { ok: false, error: "Conversation not found." };
 
     const { data: msg, error } = await ctx.supabase
       .from("support_messages")
       .insert({ thread_id: thread.id, sender: "user", author_id: ctx.userId, body: message })
       .select("id")
       .single();
-    if (error) return { error: error.message };
+    if (error) return { ok: false, error: error.message };
 
     await ctx.supabase
       .from("support_threads")
@@ -218,54 +219,52 @@ export const replyToThread = createServerFn({ method: "POST" })
 
 export const setThreadsRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { threadIds: string[] }) => d)
-  .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
+  .inputValidator((d: { ids: string[]; read: boolean }) => d)
+  .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
     const ctx = context as unknown as Ctx;
-    if (!data.threadIds?.length) return { ok: true };
+    if (!data.ids?.length) return { ok: true };
     const { error } = await ctx.supabase
       .from("support_threads")
-      .update({ user_unread: false })
-      .in("id", data.threadIds)
+      .update({ user_unread: !data.read })
+      .in("id", data.ids)
       .eq("user_id", ctx.userId);
-    if (error) return { error: error.message };
-    return { ok: true };
+    return { ok: !error };
   });
 
 export const deleteMyThreads = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { threadIds: string[] }) => d)
-  .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
+  .inputValidator((d: { ids: string[] }) => d)
+  .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
     const ctx = context as unknown as Ctx;
-    if (!data.threadIds?.length) return { ok: true };
+    if (!data.ids?.length) return { ok: true };
     const { error } = await ctx.supabase
       .from("support_threads")
       .update({ user_deleted: true })
-      .in("id", data.threadIds)
+      .in("id", data.ids)
       .eq("user_id", ctx.userId);
-    if (error) return { error: error.message };
-    return { ok: true };
+    return { ok: !error };
   });
 
 /* ----------------------------- notifications ------------------------------ */
 
-export const listMyNotifications = createServerFn({ method: "POST" })
+export const listNotifications = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ notifications: AppNotification[] } | { error: string }> => {
+  .handler(async ({ context }): Promise<{ notifications: AppNotification[]; unread: number }> => {
     const ctx = context as unknown as Ctx;
-    const { data, error } = await ctx.supabase
+    const { data } = await ctx.supabase
       .from("notifications")
       .select("id, kind, title, body, read_at, created_at")
       .eq("user_id", ctx.userId)
       .order("created_at", { ascending: false })
       .limit(200);
-    if (error) return { error: error.message };
-    return { notifications: (data ?? []) as AppNotification[] };
+    const notifications = (data ?? []) as AppNotification[];
+    return { notifications, unread: notifications.filter((n) => !n.read_at).length };
   });
 
 export const setNotificationsRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { ids: string[]; read: boolean }) => d)
-  .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
+  .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
     const ctx = context as unknown as Ctx;
     if (!data.ids?.length) return { ok: true };
     const { error } = await ctx.supabase
@@ -273,14 +272,25 @@ export const setNotificationsRead = createServerFn({ method: "POST" })
       .update({ read_at: data.read ? new Date().toISOString() : null })
       .in("id", data.ids)
       .eq("user_id", ctx.userId);
-    if (error) return { error: error.message };
-    return { ok: true };
+    return { ok: !error };
+  });
+
+export const markNotificationsRead = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ ok: boolean }> => {
+    const ctx = context as unknown as Ctx;
+    const { error } = await ctx.supabase
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("user_id", ctx.userId)
+      .is("read_at", null);
+    return { ok: !error };
   });
 
 export const deleteNotifications = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { ids: string[] }) => d)
-  .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
+  .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
     const ctx = context as unknown as Ctx;
     if (!data.ids?.length) return { ok: true };
     const { error } = await ctx.supabase
@@ -288,8 +298,7 @@ export const deleteNotifications = createServerFn({ method: "POST" })
       .delete()
       .in("id", data.ids)
       .eq("user_id", ctx.userId);
-    if (error) return { error: error.message };
-    return { ok: true };
+    return { ok: !error };
   });
 
 /* --------------------------------- admin ---------------------------------- */
