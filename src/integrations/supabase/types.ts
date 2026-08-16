@@ -114,6 +114,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          dedupe_key: string | null
+          id: string
+          kind: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -174,6 +207,86 @@ export type Database = {
         }
         Relationships: []
       }
+      support_messages: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          id: string
+          sender: string
+          thread_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          sender: string
+          thread_id: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          sender?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "support_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_threads: {
+        Row: {
+          admin_unread: boolean
+          created_at: string
+          email: string
+          id: string
+          last_message_at: string
+          name: string
+          status: string
+          subject: string
+          updated_at: string
+          user_deleted: boolean
+          user_id: string | null
+          user_unread: boolean
+        }
+        Insert: {
+          admin_unread?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          last_message_at?: string
+          name?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_deleted?: boolean
+          user_id?: string | null
+          user_unread?: boolean
+        }
+        Update: {
+          admin_unread?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          last_message_at?: string
+          name?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_deleted?: boolean
+          user_id?: string | null
+          user_unread?: boolean
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -207,6 +320,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_app_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { submitContactMessage } from "@/lib/support.functions";
 import { useState } from "react";
 import {
   Mail,
@@ -39,6 +41,7 @@ export const Route = createFileRoute("/contact")({
 });
 
 function Contact() {
+  const send = useServerFn(submitContactMessage);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,18 +53,16 @@ function Contact() {
     setSending(true);
     const form = e.currentTarget;
     const fd = new FormData(form);
-    fd.append("_captcha", "false");
-    fd.append("_template", "table");
-    fd.append(
-      "_subject",
-      `[SmartyDiet] ${String(fd.get("subject") || "New contact message")}`,
-    );
     try {
-      const res = await fetch(`https://formsubmit.co/ajax/${SUPPORT_EMAIL}`, {
-        method: "POST",
-        body: fd,
+      const res = await send({
+        data: {
+          name: String(fd.get("name") ?? ""),
+          email: String(fd.get("email") ?? ""),
+          subject: String(fd.get("subject") ?? ""),
+          message: String(fd.get("message") ?? ""),
+        },
       });
-      if (!res.ok) throw new Error("send_failed");
+      if ("error" in res) throw new Error(res.error);
       setSent(true);
       form.reset();
       setFiles([]);
@@ -71,6 +72,7 @@ function Contact() {
       setSending(false);
     }
   }
+
 
   return (
     <div className="mx-auto w-full max-w-[760px] px-4 pb-6 pt-4 space-y-6">
