@@ -132,7 +132,9 @@ export function Navigation() {
                   <Link to="/questionnaire">New plan</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/inbox">Inbox</Link>
+                  <Link to="/inbox" search={{ tab: "updates" as const, compose: false }}>
+                    Inbox
+                  </Link>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
