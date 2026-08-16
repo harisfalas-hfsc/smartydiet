@@ -1,6 +1,7 @@
 /** Emails that always get admin access in the app. */
 export const ADMIN_EMAILS = [
   "harisfalas@gmail.com",
+  "smartydiet@outlook.com",
 ];
 
 export function isAdminEmail(email: string | null | undefined): boolean {
