@@ -98,6 +98,7 @@ export const submitContactMessage = createServerFn({ method: "POST" })
       templateData: { name, subject, message },
     });
     return { ok: true };
+
   });
 
 /* -------------------------------- member ---------------------------------- */
@@ -143,6 +144,24 @@ export const submitMemberMessage = createServerFn({ method: "POST" })
         subject,
         message,
       });
+
+      // Confirmation back to the member: email + in-app notification.
+      if (validEmail(email)) {
+        const { safeSend } = await import("@/lib/support-email.server");
+        await safeSend({
+          templateName: "contact-confirmation",
+          recipientEmail: email,
+          idempotencyKey: `contact-confirm-${thread.id}`,
+          templateData: { name, subject, message },
+        });
+      }
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("notifications").insert({
+        user_id: ctx.userId,
+        title: "We received your message",
+        body: `Thanks for reaching out about "${subject}". Our team replies within 24–48 hours.`,
+      });
+
       return { ok: true, threadId: thread.id };
     },
   );
