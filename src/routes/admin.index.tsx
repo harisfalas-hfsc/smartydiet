@@ -1,856 +1,197 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
+  ArrowLeft,
+  BarChart3,
+  ClipboardList,
+  Crown,
+  Loader2,
+  MessageSquare,
   ShieldAlert,
   Users,
-  CreditCard,
-  TrendingUp,
-  Search,
-  Loader2,
-  Plus,
-  Minus,
-  Crown,
-  MessageSquare,
-  Megaphone,
-  Send,
-  Mail,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
 import { isAdminEmail } from "@/lib/admin";
-import {
-  adminListUsers,
-  adminGrantCredits,
-  adminSetRole,
-  adminGetStripeAnalytics,
-  type AdminUserRow,
-  type AdminAnalytics,
-} from "@/lib/admin.functions";
-import {
-  adminListThreads,
-  adminReplyToThread,
-  adminSetThreads,
-  adminBroadcast,
-  type SupportThread,
-} from "@/lib/support.functions";
-import { Textarea } from "@/components/ui/textarea";
-import { getStripeEnvironment } from "@/lib/stripe";
-import type { StripeEnv } from "@/lib/stripe.server";
+import { adminGetStats, type AdminStats } from "@/lib/admin.functions";
+import { adminUnreadMessageCount } from "@/lib/support.functions";
+import { AdminMessagesTab } from "@/components/admin/AdminMessagesTab";
+import { AdminUsersTab } from "@/components/admin/AdminUsersTab";
+import { AdminRevenueTab } from "@/components/admin/AdminRevenueTab";
+import { AdminPlansTab } from "@/components/admin/AdminPlansTab";
 
-export const Route = createFileRoute("/admin/")({ component: AdminPage });
+export const Route = createFileRoute("/admin/")({
+  head: () => ({
+    meta: [
+      { title: "Admin — SmartyDiet" },
+      { name: "description", content: "SmartyDiet admin hub: members, plans, revenue and support." },
+      { property: "og:title", content: "Admin — SmartyDiet" },
+      { property: "og:description", content: "Members, plans, revenue and support in one hub." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  component: AdminPage,
+});
+
+type SectionKey = "revenue" | "plans" | "messages" | "members" | "customers";
+
+const SECTIONS: Array<{
+  key: SectionKey;
+  label: string;
+  description: string;
+  Icon: typeof Users;
+}> = [
+  { key: "revenue", label: "Revenue", description: "Payments & trends", Icon: BarChart3 },
+  { key: "plans", label: "Diet plans", description: "Every generation", Icon: ClipboardList },
+  { key: "messages", label: "Messages", description: "Support inbox", Icon: MessageSquare },
+  { key: "members", label: "Members", description: "All accounts", Icon: Users },
+  { key: "customers", label: "Customers", description: "Paying members", Icon: Crown },
+];
 
 function AdminPage() {
+  const getStats = useServerFn(adminGetStats);
+  const getUnread = useServerFn(adminUnreadMessageCount);
+
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [section, setSection] = useState<SectionKey | null>(null);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [unread, setUnread] = useState(0);
+
   useEffect(() => {
     supabase.auth
       .getUser()
       .then(({ data }) => setAuthed(isAdminEmail(data.user?.email)))
       .catch(() => setAuthed(false));
   }, []);
+
+  const refresh = useCallback(async () => {
+    const [s, u] = await Promise.all([
+      getStats({ data: {} } as never).catch(() => null),
+      getUnread({ data: {} } as never).catch(() => null),
+    ]);
+    if (s && !("error" in (s as object))) setStats(s as AdminStats);
+    if (u && typeof (u as { count?: number }).count === "number")
+      setUnread((u as { count: number }).count);
+  }, [getStats, getUnread]);
+
+  useEffect(() => {
+    if (authed) void refresh();
+  }, [authed, refresh]);
+
   if (authed === null) {
     return (
-      <Shell>
-        <div className="mt-10 flex justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
-      </Shell>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
     );
   }
+
   if (!authed) {
     return (
-      <Shell>
-        <div className="mx-auto mt-10 max-w-sm rounded-3xl border bg-card p-6 text-center shadow-sm">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-            <ShieldAlert className="h-6 w-6" />
-          </div>
-          <h1 className="mt-4 text-xl font-extrabold">Admin access only</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            This area is restricted to SmartyDiet administrators.
-          </p>
-        </div>
-      </Shell>
+      <div className="mx-auto w-full max-w-md px-4 py-20 text-center">
+        <ShieldAlert className="mx-auto h-10 w-10 text-destructive" />
+        <h1 className="mt-4 text-2xl font-extrabold">Admins only</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          You need an admin account to open this page.
+        </p>
+      </div>
     );
   }
-  return (
-    <Shell>
-      <AdminInner />
-    </Shell>
-  );
-}
 
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-[100dvh] w-full flex-col bg-background text-foreground">
-      
-      <main className="mx-auto w-full max-w-[1100px] px-4 pb-16 pt-4 lg:px-8">{children}</main>
-    </div>
-  );
-}
-
-function safeEnv(): StripeEnv {
-  try {
-    return getStripeEnvironment();
-  } catch {
-    return "sandbox";
-  }
-}
-
-function AdminInner() {
-  const [env, setEnv] = useState<StripeEnv>(safeEnv());
-  const listUsers = useServerFn(adminListUsers);
-  const grantCredits = useServerFn(adminGrantCredits);
-  const setRole = useServerFn(adminSetRole);
-  const getAnalytics = useServerFn(adminGetStripeAnalytics);
-
-  const [users, setUsers] = useState<AdminUserRow[]>([]);
-  const [usersLoading, setUsersLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
-  const [analyticsLoading, setAnalyticsLoading] = useState(true);
-  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
-  const [grantUser, setGrantUser] = useState<AdminUserRow | null>(null);
-  const [grantCount, setGrantCount] = useState(1);
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  async function reloadUsers() {
-    setUsersLoading(true);
-    const r = await listUsers({
-      data: { search: search.trim() || undefined, environment: env },
-    });
-    if ("error" in r) setMessage(r.error);
-    else setUsers(r.users);
-    setUsersLoading(false);
-  }
-  async function reloadAnalytics() {
-    setAnalyticsLoading(true);
-    setAnalyticsError(null);
-    try {
-      const r = await getAnalytics({ data: { environment: env } });
-      if ("error" in r) {
-        setAnalyticsError(r.error);
-        setAnalytics(null);
-      } else setAnalytics(r);
-    } catch (e) {
-      setAnalyticsError(e instanceof Error ? e.message : "Failed");
-    } finally {
-      setAnalyticsLoading(false);
-    }
-  }
-  useEffect(() => {
-    void reloadUsers();
-    void reloadAnalytics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [env]);
-
-  const activeSubs = useMemo(() => users.filter((u) => u.has_active_subscription), [users]);
-  const withPurchases = useMemo(() => users.filter((u) => u.purchases > 0), [users]);
-
-  async function doGrant(delta: number) {
-    if (!grantUser) return;
-    setBusy(true);
-    const r = await grantCredits({ data: { userId: grantUser.id, credits: delta } });
-    setBusy(false);
-    if ("error" in r) setMessage(r.error);
-    else {
-      setMessage(`Updated ${grantUser.email}: now ${r.credits} credits`);
-      setGrantUser(null);
-      void reloadUsers();
-    }
-  }
-  async function toggleAdmin(u: AdminUserRow) {
-    if (isAdminEmail(u.email)) {
-      setMessage("This user is admin by email allowlist (edit src/lib/admin.ts to change).");
-      return;
-    }
-    setBusy(true);
-    const r = await setRole({ data: { userId: u.id, makeAdmin: !u.is_admin } });
-    setBusy(false);
-    if ("error" in r) setMessage(r.error);
-    else {
-      setMessage(`${u.email} is now ${!u.is_admin ? "admin" : "regular user"}`);
-      void reloadUsers();
-    }
-  }
+  const active = SECTIONS.find((s) => s.key === section);
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-extrabold">Admin panel</h1>
-          <p className="text-sm text-muted-foreground">
-            Environment: <span className="font-mono">{env}</span>
-          </p>
-        </div>
-        <div className="inline-flex rounded-full border p-1 text-xs font-semibold">
-          {(["sandbox", "live"] as StripeEnv[]).map((e) => (
+    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:py-12 lg:max-w-5xl lg:px-8 lg:py-16">
+      <PageHeader
+        eyebrow="Control room"
+        icon={ShieldAlert}
+        title="Admin"
+        subtitle="Everything that runs SmartyDiet — members, plans, revenue and support."
+      />
+
+      {!section ? (
+        <div className="space-y-5">
+          {unread > 0 && (
             <button
-              key={e}
               type="button"
-              onClick={() => setEnv(e)}
-              className={`rounded-full px-3 py-1 ${env === e ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              onClick={() => setSection("messages")}
+              className="flex w-full items-center gap-3 rounded-2xl border-2 border-primary bg-primary/10 p-4 text-left"
             >
-              {e}
+              <MessageSquare className="h-5 w-5 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold">
+                  {unread} unread {unread === 1 ? "message" : "messages"}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  Members are waiting for a reply.
+                </span>
+              </span>
             </button>
-          ))}
-        </div>
-      </div>
-      {message && (
-        <div className="mb-4 rounded-2xl bg-primary/10 p-3 text-sm font-semibold text-foreground">
-          {message}{" "}
-          <button onClick={() => setMessage(null)} className="ml-2 text-xs underline">
-            dismiss
-          </button>
-        </div>
-      )}
-
-      <Tabs defaultValue="overview">
-        <TabsList className="mb-4 grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="overview">
-            <TrendingUp className="mr-1 h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="users">
-            <Users className="mr-1 h-4 w-4" />
-            Users
-          </TabsTrigger>
-          <TabsTrigger value="messages">
-            <MessageSquare className="mr-1 h-4 w-4" />
-            Messages
-          </TabsTrigger>
-          <TabsTrigger value="subs">
-            <Crown className="mr-1 h-4 w-4" />
-            Subs
-          </TabsTrigger>
-          <TabsTrigger value="purchases">
-            <CreditCard className="mr-1 h-4 w-4" />
-            Purchases
-          </TabsTrigger>
-        </TabsList>
-
-
-        <TabsContent value="overview">
-          <OverviewTab
-            analytics={analytics}
-            loading={analyticsLoading}
-            error={analyticsError}
-            users={users}
-            onReload={reloadAnalytics}
-          />
-        </TabsContent>
-
-        <TabsContent value="users">
-          <Card>
-            <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
-              <CardTitle>All users ({users.length})</CardTitle>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="email…"
-                    className="h-9 w-48 pl-8"
-                    onKeyDown={(e) => e.key === "Enter" && reloadUsers()}
-                  />
-                </div>
-                <Button size="sm" onClick={reloadUsers} disabled={usersLoading}>
-                  {usersLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Reload"}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <UserTable
-                users={users}
-                onGrant={(u) => {
-                  setGrantUser(u);
-                  setGrantCount(1);
-                }}
-                onToggleAdmin={toggleAdmin}
-                busy={busy}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="messages">
-          <MessagesTab />
-        </TabsContent>
-
-        <TabsContent value="subs">
-          <Card>
-            <CardHeader>
-              <CardTitle>Active subscribers ({activeSubs.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <UserTable
-                users={activeSubs}
-                onGrant={(u) => {
-                  setGrantUser(u);
-                  setGrantCount(1);
-                }}
-                onToggleAdmin={toggleAdmin}
-                busy={busy}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="purchases">
-          <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0">
-              <CardTitle>Users with purchases ({withPurchases.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <UserTable
-                users={withPurchases}
-                onGrant={(u) => {
-                  setGrantUser(u);
-                  setGrantCount(1);
-                }}
-                onToggleAdmin={toggleAdmin}
-                busy={busy}
-              />
-            </CardContent>
-          </Card>
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Recent Stripe transactions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {analyticsLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : analytics?.recent?.length ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {analytics.recent.map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="font-mono text-[10px]">{r.id.slice(0, 14)}…</TableCell>
-                          <TableCell className="whitespace-nowrap text-xs">
-                            {new Date(r.created).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-xs">{r.email ?? "—"}</TableCell>
-                          <TableCell className="text-xs">{r.description ?? "—"}</TableCell>
-                          <TableCell className="text-xs">{r.status}</TableCell>
-                          <TableCell>
-                            <Badge variant={r.type === "subscription" ? "default" : "secondary"}>
-                              {r.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-xs">
-                            {r.amount.toFixed(2)} {r.currency}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No transactions{analyticsError ? ` — ${analyticsError}` : ""}.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <Dialog open={!!grantUser} onOpenChange={(o) => !o && setGrantUser(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Grant credits</DialogTitle>
-          </DialogHeader>
-          {grantUser && (
-            <div className="space-y-3">
-              <div className="text-sm">
-                <div className="font-semibold">{grantUser.email}</div>
-                <div className="text-muted-foreground">
-                  Currently: {grantUser.credits} credits
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setGrantCount((c) => Math.max(1, c - 1))}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  value={grantCount}
-                  onChange={(e) => setGrantCount(Number(e.target.value) || 1)}
-                  className="text-center"
-                />
-                <Button variant="outline" size="sm" onClick={() => setGrantCount((c) => c + 1)}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
           )}
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => grantUser && doGrant(-grantCount)}
-              disabled={busy}
-            >
-              Remove {grantCount}
-            </Button>
-            <Button onClick={() => doGrant(grantCount)} disabled={busy}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : `Grant ${grantCount}`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
 
-function OverviewTab({
-  analytics,
-  loading,
-  error,
-  users,
-  onReload,
-}: {
-  analytics: AdminAnalytics | null;
-  loading: boolean;
-  error: string | null;
-  users: AdminUserRow[];
-  onReload: () => void;
-}) {
-  const totalCredits = users.reduce((s, u) => s + u.credits, 0);
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
-          label="Total revenue"
-          value={
-            analytics
-              ? `${analytics.totalRevenue.toFixed(2)} ${analytics.currency}`
-              : loading
-                ? "…"
-                : "—"
-          }
-        />
-        <Stat label="Payments count" value={String(analytics?.paymentsCount ?? 0)} />
-        <Stat label="Active subscriptions" value={String(analytics?.activeSubscriptions ?? 0)} />
-        <Stat label="Product purchases" value={String(analytics?.productPurchases ?? 0)} />
-      </div>
-      <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle>Revenue by month</CardTitle>
-          <Button size="sm" variant="outline" onClick={onReload} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          {!analytics?.revenueByMonth?.length && !loading && !error && (
-            <p className="text-sm text-muted-foreground">No revenue yet.</p>
-          )}
-          {analytics?.revenueByMonth?.length ? (
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.revenueByMonth}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="month" fontSize={12} />
-                  <YAxis fontSize={12} />
-                  <Tooltip
-                    formatter={(v: number) => `${v.toFixed(2)} ${analytics.currency}`}
-                    contentStyle={{ borderRadius: 12, fontSize: 12 }}
-                  />
-                  <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Total users" value={String(users.length)} />
-        <Stat label="Bonus credits outstanding" value={String(totalCredits)} />
-        <Stat
-          label="Subscription payments"
-          value={String(analytics?.subscriptionPurchases ?? 0)}
-        />
-      </div>
-    </div>
-  );
-}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label="Members" value={stats?.members ?? "—"} />
+            <Stat label="New (30d)" value={stats?.newMembers30d ?? "—"} />
+            <Stat label="Plans" value={stats?.plansTotal ?? "—"} />
+            <Stat label="Credits left" value={stats?.creditsOutstanding ?? "—"} />
+          </div>
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            {SECTIONS.map(({ key, label, description, Icon }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setSection(key)}
+                className="group relative flex flex-col items-start gap-2 rounded-2xl border border-blue-400 bg-card p-4 text-left transition hover:border-primary hover:shadow-md"
+              >
+                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-bold">{label}</span>
+                <span className="text-xs text-muted-foreground">{description}</span>
+                {key === "messages" && unread > 0 && (
+                  <span className="absolute right-3 top-3 grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                    {unread > 9 ? "9+" : unread}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="mt-1 text-2xl font-extrabold">{value}</div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function UserTable({
-  users,
-  onGrant,
-  onToggleAdmin,
-  busy,
-}: {
-  users: AdminUserRow[];
-  onGrant: (u: AdminUserRow) => void;
-  onToggleAdmin: (u: AdminUserRow) => void;
-  busy: boolean;
-}) {
-  if (!users.length)
-    return <p className="py-6 text-center text-sm text-muted-foreground">No users.</p>;
-  return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Email</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead className="text-right">Age</TableHead>
-            <TableHead className="text-right">Credits</TableHead>
-            <TableHead className="text-right">Purchases</TableHead>
-            <TableHead>Subscription</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead className="whitespace-nowrap">Joined</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((u) => (
-            <TableRow key={u.id}>
-              <TableCell className="text-xs">{u.email || "—"}</TableCell>
-              <TableCell className="text-xs">{u.name || "—"}</TableCell>
-              <TableCell className="text-right font-mono text-xs">{u.age ?? "—"}</TableCell>
-              <TableCell className="text-right font-mono text-xs">{u.credits}</TableCell>
-              <TableCell className="text-right font-mono text-xs">{u.purchases}</TableCell>
-              <TableCell>
-                {u.has_active_subscription ? (
-                  <Badge>{u.subscription_status ?? "active"}</Badge>
-                ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
-                )}
-              </TableCell>
-              <TableCell>
-                {u.is_admin ? (
-                  <Badge variant="default">
-                    <Crown className="mr-1 h-3 w-3" />
-                    admin
-                  </Badge>
-                ) : (
-                  <span className="text-xs text-muted-foreground">user</span>
-                )}
-              </TableCell>
-              <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                {new Date(u.created_at).toLocaleDateString()}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onGrant(u)}
-                    disabled={busy}
-                  >
-                    credits
-                  </Button>
-                  {!isAdminEmail(u.email) && (
-                    <Button
-                      size="sm"
-                      variant={u.is_admin ? "outline" : "secondary"}
-                      onClick={() => onToggleAdmin(u)}
-                      disabled={busy}
-                    >
-                      {u.is_admin ? "revoke" : "make admin"}
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-
-function MessagesTab() {
-  const listThreads = useServerFn(adminListThreads);
-  const replyFn = useServerFn(adminReplyToThread);
-  const setThreads = useServerFn(adminSetThreads);
-  const broadcastFn = useServerFn(adminBroadcast);
-
-  const [threads, setThreadList] = useState<SupportThread[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  const [bTitle, setBTitle] = useState("");
-  const [bBody, setBBody] = useState("");
-  const [bAudience, setBAudience] = useState<"all" | "subscribers">("all");
-  const [bBusy, setBBusy] = useState(false);
-  const [bResult, setBResult] = useState<string | null>(null);
-
-  const load = async (s: string) => {
-    setLoading(true);
-    const res = await listThreads({ data: { search: s } });
-    if ("threads" in res) {
-      setThreadList(res.threads);
-      setError(null);
-    } else setError(res.error);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    void load("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const unread = threads.filter((t) => t.admin_unread).length;
-
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Megaphone className="h-4 w-4 text-primary" /> Broadcast announcement
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Input placeholder="Title" value={bTitle} onChange={(e) => setBTitle(e.target.value)} />
-          <Textarea
-            rows={3}
-            placeholder="Message body"
-            value={bBody}
-            onChange={(e) => setBBody(e.target.value)}
-            className="resize-none"
-          />
-          <div className="flex flex-wrap items-center gap-2">
+      ) : (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between gap-2">
             <Button
-              type="button"
+              variant="ghost"
               size="sm"
-              variant={bAudience === "all" ? "default" : "outline"}
-              onClick={() => setBAudience("all")}
-            >
-              All members
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={bAudience === "subscribers" ? "default" : "outline"}
-              onClick={() => setBAudience("subscribers")}
-            >
-              Paying customers
-            </Button>
-            <Button
-              size="sm"
-              disabled={bBusy || !bTitle.trim()}
-              onClick={async () => {
-                setBBusy(true);
-                const res = await broadcastFn({
-                  data: { title: bTitle, body: bBody, audience: bAudience },
-                });
-                setBResult("ok" in res ? `Sent to ${res.sent} member(s).` : res.error);
-                if ("ok" in res) {
-                  setBTitle("");
-                  setBBody("");
-                }
-                setBBusy(false);
+              onClick={() => {
+                setSection(null);
+                void refresh();
               }}
             >
-              <Send className="mr-2 h-4 w-4" /> {bBusy ? "Sending…" : "Send"}
+              <ArrowLeft className="mr-2 h-4 w-4" /> Admin hub
             </Button>
-            {bResult && <span className="text-xs text-muted-foreground">{bResult}</span>}
+            <p className="text-sm font-bold">{active?.label}</p>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Mail className="h-4 w-4 text-primary" /> Support inbox
-            {unread > 0 && <Badge variant="destructive">{unread} unread</Badge>}
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                className="pl-8"
-                placeholder="Search name, email, subject"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && load(search)}
-              />
-            </div>
-            <Button size="sm" variant="outline" onClick={() => load(search)}>
-              Search
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            </div>
-          ) : threads.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No messages yet.</p>
-          ) : (
-            threads.map((t) => (
-              <AdminThreadCard
-                key={t.id}
-                thread={t}
-                onReply={async (message) => {
-                  const res = await replyFn({ data: { threadId: t.id, message } });
-                  await load(search);
-                  return "error" in res ? res.error : null;
-                }}
-                onToggleRead={async () => {
-                  await setThreads({ data: { threadIds: [t.id], read: t.admin_unread } });
-                  await load(search);
-                }}
-                onClose={async () => {
-                  await setThreads({ data: { threadIds: [t.id], status: "closed", read: true } });
-                  await load(search);
-                }}
-                onDelete={async () => {
-                  await setThreads({ data: { threadIds: [t.id], remove: true } });
-                  await load(search);
-                }}
-              />
-            ))
-          )}
-        </CardContent>
-      </Card>
+          {section === "revenue" && <AdminRevenueTab />}
+          {section === "plans" && <AdminPlansTab />}
+          {section === "messages" && <AdminMessagesTab />}
+          {section === "members" && <AdminUsersTab />}
+          {section === "customers" && <AdminUsersTab onlyCustomers />}
+        </div>
+      )}
     </div>
   );
 }
 
-function AdminThreadCard({
-  thread,
-  onReply,
-  onToggleRead,
-  onClose,
-  onDelete,
-}: {
-  thread: SupportThread;
-  onReply: (message: string) => Promise<string | null>;
-  onToggleRead: () => Promise<void>;
-  onClose: () => Promise<void>;
-  onDelete: () => Promise<void>;
-}) {
-  const [text, setText] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [open, setOpen] = useState(thread.admin_unread);
-
+function Stat({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-2xl border p-3">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-start justify-between gap-3 text-left"
-      >
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold">
-            {thread.subject}{" "}
-            {thread.admin_unread && <Badge variant="destructive">New</Badge>}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {thread.name} · {thread.email} · {thread.status} ·{" "}
-            {new Date(thread.last_message_at).toLocaleString()}
-          </p>
-        </div>
-      </button>
-
-      {open && (
-        <div className="mt-3 space-y-2">
-          {(thread.messages ?? []).map((m) => (
-            <div
-              key={m.id}
-              className={
-                m.sender === "admin"
-                  ? "rounded-xl bg-primary/10 p-2 text-sm"
-                  : "rounded-xl bg-secondary p-2 text-sm"
-              }
-            >
-              <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                {m.sender === "admin" ? "SmartyDiet" : thread.name} ·{" "}
-                {new Date(m.created_at).toLocaleString()}
-              </p>
-              <p className="whitespace-pre-wrap">{m.body}</p>
-            </div>
-          ))}
-          <Textarea
-            rows={3}
-            placeholder="Write a reply…"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="resize-none"
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              disabled={busy || !text.trim()}
-              onClick={async () => {
-                setBusy(true);
-                await onReply(text);
-                setText("");
-                setBusy(false);
-              }}
-            >
-              <Send className="mr-2 h-4 w-4" /> Reply
-            </Button>
-            <Button size="sm" variant="outline" onClick={onToggleRead}>
-              Mark {thread.admin_unread ? "read" : "unread"}
-            </Button>
-            <Button size="sm" variant="outline" onClick={onClose}>
-              Close
-            </Button>
-            <Button size="sm" variant="ghost" onClick={onDelete}>
-              Delete
-            </Button>
-          </div>
-        </div>
-      )}
+    <div className="rounded-2xl border border-blue-400 bg-card p-4">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-extrabold">{value}</p>
     </div>
   );
 }
