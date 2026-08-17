@@ -1,9 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import heroNutrition from "@/assets/hero-nutrition.jpg";
 
 export const Route = createFileRoute("/")({
@@ -47,15 +44,6 @@ type CtaState =
   | { kind: "loading" }
   | { kind: "guest" }
   | { kind: "member" };
-
-const INCLUDES = [
-  "Calorie & macro targets",
-  "Full 1, 2 or 4-week meal plan",
-  "Weekly grocery list",
-  "2 free refinements",
-  "PDF export + printable list",
-  "Saved to your account",
-];
 
 function Home() {
   const { user, loading } = useAuth();

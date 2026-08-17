@@ -71,7 +71,7 @@ function HowItWorks() {
   const { freeAccessMode } = useFreeAccessMode();
   const steps = freeAccessMode ? FREE_STEPS : STEPS;
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:py-12">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       <div className="mb-8 text-center">
         <p className="text-xs font-semibold uppercase tracking-wider text-primary">
           How it works

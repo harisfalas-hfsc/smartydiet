@@ -75,7 +75,7 @@ function Contact() {
 
 
   return (
-    <div className="mx-auto w-full max-w-[760px] px-4 pb-6 pt-4 space-y-6">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-12 space-y-6">
       {/* Hero card */}
       <Card className="border-2 border-primary">
         <CardContent className="p-6">
