@@ -11,14 +11,15 @@ function applyTheme(theme: Theme) {
 }
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
-    const next: Theme = stored === "dark" || stored === "light" ? stored : "light";
+    const next: Theme = stored === "dark" || stored === "light" ? stored : "dark";
     setThemeState(next);
     applyTheme(next);
   }, []);
+
 
   const setTheme = useCallback((next: Theme) => {
     setThemeState(next);
