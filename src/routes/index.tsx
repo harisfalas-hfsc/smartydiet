@@ -59,7 +59,6 @@ const INCLUDES = [
 ];
 
 function Home() {
-  const { freeAccessMode } = useFreeAccessMode();
   const { user, loading } = useAuth();
   const [cta, setCta] = useState<CtaState>({ kind: "loading" });
 
@@ -72,26 +71,6 @@ function Home() {
     setCta({ kind: "member" });
   }, [user, loading]);
 
-  const primary = (() => {
-    if (cta.kind === "loading")
-      return (
-        <Button size="lg" disabled className="w-full sm:w-auto">
-          Get started
-        </Button>
-      );
-    if (cta.kind === "member")
-      return (
-        <Button asChild size="lg" className="w-full sm:w-auto">
-          <Link to="/plans">View my diet plans</Link>
-        </Button>
-      );
-
-    return (
-      <Button asChild size="lg" className="w-full sm:w-auto">
-        <Link to="/questionnaire">Get started</Link>
-      </Button>
-    );
-  })();
 
   const heroCtaLabel =
     cta.kind === "member" ? "View my diet plans" : "Get started";
