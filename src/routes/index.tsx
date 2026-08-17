@@ -78,50 +78,46 @@ function Home() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col px-4 pb-8 pt-0 sm:pb-12">
-      {/* MOBILE — clean cards, no image */}
-      <section className="mt-4 mb-4 rounded-[15px] border-[1.5px] border-sky-300/70 bg-card p-6 shadow-[0_12px_36px_-28px_rgba(0,0,0,0.8)] sm:hidden">
-        <h1 className="text-[28px] font-black leading-[1.1] tracking-tight text-foreground">
-          Your personal nutrition plan,
+      {/* MOBILE — centered, image-free, single screen */}
+      <section className="mt-6 text-center sm:hidden">
+        <h1 className="text-[34px] font-extrabold uppercase leading-[1.05] tracking-tight text-foreground">
+          Your personal nutrition plan
           <br />
-          <span className="text-primary">built in minutes.</span>
+          <span className="text-primary">built in minutes</span>
         </h1>
 
-        <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-          Answer a smart questionnaire and get a full 1, 2 or 4-week diet plan
-          tailored to your body, goals and food preferences. No appointments,
-          no nutritionist visits.
+        <p className="mx-auto mt-5 max-w-[22rem] text-[15px] leading-relaxed text-muted-foreground">
+          Answer a smart questionnaire. Get a full tailor-made diet plan built
+          around your body, goals, food preferences and constraints.
         </p>
 
-        <div className="mt-5 flex flex-col gap-2.5">
+        <div className="mt-8 flex flex-col gap-3">
           <Link
             to={heroCtaTo}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-[15px] font-extrabold text-primary-foreground"
+            className="flex h-14 w-full items-center justify-center rounded-full bg-primary text-[16px] font-extrabold text-primary-foreground no-underline"
+            style={{ textDecoration: "none" }}
           >
             {heroCtaLabel}
           </Link>
+          <Link
+            to="/how-it-works"
+            className="flex h-14 w-full items-center justify-center rounded-full border-2 border-primary text-[16px] font-bold text-primary no-underline"
+            style={{ textDecoration: "none" }}
+          >
+            How it works
+          </Link>
+          <Link
+            to="/tools"
+            className="flex h-14 w-full items-center justify-center rounded-full border-2 border-primary text-[16px] font-bold text-primary no-underline"
+            style={{ textDecoration: "none" }}
+          >
+            Free nutrition tools
+          </Link>
         </div>
-      </section>
 
-      <section className="mb-4 rounded-[15px] border-[1.5px] border-emerald-300/50 bg-card p-6 sm:hidden">
-        <h2 className="text-[15px] font-extrabold uppercase tracking-wide text-foreground">
-          What you get
-        </h2>
-        <ul className="mt-4 grid gap-2.5">
-          {INCLUDES.map((it) => (
-            <li
-              key={it}
-              className="flex items-start gap-2.5 text-[14px] leading-snug text-muted-foreground"
-            >
-              <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none text-primary" />
-              <span>{it}</span>
-            </li>
-          ))}
-        </ul>
-
-        <p className="mt-5 text-[12px] leading-snug text-muted-foreground/70">
-          This is not medical advice. Smarty Diet is designed for healthy people
-          who want to enrich their diet, understand what they eat, and make
-          better food choices.
+        <p className="mx-auto mt-6 max-w-[22rem] text-[12px] leading-snug text-muted-foreground/70">
+          Not medical advice. SmartyDiet is made for healthy people who want to
+          enrich their diet and make better food choices.
         </p>
       </section>
 
