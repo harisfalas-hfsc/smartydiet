@@ -116,7 +116,7 @@ export function Navigation() {
           {loading ? null : (
             <>
               {user && <NotificationBell />}
-              <DropdownMenu>
+              <DropdownMenu open={accountOpen} onOpenChange={setAccountOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
