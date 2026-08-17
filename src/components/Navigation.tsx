@@ -43,8 +43,9 @@ export function Navigation() {
   const navigate = useNavigate();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [navCount, setNavCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+
 
   useEffect(() => {
     const unsub = router.subscribe("onResolved", () => {
