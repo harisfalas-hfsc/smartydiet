@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+import { useTheme } from "@/hooks/useTheme";
 
 
 export function Navigation() {
