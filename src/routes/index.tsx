@@ -142,7 +142,7 @@ function Home() {
               </Link>
               <Link
                 to="/how-it-works"
-                className="inline-flex h-12 items-center rounded-full border-2 border-primary px-8 text-base font-bold text-primary no-underline hover:bg-primary/10"
+                className="inline-flex h-12 items-center rounded-full border-2 border-white/80 bg-white/10 px-8 text-base font-bold text-white no-underline backdrop-blur-sm hover:bg-white/20"
               >
                 How it works
               </Link>
