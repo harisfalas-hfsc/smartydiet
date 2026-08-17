@@ -49,6 +49,10 @@ export const createDietCheckout = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<CheckoutResult> => {
     try {
+      const { readFreeAccessMode, FREE_ACCESS_BLOCK_MESSAGE } = await import(
+        "@/lib/free-access.server"
+      );
+      if (await readFreeAccessMode()) return { error: FREE_ACCESS_BLOCK_MESSAGE };
       const { supabase, userId } = context;
       const { data: userData } = await supabase.auth.getUser();
       const email = userData.user?.email ?? undefined;
@@ -113,6 +117,10 @@ export const markSessionPaid = createServerFn({ method: "POST" })
   .inputValidator((input: { stripeSessionId: string; environment: StripeEnv }) => input)
   .handler(async ({ data, context }) => {
     try {
+      const { readFreeAccessMode, FREE_ACCESS_BLOCK_MESSAGE } = await import(
+        "@/lib/free-access.server"
+      );
+      if (await readFreeAccessMode()) return { paid: false, error: FREE_ACCESS_BLOCK_MESSAGE };
       const stripe = createStripeClient(data.environment);
       const cs = await stripe.checkout.sessions.retrieve(data.stripeSessionId);
       if (cs.payment_status !== "paid") return { paid: false };

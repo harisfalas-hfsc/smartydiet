@@ -19,7 +19,6 @@ interface SitemapEntry {
 const ENTRIES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/about", changefreq: "monthly", priority: "0.8" },
-  { path: "/pricing", changefreq: "monthly", priority: "0.9" },
   { path: "/how-it-works", changefreq: "monthly", priority: "0.8" },
   { path: "/faq", changefreq: "monthly", priority: "0.8" },
   { path: "/contact", changefreq: "yearly", priority: "0.5" },
@@ -40,8 +39,17 @@ const ENTRIES: SitemapEntry[] = [
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: () => {
-        const urls = ENTRIES.map((e) =>
+      GET: async () => {
+        const { readFreeAccessMode } = await import("@/lib/free-access.server");
+        const freeAccessMode = await readFreeAccessMode();
+        const entries = freeAccessMode
+          ? ENTRIES
+          : [
+              ...ENTRIES.slice(0, 2),
+              { path: "/pricing", changefreq: "monthly" as const, priority: "0.9" },
+              ...ENTRIES.slice(2),
+            ];
+        const urls = entries.map((e) =>
           [
             "  <url>",
             `    <loc>${BASE_URL}${e.path}</loc>`,

@@ -4,6 +4,7 @@ import { Compass, BookOpen, Brain } from "lucide-react";
 
 
 import { cn } from "@/lib/utils";
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import {
   SmartyCard,
   SmartyPill,
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/about")({
 });
 
 function AboutPage() {
+  const { freeAccessMode } = useFreeAccessMode();
   const t = toneClasses("purple");
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
@@ -44,7 +46,7 @@ function AboutPage() {
         </h1>
         <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
           SmartyDiet combines personalized diet planning with free tools so anyone can eat
-          with intention — no subscription, no guesswork.
+          with intention{freeAccessMode ? " — no guesswork." : " — no subscription, no guesswork."}
         </p>
       </div>
 
@@ -55,7 +57,7 @@ function AboutPage() {
         cornerIcon={Compass}
         title="Nutrition made"
         accent="personal."
-        description="We package the assessment, calculation and planning work of a dietitian into an always-available AI — accessible for one €9.99 payment."
+        description={freeAccessMode ? "We package the assessment, calculation and planning work of a dietitian into an always-available AI." : "We package the assessment, calculation and planning work of a dietitian into an always-available AI — accessible for one €9.99 payment."}
       >
         <div className="grid gap-6 lg:grid-cols-2">
           <div className={cn("rounded-2xl border p-4", t.softBorder, t.softBg)}>

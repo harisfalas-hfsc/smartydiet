@@ -1,6 +1,10 @@
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+
 const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
 
 export function PaymentTestModeBanner() {
+  const { freeAccessMode } = useFreeAccessMode();
+  if (freeAccessMode) return null;
   if (!clientToken) {
     return (
       <div className="w-full bg-red-100 border-b border-red-300 px-4 py-2 text-center text-xs sm:text-sm text-red-800">

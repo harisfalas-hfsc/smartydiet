@@ -11,6 +11,7 @@ import {
   MessageSquare,
   ShieldAlert,
   Users,
+  Lock,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import { AdminMessagesTab } from "@/components/admin/AdminMessagesTab";
 import { AdminUsersTab } from "@/components/admin/AdminUsersTab";
 import { AdminRevenueTab } from "@/components/admin/AdminRevenueTab";
 import { AdminPlansTab } from "@/components/admin/AdminPlansTab";
+import { AdminPaymentsTab } from "@/components/admin/AdminPaymentsTab";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
@@ -35,7 +37,7 @@ export const Route = createFileRoute("/admin/")({
   component: AdminPage,
 });
 
-type SectionKey = "revenue" | "plans" | "messages" | "members" | "customers";
+type SectionKey = "revenue" | "plans" | "messages" | "members" | "customers" | "payments";
 
 const SECTIONS: Array<{
   key: SectionKey;
@@ -48,6 +50,7 @@ const SECTIONS: Array<{
   { key: "messages", label: "Messages", description: "Support inbox", Icon: MessageSquare },
   { key: "members", label: "Members", description: "All accounts", Icon: Users },
   { key: "customers", label: "Customers", description: "Paying members", Icon: Crown },
+  { key: "payments", label: "Payments", description: "Free access mode", Icon: Lock },
 ];
 
 function AdminPage() {
@@ -181,6 +184,7 @@ function AdminPage() {
           {section === "messages" && <AdminMessagesTab />}
           {section === "members" && <AdminUsersTab />}
           {section === "customers" && <AdminUsersTab onlyCustomers />}
+          {section === "payments" && <AdminPaymentsTab />}
         </div>
       )}
     </div>

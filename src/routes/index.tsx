@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import heroNutrition from "@/assets/hero-nutrition.jpg";
 import { SmartyCard } from "@/components/SmartyCard";
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -81,6 +82,7 @@ const INCLUDES = [
 ];
 
 function Home() {
+  const { freeAccessMode } = useFreeAccessMode();
   const { user, loading } = useAuth();
   const [cta, setCta] = useState<CtaState>({ kind: "loading" });
 
@@ -146,8 +148,8 @@ function Home() {
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed text-[rgba(232,238,247,0.82)]">
           Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan
-          tailored to your body, goals, food preferences and constraints. €9.99
-          — one-time payment.
+          tailored to your body, goals, food preferences and constraints.
+          {!freeAccessMode && " €9.99 — one-time payment."}
         </p>
         <Link
           to={heroCtaTo}
@@ -162,7 +164,9 @@ function Home() {
           How it works
         </Link>
         <p className="mt-3 text-center text-[13px] text-[rgba(232,238,247,0.6)]">
-          Includes 1 initial plan + 2 refinements. No subscription.
+          {freeAccessMode
+            ? "Includes 1 initial plan + 2 refinements."
+            : "Includes 1 initial plan + 2 refinements. No subscription."}
         </p>
       </section>
 
@@ -190,7 +194,7 @@ function Home() {
             <p className="mt-5 text-base leading-relaxed text-white/80 lg:mt-6 lg:text-lg">
               Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan
               tailored to your body, goals, food preferences and constraints.
-              €9.99 — one-time payment.
+              {!freeAccessMode && " €9.99 — one-time payment."}
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link
@@ -207,7 +211,9 @@ function Home() {
               </Link>
             </div>
             <p className="mt-4 text-sm text-white/60">
-              Includes 1 initial plan + 2 refinements. No subscription.
+              {freeAccessMode
+                ? "Includes 1 initial plan + 2 refinements."
+                : "Includes 1 initial plan + 2 refinements. No subscription."}
             </p>
           </div>
         </div>
@@ -224,7 +230,7 @@ function Home() {
           cornerIcon={Sparkles}
           title="From questionnaire"
           accent="to plan."
-          description="Three steps. One payment. No subscription."
+          description={freeAccessMode ? "Three simple steps to your plan." : "Three steps. One payment. No subscription."}
         >
           <div className="mt-2 grid gap-6 sm:grid-cols-3 sm:gap-4">
             {STEPS.map((s) => (
@@ -260,12 +266,16 @@ function Home() {
           </div>
 
           <div className="mt-8 border-t border-border pt-8 text-center">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-              One-time payment
-            </p>
-            <p className="mt-2 text-5xl font-extrabold tracking-tight">
-              €9.99
-            </p>
+            {!freeAccessMode && (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  One-time payment
+                </p>
+                <p className="mt-2 text-5xl font-extrabold tracking-tight">
+                  €9.99
+                </p>
+              </>
+            )}
             <p className="mt-2 text-sm text-muted-foreground">
               One personalized plan. Yours to keep.
             </p>
