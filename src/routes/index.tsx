@@ -110,7 +110,7 @@ function Home() {
       </section>
 
       {/* FULL-BLEED HERO — desktop/tablet */}
-      <section className="relative left-1/2 mb-8 hidden w-screen -translate-x-1/2 overflow-hidden sm:mb-14 sm:block">
+      <section className="relative left-1/2 mb-0 hidden w-screen -translate-x-1/2 overflow-hidden sm:block">
         <img
           src={heroNutrition}
           alt="Fresh healthy food ingredients arranged for a personalized nutrition plan"
@@ -122,6 +122,9 @@ function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/92 via-black/75 to-black/25" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+        {/* fade the photo into the page background so it merges seamlessly */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent via-background/70 to-background" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-t from-transparent to-background" />
         <div className="relative mx-auto w-full max-w-6xl px-5 py-16 lg:px-6 lg:py-36">
           <div className="max-w-xl">
             <h1 className="text-[34px] font-extrabold leading-[1.05] tracking-tight text-white sm:text-[44px] lg:text-[60px]">
