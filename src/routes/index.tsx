@@ -199,21 +199,8 @@ function Home() {
               >
                 <Link to={heroCtaTo}>{heroCtaLabel}</Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-full border-primary px-8 text-base font-bold text-primary hover:bg-primary/10"
-              >
-                <Link to="/how-it-works">How it works</Link>
-              </Button>
             </div>
 
-            <p className="mt-4 text-sm text-white/55">
-              {freeAccessMode
-                ? "Includes 1 initial plan + 2 refinements."
-                : "Includes 1 initial plan + 2 refinements. No subscription."}
-            </p>
 
             <p className="mt-3 max-w-xl text-xs leading-relaxed text-white/45">
               This is not medical advice. Smarty Diet is designed for healthy
