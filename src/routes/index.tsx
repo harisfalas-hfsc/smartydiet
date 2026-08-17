@@ -121,7 +121,7 @@ function Home() {
         </p>
       </section>
 
-      {/* FULL-BLEED HERO — desktop/tablet, expanded single card */}
+      {/* FULL-BLEED HERO — desktop/tablet */}
       <section className="relative left-1/2 mb-8 hidden w-screen -translate-x-1/2 overflow-hidden sm:mb-14 sm:block">
         <img
           src={heroNutrition}
@@ -134,52 +134,33 @@ function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/92 via-black/75 to-black/25" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/25 to-transparent" />
-        <div className="relative mx-auto w-full max-w-6xl px-5 py-16 lg:px-6 lg:py-28">
-          <div className="max-w-2xl rounded-[20px] border border-white/10 bg-black/45 p-8 backdrop-blur-md lg:p-10">
-            <h1 className="text-[34px] font-extrabold leading-[1.05] tracking-tight text-white sm:text-[44px] lg:text-[54px]">
+        <div className="relative mx-auto w-full max-w-6xl px-5 py-16 lg:px-6 lg:py-36">
+          <div className="max-w-xl">
+            <h1 className="text-[34px] font-extrabold leading-[1.05] tracking-tight text-white sm:text-[44px] lg:text-[60px]">
               Your personal nutrition plan,
               <br />
               <span className="text-primary">built in minutes.</span>
             </h1>
-
-            <p className="mt-5 text-base leading-relaxed text-white/85 lg:text-lg">
+            <p className="mt-5 text-base leading-relaxed text-white/80 lg:mt-6 lg:text-lg">
               Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan
-              tailored to your body, your goals, your food preferences and your
-              constraints.
+              tailored to your body, goals, food preferences and constraints.
             </p>
-            <p className="mt-3 text-base leading-relaxed text-white/70 lg:text-lg">
-              No more appointments, no more visits to the nutritionist. Use the
-              power of Smarty Diet to have your personalized diet schedule ready
-              whenever you need it.
-            </p>
-
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {INCLUDES.map((it) => (
-                <li
-                  key={it}
-                  className="flex items-center gap-3 text-sm text-white/90"
-                >
-                  <CheckCircle2 className="h-5 w-5 flex-none text-primary" />
-                  <span>{it}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-full px-8 text-base font-bold"
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Link
+                to={heroCtaTo}
+                className="inline-flex h-12 items-center rounded-full bg-primary px-8 text-base font-bold text-primary-foreground no-underline hover:opacity-95"
               >
-                <Link to={heroCtaTo}>{heroCtaLabel}</Link>
-              </Button>
+                {heroCtaLabel}
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="inline-flex h-12 items-center rounded-full border-2 border-primary px-8 text-base font-bold text-primary no-underline hover:bg-primary/10"
+              >
+                How it works
+              </Link>
             </div>
-
-
-            <p className="mt-3 max-w-xl text-xs leading-relaxed text-white/45">
-              This is not medical advice. Smarty Diet is designed for healthy
-              people who want to enrich their diet, understand what they eat,
-              and make better food choices.
+            <p className="mt-4 text-sm text-white/60">
+              Includes 1 initial plan + 2 refinements.
             </p>
           </div>
         </div>
