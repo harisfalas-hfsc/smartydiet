@@ -176,13 +176,20 @@ export function Navigation() {
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); toggleTheme(); }}>
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      toggleTheme();
+                      setAccountOpen(false);
+                    }}
+                  >
                     {theme === "dark" ? (
                       <><Sun className="h-4 w-4 mr-2" /> Light mode</>
                     ) : (
                       <><Moon className="h-4 w-4 mr-2" /> Dark mode</>
                     )}
                   </DropdownMenuItem>
+
                   {user && (
                     <>
                       <DropdownMenuSeparator />
