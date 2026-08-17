@@ -121,7 +121,7 @@ function Home() {
           className="absolute inset-0 h-full w-full object-cover object-[60%_center]"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/92 via-black/75 to-black/25" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/25 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl px-5 py-16 lg:px-6 lg:py-36">
           <div className="max-w-xl">
             <h1 className="text-[34px] font-extrabold leading-[1.05] tracking-tight text-white sm:text-[44px] lg:text-[60px]">
