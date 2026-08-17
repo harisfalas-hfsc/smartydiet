@@ -45,6 +45,9 @@ export function Navigation() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [navCount, setNavCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+
+
 
   useEffect(() => {
     const unsub = router.subscribe("onResolved", () => {
@@ -113,7 +116,7 @@ export function Navigation() {
           {loading ? null : (
             <>
               {user && <NotificationBell />}
-              <DropdownMenu>
+              <DropdownMenu open={accountOpen} onOpenChange={setAccountOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
@@ -173,13 +176,20 @@ export function Navigation() {
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); toggleTheme(); }}>
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      toggleTheme();
+                      setAccountOpen(false);
+                    }}
+                  >
                     {theme === "dark" ? (
                       <><Sun className="h-4 w-4 mr-2" /> Light mode</>
                     ) : (
                       <><Moon className="h-4 w-4 mr-2" /> Dark mode</>
                     )}
                   </DropdownMenuItem>
+
                   {user && (
                     <>
                       <DropdownMenuSeparator />
