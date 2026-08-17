@@ -110,7 +110,7 @@ function Home() {
       </section>
 
       {/* FULL-BLEED HERO — desktop/tablet */}
-      <section className="relative left-1/2 mb-8 hidden w-screen -translate-x-1/2 overflow-hidden sm:mb-14 sm:block">
+      <section className="relative left-1/2 mb-0 hidden w-screen -translate-x-1/2 overflow-hidden sm:block">
         <img
           src={heroNutrition}
           alt="Fresh healthy food ingredients arranged for a personalized nutrition plan"
