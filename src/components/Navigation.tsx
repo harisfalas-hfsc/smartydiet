@@ -105,71 +105,86 @@ export function Navigation() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          {loading ? null : user ? (
+          {loading ? null : (
             <>
-            <NotificationBell />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Account"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary text-xs font-bold text-primary-foreground"
-                >
-                  {initial}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="space-y-0.5">
-                  <span className="block truncate">{accountName}</span>
-                  {user.email && accountName !== user.email && (
-                    <span className="block truncate text-xs font-normal text-muted-foreground">{user.email}</span>
+              {user && <NotificationBell />}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Account"
+                    className={
+                      user
+                        ? "inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary text-xs font-bold text-primary-foreground"
+                        : "inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary text-primary"
+                    }
+                  >
+                    {user ? initial : <User className="h-4 w-4" />}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {user ? (
+                    <>
+                      <DropdownMenuLabel className="space-y-0.5">
+                        <span className="block truncate">{accountName}</span>
+                        {user.email && accountName !== user.email && (
+                          <span className="block truncate text-xs font-normal text-muted-foreground">
+                            {user.email}
+                          </span>
+                        )}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/plans">My plans</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/questionnaire">New plan</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/inbox" search={{ tab: "updates" as const, compose: false }}>
+                          Inbox
+                        </Link>
+                      </DropdownMenuItem>
+                      {isAdmin && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin">
+                            <Shield className="h-4 w-4 mr-2" /> Admin
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuLabel>Account</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/auth">Sign in</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/auth" search={{ mode: "signup" } as never}>
+                          Sign up
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
                   )}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/plans">My plans</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/questionnaire">New plan</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/inbox" search={{ tab: "updates" as const, compose: false }}>
-                    Inbox
-                  </Link>
-                </DropdownMenuItem>
-                {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin">
-                      <Shield className="h-4 w-4 mr-2" /> Admin
-                    </Link>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); toggleTheme(); }}>
+                    {theme === "dark" ? (
+                      <><Sun className="h-4 w-4 mr-2" /> Light mode</>
+                    ) : (
+                      <><Moon className="h-4 w-4 mr-2" /> Dark mode</>
+                    )}
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 mr-2" /> Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            </>
-
-
-          ) : (
-            <>
-              <Link
-                to="/auth"
-                className="inline-flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3 text-xs font-semibold text-foreground/80 no-underline hover:text-primary hover:no-underline"
-                style={{ textDecoration: "none" }}
-              >
-                Sign in
-              </Link>
-              <Link
-                to="/auth"
-                search={{ mode: "signup" } as never}
-                className="inline-flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-full border-2 border-primary px-3 text-xs font-semibold text-primary no-underline transition-colors hover:bg-primary hover:text-primary-foreground hover:no-underline"
-                style={{ textDecoration: "none" }}
-              >
-                Sign up
-              </Link>
+                  {user && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut}>
+                        <LogOut className="h-4 w-4 mr-2" /> Sign out
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           )}
         </div>
