@@ -161,7 +161,7 @@ function CalorieCounterPage() {
     : null;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:py-14">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       <div className="mb-6 text-center">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
           SmartyDiet Tools — Free to Use

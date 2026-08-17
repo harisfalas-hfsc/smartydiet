@@ -154,7 +154,7 @@ export const Route = createFileRoute("/glossary")({
 
 function GlossaryPage() {
   return (
-    <article className="mx-auto max-w-3xl px-5 py-12 sm:py-16">
+    <article className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
         Nutrition Glossary
       </h1>
