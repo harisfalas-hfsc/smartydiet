@@ -7,6 +7,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+import { startFreeSession } from "@/lib/free-access.functions";
+import { generatePlan } from "@/lib/plan.functions";
 
 type Search = { qid?: string; weeks?: number };
 
@@ -33,6 +36,10 @@ export const Route = createFileRoute("/checkout")({
 function CheckoutPage() {
   const { qid } = Route.useSearch();
   const create = useServerFn(createDietCheckout);
+  const startFree = useServerFn(startFreeSession);
+  const generate = useServerFn(generatePlan);
+  const { freeAccessMode, loading: freeLoading } = useFreeAccessMode();
+  const [freeMessage, setFreeMessage] = useState("Building your plan… this can take up to 2 minutes.");
   const [weeks, setWeeks] = useState<1 | 2 | 4 | null>(null);
   const [ready, setReady] = useState(false);
   const navigate = useNavigate();
@@ -49,6 +56,31 @@ function CheckoutPage() {
       setReady(true);
     })();
   }, [qid]);
+
+  useEffect(() => {
+    if (freeLoading || !freeAccessMode || !ready || !qid || !weeks) return;
+    let cancelled = false;
+    (async () => {
+      const res = await startFree({ data: { questionnaireId: qid, durationWeeks: weeks } });
+      if (cancelled) return;
+      if ("error" in res) {
+        setFreeMessage(res.error);
+        toast.error(res.error);
+        return;
+      }
+      const planRes = await generate({ data: { sessionId: res.sessionId } });
+      if (cancelled) return;
+      if (planRes.error && planRes.error !== "No credits remaining") {
+        setFreeMessage(planRes.error);
+        toast.error(planRes.error);
+        return;
+      }
+      navigate({ to: "/plans/$sessionId", params: { sessionId: res.sessionId }, replace: true });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [freeLoading, freeAccessMode, ready, qid, weeks, startFree, generate, navigate]);
 
   const options = useMemo(
     () => ({
@@ -71,6 +103,15 @@ function CheckoutPage() {
     }),
     [qid, weeks, create],
   );
+
+  if (freeLoading || freeAccessMode) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
+        <p className="mt-4 text-sm text-muted-foreground">{freeMessage}</p>
+      </div>
+    );
+  }
 
   if (!ready) {
     return (

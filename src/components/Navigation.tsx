@@ -30,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 
 
 export function Navigation() {
@@ -180,6 +181,7 @@ export function Navigation() {
 }
 
 function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuthed: boolean; isAdmin: boolean }) {
+  const { freeAccessMode } = useFreeAccessMode();
   const sections: {
     heading: string;
     items: { to: string; label: string; Icon: typeof Home }[];
@@ -203,7 +205,7 @@ function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuth
         { to: "/", label: "Home", Icon: Home },
         { to: "/about", label: "About", Icon: Info },
         { to: "/how-it-works", label: "How It Works", Icon: BookOpen },
-        { to: "/pricing", label: "Pricing", Icon: Crown },
+        ...(freeAccessMode ? [] : [{ to: "/pricing", label: "Pricing", Icon: Crown }]),
         { to: "/tools", label: "Tools", Icon: Wrench },
         { to: "/faq", label: "Frequently Asked Questions", Icon: HelpCircle },
         { to: "/diet-science", label: "The Diet Science", Icon: BookOpen },

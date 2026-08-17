@@ -28,6 +28,7 @@ import {
 } from "@/lib/questionnaire-schema";
 import { saveQuestionnaire } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 
 export const Route = createFileRoute("/_authenticated/questionnaire")({
   head: () => ({
@@ -44,6 +45,7 @@ const STORAGE_KEY = "smartydiet.questionnaire.v2";
 
 function QuestionnairePage() {
   const navigate = useNavigate();
+  const { freeAccessMode } = useFreeAccessMode();
   const save = useServerFn(saveQuestionnaire);
   const [step, setStep] = useState(0);
   const [data, setData] = useState<QuestionnaireData>(DEFAULT_QUESTIONNAIRE);
@@ -121,7 +123,9 @@ function QuestionnairePage() {
           </p>
           <h1 className="text-2xl font-bold">{STEP_LABELS[step]}</h1>
         </div>
-        <p className="text-sm text-muted-foreground">€9.99 at checkout</p>
+        {!freeAccessMode && (
+          <p className="text-sm text-muted-foreground">€9.99 at checkout</p>
+        )}
       </div>
       <Progress value={progress} className="mb-6" />
 
@@ -155,7 +159,11 @@ function QuestionnairePage() {
         </Button>
         <Button onClick={next} disabled={busy}>
           {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {step === STEP_LABELS.length - 1 ? "Continue to payment" : "Next"}
+          {step === STEP_LABELS.length - 1
+            ? freeAccessMode
+              ? "Build my plan"
+              : "Continue to payment"
+            : "Next"}
         </Button>
       </div>
     </div>

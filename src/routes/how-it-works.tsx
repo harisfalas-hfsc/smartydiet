@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
 import { SmartyCard } from "@/components/SmartyCard";
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
@@ -23,6 +24,27 @@ export const Route = createFileRoute("/how-it-works")({
   }),
   component: HowItWorks,
 });
+
+const FREE_STEPS = [
+  {
+    n: 1,
+    color: "text-emerald-500",
+    title: "Answer",
+    desc: "A short questionnaire about you.",
+  },
+  {
+    n: 2,
+    color: "text-orange-500",
+    title: "Build",
+    desc: "We generate your tailored plan.",
+  },
+  {
+    n: 3,
+    color: "text-sky-500",
+    title: "Get your plan",
+    desc: "Meals, macros & grocery list.",
+  },
+];
 
 const STEPS = [
   {
@@ -46,6 +68,8 @@ const STEPS = [
 ];
 
 function HowItWorks() {
+  const { freeAccessMode } = useFreeAccessMode();
+  const steps = freeAccessMode ? FREE_STEPS : STEPS;
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:py-12">
       <div className="mb-8 text-center">
@@ -67,7 +91,7 @@ function HowItWorks() {
         description="No fluff. Just three steps."
       >
         <div className="mt-2 grid gap-6 sm:grid-cols-3 sm:gap-4">
-          {STEPS.map((s) => (
+          {steps.map((s) => (
             <div
               key={s.n}
               className="flex flex-col items-center text-center"
@@ -88,7 +112,7 @@ function HowItWorks() {
 
       <div className="mt-8 flex justify-center">
         <Button asChild size="lg">
-          <Link to="/questionnaire">Start my plan — €9.99</Link>
+          <Link to="/questionnaire">{freeAccessMode ? "Start my plan" : "Start my plan — €9.99"}</Link>
         </Button>
       </div>
     </div>

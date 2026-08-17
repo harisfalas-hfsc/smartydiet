@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Sparkles, ClipboardList } from "lucide-react";
 import { SmartyCard, SmartyRow } from "@/components/SmartyCard";
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 
 export const Route = createFileRoute("/_authenticated/plans")({
   head: () => ({
@@ -35,6 +36,7 @@ const TONES: Array<"cyan" | "green" | "orange" | "purple" | "yellow" | "pink" | 
 ];
 
 function PlansList() {
+  const { freeAccessMode } = useFreeAccessMode();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [rows, setRows] = useState<Row[] | null>(null);
 
@@ -143,10 +145,10 @@ function PlansList() {
                 cornerIcon={Sparkles}
                 title="Want a"
                 accent="new plan?"
-                description="You've used all refinements on your current plans. Create a brand new personalized diet plan for €9.99."
+                description={freeAccessMode ? "You've used all refinements on your current plans. Create a brand new personalized diet plan." : "You've used all refinements on your current plans. Create a brand new personalized diet plan for €9.99."}
               >
                 <Button asChild size="lg">
-                  <Link to="/questionnaire">Create a new diet plan — €9.99</Link>
+                  <Link to="/questionnaire">{freeAccessMode ? "Create a new diet plan" : "Create a new diet plan — €9.99"}</Link>
                 </Button>
               </SmartyCard>
             </div>

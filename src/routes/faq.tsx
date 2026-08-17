@@ -67,6 +67,8 @@ const ITEMS: { q: string; a: string }[] = [
   },
 ];
 
+const PRICING_QUESTIONS = ["How much does it cost?", "Can I get a refund?"];
+
 const JSONLD = {
   "@context": "https://schema.org",
   "@graph": [
@@ -93,6 +95,8 @@ const JSONLD = {
   ],
 };
 
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
@@ -111,6 +115,17 @@ export const Route = createFileRoute("/faq")({
 });
 
 function FAQ() {
+  const { freeAccessMode } = useFreeAccessMode();
+  const items = freeAccessMode
+    ? ITEMS.filter((it) => !PRICING_QUESTIONS.includes(it.q)).map((it) =>
+        it.q === "How is SmartyDiet different from a human dietitian?"
+          ? {
+              ...it,
+              a: "A human dietitian can diagnose and treat medical conditions; SmartyDiet cannot. What SmartyDiet does do is package the assessment, calculation and planning work of a dietitian into an always-available AI.",
+            }
+          : it,
+      )
+    : ITEMS;
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       <div className="mb-8 text-center">
@@ -132,7 +147,7 @@ function FAQ() {
         description="Tap a question to open the answer."
       >
         <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
-          {ITEMS.map((it, i) => (
+          {items.map((it, i) => (
             <AccordionItem
               key={it.q}
               value={`item-${i}`}
