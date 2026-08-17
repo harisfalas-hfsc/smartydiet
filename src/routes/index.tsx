@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import heroNutrition from "@/assets/hero-nutrition.jpg";
-import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -59,7 +58,6 @@ const INCLUDES = [
 ];
 
 function Home() {
-  const { freeAccessMode } = useFreeAccessMode();
   const { user, loading } = useAuth();
   const [cta, setCta] = useState<CtaState>({ kind: "loading" });
 
@@ -72,26 +70,6 @@ function Home() {
     setCta({ kind: "member" });
   }, [user, loading]);
 
-  const primary = (() => {
-    if (cta.kind === "loading")
-      return (
-        <Button size="lg" disabled className="w-full sm:w-auto">
-          Get started
-        </Button>
-      );
-    if (cta.kind === "member")
-      return (
-        <Button asChild size="lg" className="w-full sm:w-auto">
-          <Link to="/plans">View my diet plans</Link>
-        </Button>
-      );
-
-    return (
-      <Button asChild size="lg" className="w-full sm:w-auto">
-        <Link to="/questionnaire">Get started</Link>
-      </Button>
-    );
-  })();
 
   const heroCtaLabel =
     cta.kind === "member" ? "View my diet plans" : "Get started";
@@ -100,35 +78,39 @@ function Home() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col px-4 pb-8 pt-0 sm:pb-12">
-      {/* MOBILE HERO CARD — single, expanded card */}
-      <section
-        className="mt-4 mb-4 overflow-hidden rounded-[15px] border-[1.5px] border-sky-300/70 bg-cover bg-[68%_center] bg-no-repeat p-6 shadow-[0_12px_36px_-28px_rgba(0,0,0,0.8)] sm:hidden"
-        style={{
-          backgroundImage: `linear-gradient(to bottom, rgba(4,10,18,0.55), rgba(4,10,18,0.92)), url(${heroNutrition})`,
-        }}
-      >
-        <h1 className="text-[30px] font-black leading-[1.08] tracking-tight text-[#E8EEF7]">
+      {/* MOBILE — clean cards, no image */}
+      <section className="mt-4 mb-4 rounded-[15px] border-[1.5px] border-sky-300/70 bg-card p-6 shadow-[0_12px_36px_-28px_rgba(0,0,0,0.8)] sm:hidden">
+        <h1 className="text-[28px] font-black leading-[1.1] tracking-tight text-foreground">
           Your personal nutrition plan,
           <br />
           <span className="text-primary">built in minutes.</span>
         </h1>
 
-        <p className="mt-4 text-[15px] leading-relaxed text-[rgba(232,238,247,0.85)]">
-          Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan
-          tailored to your body, your goals, your food preferences and your
-          constraints.
-        </p>
-        <p className="mt-3 text-[15px] leading-relaxed text-[rgba(232,238,247,0.75)]">
-          No more appointments, no more visits to the nutritionist. Use the
-          power of Smarty Diet to have your personalized diet schedule ready
-          whenever you need it.
+        <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+          Answer a smart questionnaire and get a full 1, 2 or 4-week diet plan
+          tailored to your body, goals and food preferences. No appointments,
+          no nutritionist visits.
         </p>
 
-        <ul className="mt-5 grid gap-2.5">
+        <div className="mt-5 flex flex-col gap-2.5">
+          <Link
+            to={heroCtaTo}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-[15px] font-extrabold text-primary-foreground"
+          >
+            {heroCtaLabel}
+          </Link>
+        </div>
+      </section>
+
+      <section className="mb-4 rounded-[15px] border-[1.5px] border-emerald-300/50 bg-card p-6 sm:hidden">
+        <h2 className="text-[15px] font-extrabold uppercase tracking-wide text-foreground">
+          What you get
+        </h2>
+        <ul className="mt-4 grid gap-2.5">
           {INCLUDES.map((it) => (
             <li
               key={it}
-              className="flex items-start gap-2.5 text-[14px] leading-snug text-[rgba(232,238,247,0.9)]"
+              className="flex items-start gap-2.5 text-[14px] leading-snug text-muted-foreground"
             >
               <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none text-primary" />
               <span>{it}</span>
@@ -136,28 +118,7 @@ function Home() {
           ))}
         </ul>
 
-        <div className="mt-6 flex flex-col gap-2.5">
-          <Link
-            to={heroCtaTo}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-[15px] font-extrabold text-primary-foreground"
-          >
-            {heroCtaLabel}
-          </Link>
-          <Link
-            to="/how-it-works"
-            className="flex h-[46px] w-full items-center justify-center rounded-full border-2 border-primary bg-[rgba(4,10,18,0.35)] text-[15px] font-extrabold text-primary"
-          >
-            How it works
-          </Link>
-        </div>
-
-        <p className="mt-4 text-center text-[12px] leading-snug text-[rgba(232,238,247,0.55)]">
-          {freeAccessMode
-            ? "Includes 1 initial plan + 2 refinements."
-            : "Includes 1 initial plan + 2 refinements. No subscription."}
-        </p>
-
-        <p className="mt-3 text-center text-[12px] leading-snug text-[rgba(232,238,247,0.5)]">
+        <p className="mt-5 text-[12px] leading-snug text-muted-foreground/70">
           This is not medical advice. Smarty Diet is designed for healthy people
           who want to enrich their diet, understand what they eat, and make
           better food choices.
@@ -216,21 +177,8 @@ function Home() {
               >
                 <Link to={heroCtaTo}>{heroCtaLabel}</Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-full border-primary px-8 text-base font-bold text-primary hover:bg-primary/10"
-              >
-                <Link to="/how-it-works">How it works</Link>
-              </Button>
             </div>
 
-            <p className="mt-4 text-sm text-white/55">
-              {freeAccessMode
-                ? "Includes 1 initial plan + 2 refinements."
-                : "Includes 1 initial plan + 2 refinements. No subscription."}
-            </p>
 
             <p className="mt-3 max-w-xl text-xs leading-relaxed text-white/45">
               This is not medical advice. Smarty Diet is designed for healthy
