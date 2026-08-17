@@ -278,7 +278,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "SmartyDiet" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-      { name: "theme-color", content: "#1c1c1c" },
+      { name: "theme-color", content: "#ffffff" },
       { name: "color-scheme", content: "light dark" },
 
       { property: "og:site_name", content: "SmartyDiet" },
