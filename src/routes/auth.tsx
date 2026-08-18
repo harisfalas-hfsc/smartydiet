@@ -12,6 +12,7 @@ import {
   verifyDeviceCredential,
 } from "@/lib/offline/credentials";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { isOnlineNow } from "@/lib/offline/connectivity";
 
 
 export const Route = createFileRoute("/auth")({
@@ -143,7 +144,7 @@ function Auth() {
     setSubmitting(true);
     const normalizedEmail = email.trim().toLowerCase();
     try {
-      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      if (!isOnlineNow()) {
         await offlineSignIn(normalizedEmail);
         return;
       }
@@ -178,7 +179,7 @@ function Auth() {
       goNext();
     } catch (error) {
       // Network failure on a device that has a stored verifier → offline sign-in.
-      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      if (!isOnlineNow()) {
         const ok = await offlineSignIn(normalizedEmail);
         if (ok) return;
       }

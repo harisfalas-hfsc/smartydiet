@@ -4,6 +4,7 @@
  */
 import { createStore, get, set } from "idb-keyval";
 import {
+import { isOnlineNow } from "./connectivity";
   deleteNotifications,
   deleteMyThreads,
   setNotificationsRead,
@@ -73,7 +74,7 @@ let flushing = false;
 
 /** Replays every queued mutation. Failed items stay queued for the next attempt. */
 export async function flushQueue(userId: string): Promise<number> {
-  if (flushing || typeof navigator === "undefined" || navigator.onLine === false) return 0;
+  if (flushing || !isOnlineNow()) return 0;
   flushing = true;
   try {
     const items = await readQueue(userId);

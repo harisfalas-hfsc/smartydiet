@@ -9,6 +9,7 @@ import { applyUpdate, registerServiceWorker, warmUrls } from "@/lib/offline/regi
 import { getOfflineSession, refreshStoredSession } from "@/lib/offline/credentials";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { isOnlineNow, initConnectivity, subscribeConnectivity } from "@/lib/offline/connectivity";
 
 const PUBLIC_PAGES = [
   "/",
@@ -43,7 +44,7 @@ export function OfflineBootstrap() {
 
   const prefetch = useCallback(async () => {
     if (running.current) return;
-    if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+    if (!isOnlineNow()) return;
     running.current = true;
     try {
       warmUrls([...PUBLIC_PAGES, ...MEMBER_PAGES]);
