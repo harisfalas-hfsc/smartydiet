@@ -452,6 +452,7 @@ function PlanView() {
               value={refineText}
               onChange={(e) => setRefineText(e.target.value)}
             />
+            <OfflineActionNotice className="mt-2" />
             <div className="mt-2 flex justify-end">
               <Button onClick={refine} disabled={busy || !online}>
                 {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
