@@ -143,9 +143,20 @@ export function OfflineBootstrap() {
   }, []);
 
   useEffect(() => {
-    registerServiceWorker(() => setUpdateReady(true));
+    let unsubscribe: (() => void) | undefined;
 
-    void prefetch();
+    // Connectivity MUST be resolved before the first data read, otherwise a
+    // native cold start in airplane mode races the network layer and fails.
+    void initConnectivity().then(() => {
+      registerServiceWorker(() => setUpdateReady(true));
+      void prefetch();
+      unsubscribe = subscribeConnectivity((online) => {
+        if (!online) return;
+        void prefetch();
+        const offlineSession = getOfflineSession();
+        if (offlineSession) void flushQueue(offlineSession.user.id);
+      });
+    });
 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
@@ -153,18 +164,12 @@ export function OfflineBootstrap() {
       }
     });
 
-    const onOnline = () => {
-      void prefetch();
-      const offlineSession = getOfflineSession();
-      if (offlineSession) void flushQueue(offlineSession.user.id);
-    };
-    window.addEventListener("online", onOnline);
-
     return () => {
       sub.subscription.unsubscribe();
-      window.removeEventListener("online", onOnline);
+      unsubscribe?.();
     };
   }, [prefetch]);
+
 
   if (!updateReady) return null;
 
