@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Sparkles, ClipboardList } from "lucide-react";
 import { SmartyCard, SmartyRow } from "@/components/SmartyCard";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+import { OFFLINE_KEYS, offlineFirst } from "@/lib/offline/store";
+import { useOfflineUserId } from "@/hooks/useOfflineUser";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { OfflineEmptyState } from "@/components/offline/OfflineNotice";
 
 export const Route = createFileRoute("/_authenticated/plans")({
   head: () => ({
@@ -39,17 +43,30 @@ function PlansList() {
   const { freeAccessMode } = useFreeAccessMode();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [rows, setRows] = useState<Row[] | null>(null);
+  const userId = useOfflineUserId();
+  const online = useOnlineStatus();
 
   useEffect(() => {
+    if (!userId) return;
+    let active = true;
     (async () => {
-      const { data } = await supabase
-        .from("generation_sessions")
-        .select("id,duration_weeks,status,credits_used,credits_total,created_at")
-        .eq("status", "paid")
-        .order("created_at", { ascending: false });
-      setRows((data as Row[]) ?? []);
+      const data = await offlineFirst<Row[]>(
+        OFFLINE_KEYS.sessions,
+        async () => {
+          const { data: fresh } = await supabase
+            .from("generation_sessions")
+            .select("*")
+            .order("created_at", { ascending: false });
+          return (fresh as Row[]) ?? [];
+        },
+        userId,
+      ).catch(() => [] as Row[]);
+      if (active) setRows(data.filter((r) => r.status === "paid"));
     })();
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [userId]);
 
   if (pathname !== "/plans") return <Outlet />;
 
@@ -88,11 +105,18 @@ function PlansList() {
           cornerIcon={FileText}
           title="No plans"
           accent="yet."
-          description="Build your first personalized Smarty Meal Plan™ in a few minutes."
+          description={
+            online
+              ? "Build your first personalized Smarty Meal Plan™ in a few minutes."
+              : undefined
+          }
         >
-          <Button asChild size="lg">
-            <Link to="/questionnaire">Build my first plan</Link>
-          </Button>
+          <OfflineEmptyState />
+          {online && (
+            <Button asChild size="lg">
+              <Link to="/questionnaire">Build my first plan</Link>
+            </Button>
+          )}
         </SmartyCard>
       ) : (
         <>

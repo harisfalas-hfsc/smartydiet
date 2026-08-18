@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import { OFFLINE_KEYS, offlineFirst, readCached } from "@/lib/offline/store";
+import { getOfflineSession, setOfflineSession } from "@/lib/offline/credentials";
 
 type ProfileSummary = {
   display_name: string | null;
@@ -33,26 +35,79 @@ export function useAuth() {
         if (active) setProfile(null);
         return;
       }
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name, avatar_url")
-        .eq("id", authUser.id)
-        .maybeSingle();
+      // Offline-first: header/avatar/name must render with no connection.
+      const data = await offlineFirst<ProfileSummary | null>(
+        OFFLINE_KEYS.profile,
+        async () => {
+          const { data: row } = await supabase
+            .from("profiles")
+            .select("display_name, avatar_url")
+            .eq("id", authUser.id)
+            .maybeSingle();
+          return (row as ProfileSummary | null) ?? null;
+        },
+        authUser.id,
+      ).catch(() => null);
       if (active) setProfile(data ?? null);
     }
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-      void loadProfile(data.session?.user ?? null);
-    });
+    async function applyOfflineFallback() {
+      const cached = getOfflineSession();
+      if (!cached || !active) return false;
+      setUser({
+        id: cached.user.id,
+        email: cached.user.email ?? undefined,
+        user_metadata: { full_name: cached.user.displayName ?? undefined },
+      } as unknown as User);
+      const cachedProfile = await readCached<ProfileSummary>(OFFLINE_KEYS.profile, cached.user.id);
+      if (active) setProfile(cachedProfile ?? null);
+      return true;
+    }
+
+    supabase.auth
+      .getSession()
+      .then(async ({ data }) => {
+        if (!active) return;
+        if (data.session) {
+          setSession(data.session);
+          setUser(data.session.user);
+          setLoading(false);
+          setOfflineSession({
+            id: data.session.user.id,
+            email: data.session.user.email ?? null,
+            displayName: nameFromUser(data.session.user),
+          });
+          void loadProfile(data.session.user);
+        } else {
+          const restored = await applyOfflineFallback();
+          if (!restored && active) {
+            setSession(null);
+            setUser(null);
+          }
+          if (active) setLoading(false);
+        }
+      })
+      .catch(async () => {
+        await applyOfflineFallback();
+        if (active) setLoading(false);
+      });
+
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
       if (!active) return;
+      if (!s && getOfflineSession()) {
+        // Keep the offline member signed in when the network drops.
+        if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+      }
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
+      if (s?.user) {
+        setOfflineSession({
+          id: s.user.id,
+          email: s.user.email ?? null,
+          displayName: nameFromUser(s.user),
+        });
+      }
       void loadProfile(s?.user ?? null);
     });
     return () => {

@@ -6,6 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import {
+  rememberDeviceCredential,
+  setOfflineSession,
+  verifyDeviceCredential,
+} from "@/lib/offline/credentials";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 
 export const Route = createFileRoute("/auth")({
@@ -37,6 +43,7 @@ function Auth() {
   const [authNotice, setAuthNotice] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const online = useOnlineStatus();
 
   const goNext = () => {
     if (next) window.location.href = next;
@@ -109,21 +116,72 @@ function Auth() {
     }
   }
 
+  async function offlineSignIn(normalizedEmail: string) {
+    const verified = await verifyDeviceCredential(normalizedEmail, password);
+    if (!verified) {
+      setAuthError(
+        "You're offline. Sign in with the password you last used on this device, or connect to the internet.",
+      );
+      return false;
+    }
+    // Best-effort: hand the cached session to the client (works when it's still valid).
+    try {
+      await supabase.auth.setSession(verified.session as never);
+    } catch {
+      /* expected offline */
+    }
+    setOfflineSession(verified.user);
+    goNext();
+    return true;
+  }
+
   async function submitSignin(e: FormEvent) {
     e.preventDefault();
     if (!email || !password) return;
     setAuthError("");
     setAuthNotice("");
     setSubmitting(true);
+    const normalizedEmail = email.trim().toLowerCase();
     try {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        await offlineSignIn(normalizedEmail);
+        return;
+      }
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         password,
       });
       if (error) throw error;
       await ensureProfile(data.user);
+      if (data.user && data.session) {
+        const meta = data.user.user_metadata ?? {};
+        await rememberDeviceCredential({
+          email: normalizedEmail,
+          password,
+          user: {
+            id: data.user.id,
+            email: data.user.email ?? normalizedEmail,
+            displayName:
+              (typeof meta.full_name === "string" ? meta.full_name : null) ??
+              (typeof meta.name === "string" ? meta.name : null),
+          },
+          session: data.session,
+        });
+        setOfflineSession({
+          id: data.user.id,
+          email: data.user.email ?? normalizedEmail,
+          displayName:
+            (typeof meta.full_name === "string" ? meta.full_name : null) ??
+            (typeof meta.name === "string" ? meta.name : null),
+        });
+      }
       goNext();
     } catch (error) {
+      // Network failure on a device that has a stored verifier → offline sign-in.
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        const ok = await offlineSignIn(normalizedEmail);
+        if (ok) return;
+      }
       setAuthError(error instanceof Error ? error.message : "Sign in failed. Check your email and password.");
     } finally {
       setSubmitting(false);
@@ -177,12 +235,18 @@ function Auth() {
           </div>
           <Button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !online}
             style={{ background: "#FF6B4A", boxShadow: "0 14px 24px -10px rgba(255,107,74,0.55)", color: "#fff" }}
             className="mt-2 h-12 w-full rounded-2xl text-base font-semibold hover:opacity-95"
           >
             {submitting ? "Saving..." : "Continue"}
           </Button>
+          {!online && (
+            <p className="text-center text-sm" style={{ color: "#6B7A90" }}>
+              You&apos;re offline — creating a new account needs an internet connection. You can
+              still sign in with an account already used on this device.
+            </p>
+          )}
           {authNotice && <p className="text-center text-sm font-semibold" style={{ color: "#0E7C86" }}>{authNotice}</p>}
           {authError && <p className="text-center text-sm font-semibold text-destructive">{authError}</p>}
           <p className="mt-1 text-center text-sm" style={{ color: "#6B7A90" }}>

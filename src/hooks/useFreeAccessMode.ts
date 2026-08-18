@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getOfflineSession } from "@/lib/offline/credentials";
+import { OFFLINE_KEYS, readCached, saveLocal } from "@/lib/offline/store";
 
 export const FREE_ACCESS_SETTING_KEY = "free_access_mode";
 
@@ -29,9 +31,18 @@ export async function fetchFreeAccessMode(force = false): Promise<boolean> {
         .select("setting_value")
         .eq("setting_key", FREE_ACCESS_SETTING_KEY)
         .maybeSingle();
-      if (error) return false;
-      return data?.setting_value === true;
+      if (error) throw error;
+      const value = data?.setting_value === true;
+      const uid = getOfflineSession()?.user.id;
+      if (uid) void saveLocal(OFFLINE_KEYS.freeAccess, uid, value);
+      return value;
     } catch {
+      // Offline / failure: fall back to the last known value for this member.
+      const uid = getOfflineSession()?.user.id;
+      if (uid) {
+        const stored = await readCached<boolean>(OFFLINE_KEYS.freeAccess, uid);
+        if (typeof stored === "boolean") return stored;
+      }
       return false;
     } finally {
       inFlight = null;
