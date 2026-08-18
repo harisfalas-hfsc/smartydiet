@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { OFFLINE_KEYS, offlineFirst } from "@/lib/offline/store";
+import { useOfflineUserId } from "@/hooks/useOfflineUser";
+import { OFFLINE_MESSAGE, useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
 import { generatePlan, listPlanVersions, restorePlanVersion } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,6 +41,8 @@ interface PlanRow {
 
 function PlanView() {
   const { sessionId } = Route.useParams();
+  const userId = useOfflineUserId();
+  const online = useOnlineStatus();
   const generate = useServerFn(generatePlan);
   const listVersions = useServerFn(listPlanVersions);
   const restore = useServerFn(restorePlanVersion);
@@ -49,18 +55,30 @@ function PlanView() {
   const [generationError, setGenerationError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const { data: s } = await supabase
-      .from("generation_sessions")
-      .select("id,duration_weeks,credits_total,credits_used,status")
-      .eq("id", sessionId)
-      .maybeSingle();
-    setSession(s as Session | null);
-    const rows = (await listVersions({ data: { sessionId } })) as PlanRow[];
+    if (!userId) return;
+    const s = await offlineFirst<Session | null>(
+      OFFLINE_KEYS.session(sessionId),
+      async () => {
+        const { data } = await supabase
+          .from("generation_sessions")
+          .select("id,duration_weeks,credits_total,credits_used,status")
+          .eq("id", sessionId)
+          .maybeSingle();
+        return (data as Session | null) ?? null;
+      },
+      userId,
+    ).catch(() => null);
+    setSession(s);
+    const rows = await offlineFirst<PlanRow[]>(
+      OFFLINE_KEYS.planVersions(sessionId),
+      async () => (await listVersions({ data: { sessionId } })) as PlanRow[],
+      userId,
+    ).catch(() => [] as PlanRow[]);
     setVersions(rows);
     // Prefer is_final; else newest
     const active = rows.find((r) => r.is_final) ?? rows[0];
     setActiveId((prev) => prev ?? active?.id ?? null);
-  }, [sessionId, listVersions]);
+  }, [sessionId, listVersions, userId]);
 
   useEffect(() => {
     load();
@@ -83,6 +101,7 @@ function PlanView() {
 
   // Recovery: paid, no plan → auto-generate.
   useEffect(() => {
+    if (!online) return;
     if (!session || versions.length > 0 || autoGenerating) return;
     if (session.status !== "paid") return;
     if ((session.credits_used ?? 0) > 0) return;
@@ -105,9 +124,10 @@ function PlanView() {
         setAutoGenerating(false);
       }
     })();
-  }, [session, versions.length, autoGenerating, generate, sessionId, load]);
+  }, [session, versions.length, autoGenerating, generate, sessionId, load, online]);
 
   async function refine() {
+    if (!online) return toast.error(OFFLINE_MESSAGE);
     if (!refineText.trim()) return toast.error("Describe the change you want");
     setBusy(true);
     try {
@@ -131,6 +151,7 @@ function PlanView() {
   }
 
   async function doRestore(version: number) {
+    if (!online) return toast.error(OFFLINE_MESSAGE);
     setBusy(true);
     try {
       await restore({ data: { sessionId, version } });
@@ -402,7 +423,7 @@ function PlanView() {
                       View
                     </Button>
                     {!v.is_final && (
-                      <Button size="sm" onClick={() => doRestore(v.version)} disabled={busy}>
+                      <Button size="sm" onClick={() => doRestore(v.version)} disabled={busy || !online}>
                         Restore
                       </Button>
                     )}
@@ -432,7 +453,7 @@ function PlanView() {
               onChange={(e) => setRefineText(e.target.value)}
             />
             <div className="mt-2 flex justify-end">
-              <Button onClick={refine} disabled={busy}>
+              <Button onClick={refine} disabled={busy || !online}>
                 {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Refine plan
               </Button>
