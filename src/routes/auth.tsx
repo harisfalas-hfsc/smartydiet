@@ -235,12 +235,18 @@ function Auth() {
           </div>
           <Button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !online}
             style={{ background: "#FF6B4A", boxShadow: "0 14px 24px -10px rgba(255,107,74,0.55)", color: "#fff" }}
             className="mt-2 h-12 w-full rounded-2xl text-base font-semibold hover:opacity-95"
           >
             {submitting ? "Saving..." : "Continue"}
           </Button>
+          {!online && (
+            <p className="text-center text-sm" style={{ color: "#6B7A90" }}>
+              You&apos;re offline — creating a new account needs an internet connection. You can
+              still sign in with an account already used on this device.
+            </p>
+          )}
           {authNotice && <p className="text-center text-sm font-semibold" style={{ color: "#0E7C86" }}>{authNotice}</p>}
           {authError && <p className="text-center text-sm font-semibold text-destructive">{authError}</p>}
           <p className="mt-1 text-center text-sm" style={{ color: "#6B7A90" }}>
