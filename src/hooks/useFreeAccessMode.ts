@@ -34,7 +34,7 @@ export async function fetchFreeAccessMode(force = false): Promise<boolean> {
       if (error) throw error;
       const value = data?.setting_value === true;
       const uid = getOfflineSession()?.user.id;
-      if (uid) void saveLocal(OFFLINE_KEYS.freeAccess, value, uid);
+      if (uid) void saveLocal(OFFLINE_KEYS.freeAccess, uid, value);
       return value;
     } catch {
       // Offline / failure: fall back to the last known value for this member.

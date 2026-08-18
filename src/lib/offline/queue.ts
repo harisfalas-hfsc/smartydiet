@@ -41,9 +41,11 @@ async function writeQueue(userId: string, items: QueuedMutation[]) {
   }
 }
 
+type DistributiveOmit<T, K extends keyof any> = T extends unknown ? Omit<T, K> : never;
+
 export async function enqueueMutation(
   userId: string,
-  mutation: Omit<QueuedMutation, "id"> & { id?: string },
+  mutation: DistributiveOmit<QueuedMutation, "id"> & { id?: string },
 ) {
   const items = await readQueue(userId);
   items.push({ ...(mutation as QueuedMutation), id: mutation.id ?? crypto.randomUUID() });
