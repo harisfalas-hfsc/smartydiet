@@ -91,10 +91,10 @@ export function OfflineBootstrap() {
 
         // inbox
         listNotifications({})
-          .then((res) => saveLocal(OFFLINE_KEYS.notifications, uid, res))
+          .then((res) => saveLocal(OFFLINE_KEYS.notifications, uid, res.notifications))
           .catch(() => undefined),
         listMyThreads({})
-          .then((res) => saveLocal(OFFLINE_KEYS.threads, uid, res))
+          .then((res) => saveLocal(OFFLINE_KEYS.threads, uid, res.threads))
           .catch(() => undefined),
 
         // every owned session + every plan version of each session
