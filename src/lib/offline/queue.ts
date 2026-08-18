@@ -44,12 +44,12 @@ async function readQueue(userId: string): Promise<QueuedMutation[]> {
     const raw = ((await get(queueKey(userId), store)) as QueuedMutation[] | undefined) ?? [];
     // Tolerate items written by the previous (metadata-less) queue version.
     return raw.map((item) => ({
-      createdAt: Date.now(),
-      retries: 0,
-      status: "pending",
-      lastError: null,
-      priority: 1,
       ...item,
+      createdAt: item.createdAt ?? Date.now(),
+      retries: item.retries ?? 0,
+      status: item.status ?? "pending",
+      lastError: item.lastError ?? null,
+      priority: item.priority ?? 1,
     }));
   } catch {
     return [];
