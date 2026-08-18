@@ -43,6 +43,7 @@ function Auth() {
   const [authNotice, setAuthNotice] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const online = useOnlineStatus();
 
   const goNext = () => {
     if (next) window.location.href = next;
