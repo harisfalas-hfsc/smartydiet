@@ -190,6 +190,16 @@ export function Navigation() {
                     )}
                   </DropdownMenuItem>
 
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      void forgetDeviceCredentials();
+                      setAccountOpen(false);
+                    }}
+                  >
+                    <ShieldOff className="h-4 w-4 mr-2" /> Forget offline sign-in
+                  </DropdownMenuItem>
+
                   {user && (
                     <>
                       <DropdownMenuSeparator />
