@@ -29,6 +29,8 @@ import {
 import { saveQuestionnaire } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+import { OFFLINE_MESSAGE, useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
 
 export const Route = createFileRoute("/_authenticated/questionnaire")({
   head: () => ({
@@ -47,6 +49,7 @@ function QuestionnairePage() {
   const navigate = useNavigate();
   const { freeAccessMode } = useFreeAccessMode();
   const save = useServerFn(saveQuestionnaire);
+  const online = useOnlineStatus();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<QuestionnaireData>(DEFAULT_QUESTIONNAIRE);
   const [durationWeeks, setDurationWeeks] = useState<1 | 2 | 4>(2);
@@ -98,6 +101,7 @@ function QuestionnairePage() {
   }
 
   async function submit() {
+    if (!online) return toast.error(OFFLINE_MESSAGE);
     setBusy(true);
     try {
       const res = await save({
@@ -116,6 +120,7 @@ function QuestionnairePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
+      <OfflineActionNotice className="mb-4" />
       <div className="mb-6 flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">
@@ -157,7 +162,7 @@ function QuestionnairePage() {
         >
           Back
         </Button>
-        <Button onClick={next} disabled={busy}>
+        <Button onClick={next} disabled={busy || (!online && step === STEP_LABELS.length - 1)}>
           {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {step === STEP_LABELS.length - 1
             ? freeAccessMode
