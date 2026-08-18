@@ -186,3 +186,112 @@ export async function clearAllOffline() {
 }
 
 export const offlineStore = store;
+
+/* ------------------------------------------------------------------ */
+/* Local database versioning + migrations                              */
+/* ------------------------------------------------------------------ */
+
+/** Bump when the SHAPE of stored envelopes changes. Never destroys user data. */
+export const LOCAL_DB_VERSION = 2;
+const DB_VERSION_KEY = "__meta::db-version";
+
+export async function migrateLocalDatabase(): Promise<number> {
+  if (!store) return LOCAL_DB_VERSION;
+  try {
+    const current = ((await get(DB_VERSION_KEY, store)) as number | undefined) ?? 1;
+    if (current === LOCAL_DB_VERSION) return current;
+    // v1 -> v2: envelopes gained `savedAt`; backfill instead of deleting.
+    if (current < 2) {
+      const all = (await keys(store)) as string[];
+      await Promise.all(
+        all.map(async (k) => {
+          if (typeof k !== "string" || k.startsWith("__meta::")) return;
+          const env = (await get(k, store)) as Envelope<unknown> | undefined;
+          if (env && typeof env === "object" && !("savedAt" in env)) {
+            await set(k, { data: env, savedAt: 0 }, store);
+          }
+        }),
+      );
+    }
+    await set(DB_VERSION_KEY, LOCAL_DB_VERSION, store);
+    return LOCAL_DB_VERSION;
+  } catch {
+    return LOCAL_DB_VERSION;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Sync diagnostics                                                     */
+/* ------------------------------------------------------------------ */
+
+export interface SyncMeta {
+  lastSuccessAt: number | null;
+  lastAttemptAt: number | null;
+  lastError: string | null;
+  pending: number;
+  failed: number;
+  dbVersion: number;
+}
+
+const SYNC_META_KEY = "sync-meta";
+
+export async function readSyncMeta(userId?: string | null): Promise<SyncMeta> {
+  const meta = await readCached<SyncMeta>(SYNC_META_KEY, userId);
+  return (
+    meta ?? {
+      lastSuccessAt: null,
+      lastAttemptAt: null,
+      lastError: null,
+      pending: 0,
+      failed: 0,
+      dbVersion: LOCAL_DB_VERSION,
+    }
+  );
+}
+
+export async function writeSyncMeta(userId: string | null | undefined, patch: Partial<SyncMeta>) {
+  const current = await readSyncMeta(userId);
+  await saveLocal(SYNC_META_KEY, userId, { ...current, ...patch });
+}
+
+/* ------------------------------------------------------------------ */
+/* Media (avatars, hero images) — stored as data URLs so they paint     */
+/* instantly offline without a network round trip.                      */
+/* ------------------------------------------------------------------ */
+
+const MAX_MEDIA_BYTES = 1_500_000;
+
+export async function cacheMedia(url: string, userId?: string | null): Promise<string | undefined> {
+  if (!store || !url || url.startsWith("data:")) return url || undefined;
+  const existing = await readCached<string>(OFFLINE_KEYS.media(url), userId);
+  if (existing) {
+    if (isOnline()) void refreshMedia(url, userId);
+    return existing;
+  }
+  return refreshMedia(url, userId);
+}
+
+async function refreshMedia(url: string, userId?: string | null): Promise<string | undefined> {
+  if (!isOnline()) return undefined;
+  try {
+    const res = await fetch(url, { mode: "cors", credentials: "omit" });
+    if (!res.ok) return undefined;
+    const blob = await res.blob();
+    if (blob.size > MAX_MEDIA_BYTES) return undefined;
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onload = () => resolve(String(reader.result));
+      reader.readAsDataURL(blob);
+    });
+    await saveLocal(OFFLINE_KEYS.media(url), userId, dataUrl);
+    return dataUrl;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function readCachedMedia(url: string, userId?: string | null) {
+  if (!url) return undefined;
+  return readCached<string>(OFFLINE_KEYS.media(url), userId);
+}
