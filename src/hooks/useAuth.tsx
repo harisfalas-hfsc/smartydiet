@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { OFFLINE_KEYS, offlineFirst, readCached } from "@/lib/offline/store";
 import { getOfflineSession, setOfflineSession } from "@/lib/offline/credentials";
+import { isOnlineNow } from "@/lib/offline/connectivity";
 
 type ProfileSummary = {
   display_name: string | null;
@@ -96,7 +97,7 @@ export function useAuth() {
       if (!active) return;
       if (!s && getOfflineSession()) {
         // Keep the offline member signed in when the network drops.
-        if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+        if (!isOnlineNow()) return;
       }
       setSession(s);
       setUser(s?.user ?? null);

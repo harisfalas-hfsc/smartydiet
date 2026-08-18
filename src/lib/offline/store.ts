@@ -1,4 +1,5 @@
 import { clear, createStore, del, get, keys, set } from "idb-keyval";
+import { isOnlineNow } from "./connectivity";
 
 /**
  * Single IndexedDB store for every offline copy of member data.
@@ -56,8 +57,7 @@ export class OfflineUnavailableError extends Error {
 }
 
 export function isOnline(): boolean {
-  if (typeof navigator === "undefined") return true;
-  return navigator.onLine !== false;
+  return isOnlineNow();
 }
 
 export function scopedKey(key: string, userId?: string | null): string {

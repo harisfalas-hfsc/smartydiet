@@ -9,6 +9,7 @@ import { applyUpdate, registerServiceWorker, warmUrls } from "@/lib/offline/regi
 import { getOfflineSession, refreshStoredSession } from "@/lib/offline/credentials";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { isOnlineNow, initConnectivity, subscribeConnectivity } from "@/lib/offline/connectivity";
 
 const PUBLIC_PAGES = [
   "/",
@@ -43,7 +44,7 @@ export function OfflineBootstrap() {
 
   const prefetch = useCallback(async () => {
     if (running.current) return;
-    if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+    if (!isOnlineNow()) return;
     running.current = true;
     try {
       warmUrls([...PUBLIC_PAGES, ...MEMBER_PAGES]);
@@ -142,9 +143,20 @@ export function OfflineBootstrap() {
   }, []);
 
   useEffect(() => {
-    registerServiceWorker(() => setUpdateReady(true));
+    let unsubscribe: (() => void) | undefined;
 
-    void prefetch();
+    // Connectivity MUST be resolved before the first data read, otherwise a
+    // native cold start in airplane mode races the network layer and fails.
+    void initConnectivity().then(() => {
+      registerServiceWorker(() => setUpdateReady(true));
+      void prefetch();
+      unsubscribe = subscribeConnectivity((online) => {
+        if (!online) return;
+        void prefetch();
+        const offlineSession = getOfflineSession();
+        if (offlineSession) void flushQueue(offlineSession.user.id);
+      });
+    });
 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
@@ -152,18 +164,12 @@ export function OfflineBootstrap() {
       }
     });
 
-    const onOnline = () => {
-      void prefetch();
-      const offlineSession = getOfflineSession();
-      if (offlineSession) void flushQueue(offlineSession.user.id);
-    };
-    window.addEventListener("online", onOnline);
-
     return () => {
       sub.subscription.unsubscribe();
-      window.removeEventListener("online", onOnline);
+      unsubscribe?.();
     };
   }, [prefetch]);
+
 
   if (!updateReady) return null;
 
