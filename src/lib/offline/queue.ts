@@ -3,13 +3,14 @@
  * Replayed automatically as soon as the connection returns.
  */
 import { createStore, get, set } from "idb-keyval";
-import {
 import { isOnlineNow } from "./connectivity";
+import {
   deleteNotifications,
   deleteMyThreads,
   setNotificationsRead,
   setThreadsRead,
 } from "@/lib/support.functions";
+
 
 const store =
   typeof indexedDB !== "undefined" ? createStore("smartydiet-offline", "kv") : undefined;
