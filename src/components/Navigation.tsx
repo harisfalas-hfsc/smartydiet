@@ -19,6 +19,7 @@ import {
   User,
   Sun,
   Moon,
+  ShieldOff,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import { useTheme } from "@/hooks/useTheme";
+import { clearOfflineSession, forgetDeviceCredentials } from "@/lib/offline/credentials";
 
 
 export function Navigation() {
@@ -68,6 +70,7 @@ export function Navigation() {
   const canGoBack = navCount > 0 && pathname !== "/";
 
   async function handleSignOut() {
+    clearOfflineSession();
     await supabase.auth.signOut();
     navigate({ to: "/", replace: true });
   }
