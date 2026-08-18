@@ -1,4 +1,8 @@
 import { useServerFn } from "@tanstack/react-start";
+import { OFFLINE_KEYS, offlineFirst } from "@/lib/offline/store";
+import { useOfflineUserId } from "@/hooks/useOfflineUser";
+import { OFFLINE_MESSAGE, useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { enqueueMutation } from "@/lib/offline/queue";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Mail, MailOpen, MessageSquare, Send, Trash2 } from "lucide-react";
@@ -31,6 +35,8 @@ export function ConversationsPanel({
   onUnread?: (n: number) => void;
   defaultComposing?: boolean;
 }) {
+  const userId = useOfflineUserId();
+  const online = useOnlineStatus();
   const load = useServerFn(listMyThreads);
   const reply = useServerFn(replyToThread);
   const start = useServerFn(submitMemberMessage);
@@ -47,13 +53,18 @@ export function ConversationsPanel({
   const [composing, setComposing] = useState(Boolean(defaultComposing));
 
   const reload = useCallback(async () => {
+    if (!userId) return;
     try {
-      const res = await load({});
-      setThreads(res.threads);
+      const list = await offlineFirst<SupportThread[]>(
+        OFFLINE_KEYS.threads,
+        async () => (await load({})).threads,
+        userId,
+      ).catch(() => [] as SupportThread[]);
+      setThreads(list);
     } finally {
       setLoading(false);
     }
-  }, [load]);
+  }, [load, userId]);
 
   useEffect(() => {
     void reload();
@@ -70,12 +81,15 @@ export function ConversationsPanel({
     setDraft("");
     if (t.user_unread) {
       setThreads((prev) => prev.map((x) => (x.id === t.id ? { ...x, user_unread: false } : x)));
-      await setRead({ data: { ids: [t.id], read: true } }).catch(() => undefined);
+      if (!online && userId)
+        await enqueueMutation(userId, { kind: "threads.setRead", ids: [t.id], read: true });
+      else await setRead({ data: { ids: [t.id], read: true } }).catch(() => undefined);
     }
   }
 
   async function sendReply(id: string) {
     if (!draft.trim()) return;
+    if (!online) return toast.error(OFFLINE_MESSAGE);
     setBusy(true);
     const res = await reply({ data: { threadId: id, body: draft } }).catch(() => ({ ok: false }));
     setBusy(false);
@@ -87,6 +101,7 @@ export function ConversationsPanel({
 
   async function sendNew() {
     if (!newBody.trim()) return;
+    if (!online) return toast.error(OFFLINE_MESSAGE);
     setBusy(true);
     const res = await start({ data: { subject: newSubject, message: newBody } }).catch(() => ({
       ok: false as const,
@@ -103,7 +118,9 @@ export function ConversationsPanel({
   async function toggleRead(t: SupportThread) {
     const read = t.user_unread;
     setThreads((prev) => prev.map((x) => (x.id === t.id ? { ...x, user_unread: !read } : x)));
-    await setRead({ data: { ids: [t.id], read } }).catch(() => undefined);
+    if (!online && userId)
+      await enqueueMutation(userId, { kind: "threads.setRead", ids: [t.id], read });
+    else await setRead({ data: { ids: [t.id], read } }).catch(() => undefined);
   }
 
   async function markAllRead() {
