@@ -140,3 +140,9 @@
   .hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
   .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgb(0 0 0 / 0.12); }
 }
+
+/* Native-feeling PWA: no browser pull-to-refresh / rubber-band chaining. */
+html,
+body {
+  overscroll-behavior-y: contain;
+}

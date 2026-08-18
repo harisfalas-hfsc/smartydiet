@@ -16,6 +16,8 @@ import { SiteFooter } from "../components/SiteFooter";
 import { PaymentTestModeBanner } from "../components/PaymentTestModeBanner";
 import { Toaster } from "../components/ui/sonner";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
+import { OfflineBootstrap } from "../components/offline/OfflineBootstrap";
+import { OfflineBanner } from "../components/offline/OfflineNotice";
 
 const SITE_URL = "https://smartydiet.com";
 const OG_IMAGE =
@@ -261,7 +263,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1, viewport-fit=cover",
+      },
+      { name: "mobile-web-app-capable", content: "yes" },
       {
         title:
           "SmartyDiet — AI Nutrition Intelligence Platform | Your Pocket Dietitian & Diet Coach",
@@ -350,6 +356,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex min-h-screen flex-col bg-background">
+        <OfflineBanner />
         <PaymentTestModeBanner />
         <Navigation />
         <main>
@@ -358,6 +365,7 @@ function RootComponent() {
         <SiteFooter />
         <Toaster />
         <SisterAppsPopup />
+        <OfflineBootstrap />
       </div>
     </QueryClientProvider>
   );
