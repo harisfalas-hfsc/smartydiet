@@ -58,18 +58,27 @@ export async function initConnectivity(): Promise<void> {
 
   if (isNative()) {
     try {
-      const { Network } = (await import(
-        /* @vite-ignore */ "@capacitor/network"
-      )) as typeof import("@capacitor/network");
-      const status = await Network.getStatus();
+      type NetworkStatus = { connected: boolean };
+      type NetworkPlugin = {
+        getStatus: () => Promise<NetworkStatus>;
+        addListener: (
+          event: "networkStatusChange",
+          cb: (status: NetworkStatus) => void,
+        ) => Promise<unknown>;
+      };
+      // Resolved at runtime only: the plugin exists in the native build, not on the web.
+      const spec = "@capacitor/network";
+      const mod = (await import(/* @vite-ignore */ spec)) as { Network: NetworkPlugin };
+      const status = await mod.Network.getStatus();
       cached = status.connected;
       emit(status.connected);
-      await Network.addListener("networkStatusChange", (s) => emit(s.connected));
+      await mod.Network.addListener("networkStatusChange", (s) => emit(s.connected));
       return;
     } catch {
       /* plugin missing — fall through to the browser implementation */
     }
   }
+
 
   cached = navigator.onLine !== false;
   window.addEventListener("online", () => emit(true));
