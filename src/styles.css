@@ -145,18 +145,32 @@
 html,
 body {
   background-color: var(--color-background);
-  overscroll-behavior-y: auto;
   overflow-x: hidden;
-  overflow-y: auto;
   min-height: 100%;
   -webkit-overflow-scrolling: touch;
   -webkit-text-size-adjust: 100%;
 }
 
-/* On phones, keep normal page scrolling but stop the browser's pull-to-refresh gesture. */
+html {
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+}
+
+body {
+  overflow-y: visible;
+}
+
+/* On phones, the root is the only scroll container. Vertical touch panning stays
+ * enabled while root-boundary overscroll (the browser pull-to-refresh gesture) is blocked. */
 @media (max-width: 640px) {
-  html,
-  body {
+  html {
     overscroll-behavior-y: none;
+    touch-action: pan-y;
+  }
+
+  body {
+    overflow-y: visible;
+    overscroll-behavior-y: auto;
+    touch-action: pan-y;
   }
 }
