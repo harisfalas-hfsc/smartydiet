@@ -1,7 +1,7 @@
 /* SmartyDiet offline service worker.
    Caches the app shell, every visited page, and all static assets so the app
    boots and navigates with zero internet. */
-const VERSION = "smartydiet-v3";
+const VERSION = "smartydiet-v4";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const PAGE_CACHE = `${VERSION}-pages`;
