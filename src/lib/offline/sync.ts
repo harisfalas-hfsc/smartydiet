@@ -55,7 +55,6 @@ let busy = false;
 
 export function subscribeSyncing(fn: SyncListener): () => void {
   listeners.add(fn);
-  fn(busy);
   return () => listeners.delete(fn);
 }
 
