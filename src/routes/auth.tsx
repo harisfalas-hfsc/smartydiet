@@ -131,7 +131,7 @@ function Auth() {
     } catch {
       /* expected offline */
     }
-    setOfflineSession(verified.user);
+    await setOfflineSession(verified.user);
     goNext();
     return true;
   }
@@ -168,7 +168,7 @@ function Auth() {
           },
           session: data.session,
         });
-        setOfflineSession({
+        await setOfflineSession({
           id: data.user.id,
           email: data.user.email ?? normalizedEmail,
           displayName:

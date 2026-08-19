@@ -81,7 +81,7 @@ export function Navigation() {
   async function handleSignOut() {
     // Multi-user isolation: this account's private cache never survives sign-out.
     const signedOutId = user?.id;
-    clearOfflineSession();
+    await clearOfflineSession();
     if (signedOutId) await clearUserCache(signedOutId);
     await supabase.auth.signOut();
     navigate({ to: "/", replace: true });
@@ -147,7 +147,13 @@ export function Navigation() {
                         : "inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary text-primary"
                     }
                   >
-                    {user ? initial : <User className="h-4 w-4" />}
+                    {user && profile?.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt=""
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : user ? initial : <User className="h-4 w-4" />}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
