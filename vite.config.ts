@@ -54,6 +54,10 @@ export default defineConfig({
         filename: "sw.js",
         manifest: false,
         devOptions: { enabled: false },
+        // The static client bundle is emitted to dist/client — the worker and
+        // its precache manifest MUST live there or /sw.js is never served.
+        outDir: "dist/client",
+
         workbox: {
           cleanupOutdatedCaches: true,
           clientsClaim: true,
