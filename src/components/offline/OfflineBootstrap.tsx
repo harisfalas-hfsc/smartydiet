@@ -1,22 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { flushQueue } from "@/lib/offline/queue";
 import { runBackgroundSync } from "@/lib/offline/sync";
-import { applyUpdate, registerServiceWorker } from "@/lib/offline/register-sw";
+import { registerServiceWorker } from "@/lib/offline/register-sw";
 import { getOfflineSession } from "@/lib/offline/credentials";
 import { migrateLocalDatabase } from "@/lib/offline/store";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 import { initConnectivity, subscribeConnectivity } from "@/lib/offline/connectivity";
 
 /**
  * Boot sequence owner: connectivity first, then local DB migration, then the
- * service worker, then a silent background sync. Renders nothing except the
- * (non-blocking) "new version available" prompt.
+ * service worker, then a silent background sync. Renders nothing — updates and
+ * caching are fully automatic and never prompt the user.
  */
 export function OfflineBootstrap() {
-  const [updateReady, setUpdateReady] = useState(false);
-
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
 
@@ -25,7 +21,7 @@ export function OfflineBootstrap() {
     void initConnectivity()
       .then(() => migrateLocalDatabase())
       .then(() => {
-        registerServiceWorker(() => setUpdateReady(true));
+        registerServiceWorker();
         void runBackgroundSync();
         unsubscribe = subscribeConnectivity((online) => {
           if (!online) return;
@@ -53,15 +49,5 @@ export function OfflineBootstrap() {
     };
   }, []);
 
-  if (!updateReady) return null;
-
-  return (
-    <div className="fixed inset-x-0 bottom-4 z-[70] mx-auto flex w-[min(92vw,420px)] items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-lg">
-      <RefreshCw className="h-4 w-4 shrink-0 text-primary" />
-      <p className="flex-1 text-sm font-medium">A new version is available.</p>
-      <Button size="sm" onClick={applyUpdate}>
-        Refresh
-      </Button>
-    </div>
-  );
+  return null;
 }
