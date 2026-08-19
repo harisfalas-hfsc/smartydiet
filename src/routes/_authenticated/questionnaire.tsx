@@ -204,7 +204,7 @@ function QuestionnairePage() {
         >
           Back
         </Button>
-        <Button onClick={next} disabled={busy || (!online && step === STEP_LABELS.length - 1)}>
+        <Button onClick={next} disabled={busy}>
           {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {step === STEP_LABELS.length - 1
             ? freeAccessMode

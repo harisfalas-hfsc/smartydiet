@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OFFLINE_KEYS, offlineFirst } from "@/lib/offline/store";
 import { useOfflineUserId } from "@/hooks/useOfflineUser";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
+import { OfflineActionNotice, OfflineEmptyState } from "@/components/offline/OfflineNotice";
 import { generatePlan, listPlanVersions, restorePlanVersion } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
@@ -220,7 +220,11 @@ function PlanView() {
   if (!session)
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        {online ? (
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        ) : (
+          <OfflineEmptyState />
+        )}
       </div>
     );
 
@@ -457,7 +461,7 @@ function PlanView() {
                       <Button
                         size="sm"
                         onClick={() => doRestore(v.version)}
-                        disabled={busy || !online}
+                        disabled={busy}
                       >
                         Restore
                       </Button>
@@ -489,7 +493,7 @@ function PlanView() {
             />
             <OfflineActionNotice className="mt-2" />
             <div className="mt-2 flex justify-end">
-              <Button onClick={refine} disabled={busy || !online}>
+              <Button onClick={refine} disabled={busy}>
                 {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Refine plan
               </Button>

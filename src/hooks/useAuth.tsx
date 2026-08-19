@@ -122,21 +122,25 @@ export function useAuth() {
 
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
       if (!active) return;
-      if (!s && getOfflineSession()) {
-        // Keep the offline member signed in when the network drops.
-        if (!isOnlineNow()) return;
+      if (!s) {
+        void applyOfflineFallback().then((restored) => {
+          if (!active || restored) return;
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+        });
+        return;
       }
       setSession(s);
-      setUser(s?.user ?? null);
+      setUser(s.user);
       setLoading(false);
-      if (s?.user) {
-        setOfflineSession({
-          id: s.user.id,
-          email: s.user.email ?? null,
-          displayName: nameFromUser(s.user),
-        });
-      }
-      void loadProfile(s?.user ?? null);
+      void setOfflineSession({
+        id: s.user.id,
+        email: s.user.email ?? null,
+        displayName: nameFromUser(s.user),
+      });
+      void loadProfile(s.user);
     });
     return () => {
       active = false;
