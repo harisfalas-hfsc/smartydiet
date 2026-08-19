@@ -141,8 +141,11 @@
   .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgb(0 0 0 / 0.12); }
 }
 
-/* Native-feeling PWA: no browser pull-to-refresh / rubber-band chaining. */
+/* Installed-app scrolling must always work: never lock the document. */
 html,
 body {
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
+  overflow-y: visible;
+  min-height: 100%;
+  -webkit-text-size-adjust: 100%;
 }
