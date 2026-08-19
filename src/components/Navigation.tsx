@@ -61,12 +61,20 @@ export function Navigation() {
 
   useEffect(() => {
     if (!menuOpen) return;
-    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = "";
     };
   }, [menuOpen]);
+
+  // Safety net: no overlay may ever leave the document unscrollable.
+  useEffect(() => {
+    if (menuOpen) return;
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.pointerEvents = "";
+    document.documentElement.style.overflow = "";
+  }, [pathname, menuOpen]);
 
   const canGoBack = navCount > 0 && pathname !== "/";
 
