@@ -29,8 +29,11 @@ import {
 import { saveQuestionnaire } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
-import { OFFLINE_MESSAGE, useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
+import { useAuth } from "@/hooks/useAuth";
+import { enqueueMutation } from "@/lib/offline/queue";
+import { OFFLINE_KEYS, readCached, removeLocal, saveLocal } from "@/lib/offline/store";
 
 export const Route = createFileRoute("/_authenticated/questionnaire")({
   head: () => ({
@@ -43,33 +46,41 @@ export const Route = createFileRoute("/_authenticated/questionnaire")({
   component: QuestionnairePage,
 });
 
-const STORAGE_KEY = "smartydiet.questionnaire.v2";
+type SavedDraft = { data: QuestionnaireData; step: number; durationWeeks: 1 | 2 | 4 };
 
 function QuestionnairePage() {
   const navigate = useNavigate();
   const { freeAccessMode } = useFreeAccessMode();
   const save = useServerFn(saveQuestionnaire);
   const online = useOnlineStatus();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<QuestionnaireData>(DEFAULT_QUESTIONNAIRE);
   const [durationWeeks, setDurationWeeks] = useState<1 | 2 | 4>(2);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.data) setData({ ...DEFAULT_QUESTIONNAIRE, ...parsed.data });
-        if (parsed.step) setStep(parsed.step);
-        if (parsed.durationWeeks) setDurationWeeks(parsed.durationWeeks);
-      }
-    } catch {}
-  }, []);
+    if (!user?.id) return;
+    let active = true;
+    void readCached<SavedDraft>(OFFLINE_KEYS.questionnaireDraft, user.id).then((saved) => {
+      if (!active || !saved) return;
+      setData({ ...DEFAULT_QUESTIONNAIRE, ...saved.data });
+      setStep(saved.step ?? 0);
+      setDurationWeeks(saved.durationWeeks ?? 2);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ data, step, durationWeeks }));
-  }, [data, step, durationWeeks]);
+    if (!user?.id) return;
+    void saveLocal<SavedDraft>(OFFLINE_KEYS.questionnaireDraft, user.id, {
+      data,
+      step,
+      durationWeeks,
+    });
+  }, [data, step, durationWeeks, user?.id]);
 
   const upd = <K extends keyof QuestionnaireData>(
     key: K,
@@ -101,13 +112,42 @@ function QuestionnairePage() {
   }
 
   async function submit() {
-    if (!online) return toast.error(OFFLINE_MESSAGE);
+    if (!user?.id) return toast.error("Sign in to save your questionnaire.");
     setBusy(true);
     try {
+      if (!online) {
+        const questionnaireId = crypto.randomUUID();
+        const sessionId = crypto.randomUUID();
+        await enqueueMutation(user.id, {
+          kind: "questionnaire.save",
+          questionnaireId,
+          data,
+          durationWeeks,
+          questionnaireStatus: "submitted",
+          priority: 3,
+        });
+        if (freeAccessMode) {
+          await enqueueMutation(user.id, {
+            kind: "generation.request",
+            questionnaireId,
+            sessionId,
+            durationWeeks,
+            priority: 2,
+          });
+        }
+        await removeLocal(OFFLINE_KEYS.questionnaireDraft, user.id);
+        toast.success(
+          freeAccessMode
+            ? "Saved offline. Your plan will be built automatically when you reconnect."
+            : "Saved offline. Reconnect to continue to secure payment.",
+        );
+        navigate({ to: "/plans" });
+        return;
+      }
       const res = await save({
         data: { data: data as any, durationWeeks, status: "submitted" as const },
       });
-      localStorage.removeItem(STORAGE_KEY);
+      await removeLocal(OFFLINE_KEYS.questionnaireDraft, user.id);
       navigate({ to: "/checkout", search: { qid: res.id } });
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to save");
