@@ -42,7 +42,8 @@ self.addEventListener("install", (event) => {
             .catch(() => undefined),
         ),
       );
-      // Do not activate until the page asks (update prompt), but be ready fast.
+      // Silent updates: never ask the user anything.
+      await self.skipWaiting();
     })(),
   );
 });
