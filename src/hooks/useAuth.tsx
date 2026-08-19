@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
-import { OFFLINE_KEYS, offlineFirst, readCached } from "@/lib/offline/store";
-import { getOfflineSession, setOfflineSession } from "@/lib/offline/credentials";
-import { isOnlineNow } from "@/lib/offline/connectivity";
+import { OFFLINE_KEYS, cacheMedia, offlineFirst, readCached } from "@/lib/offline/store";
+import {
+  getOfflineSession,
+  getOfflineSessionAsync,
+  setOfflineSession,
+} from "@/lib/offline/credentials";
 
 type ProfileSummary = {
   display_name: string | null;
@@ -50,20 +53,43 @@ export function useAuth() {
         authUser.id,
       ).catch(() => null);
       if (active) setProfile(data ?? null);
+      if (data) {
+        const avatarUrl = data.avatar_url ? await cacheMedia(data.avatar_url, authUser.id) : null;
+        await setOfflineSession({
+          id: authUser.id,
+          email: authUser.email ?? null,
+          displayName: data.display_name?.trim() || nameFromUser(authUser),
+          avatarUrl: avatarUrl ?? data.avatar_url,
+        });
+      }
     }
 
     async function applyOfflineFallback() {
-      const cached = getOfflineSession();
+      const cached = (await getOfflineSessionAsync()) ?? getOfflineSession();
       if (!cached || !active) return false;
       setUser({
         id: cached.user.id,
         email: cached.user.email ?? undefined,
-        user_metadata: { full_name: cached.user.displayName ?? undefined },
+        user_metadata: {
+          full_name: cached.user.displayName ?? undefined,
+          avatar_url: cached.user.avatarUrl ?? undefined,
+        },
       } as unknown as User);
       const cachedProfile = await readCached<ProfileSummary>(OFFLINE_KEYS.profile, cached.user.id);
-      if (active) setProfile(cachedProfile ?? null);
+      if (active) {
+        setProfile(
+          cachedProfile ?? {
+            display_name: cached.user.displayName,
+            avatar_url: cached.user.avatarUrl ?? null,
+          },
+        );
+      }
       return true;
     }
+
+    void applyOfflineFallback().then((restored) => {
+      if (restored && active) setLoading(false);
+    });
 
     supabase.auth
       .getSession()
@@ -95,21 +121,25 @@ export function useAuth() {
 
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
       if (!active) return;
-      if (!s && getOfflineSession()) {
-        // Keep the offline member signed in when the network drops.
-        if (!isOnlineNow()) return;
+      if (!s) {
+        void applyOfflineFallback().then((restored) => {
+          if (!active || restored) return;
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+        });
+        return;
       }
       setSession(s);
-      setUser(s?.user ?? null);
+      setUser(s.user);
       setLoading(false);
-      if (s?.user) {
-        setOfflineSession({
-          id: s.user.id,
-          email: s.user.email ?? null,
-          displayName: nameFromUser(s.user),
-        });
-      }
-      void loadProfile(s?.user ?? null);
+      void setOfflineSession({
+        id: s.user.id,
+        email: s.user.email ?? null,
+        displayName: nameFromUser(s.user),
+      });
+      void loadProfile(s.user);
     });
     return () => {
       active = false;

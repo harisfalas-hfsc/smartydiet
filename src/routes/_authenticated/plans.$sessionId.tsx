@@ -3,17 +3,26 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { OFFLINE_KEYS, offlineFirst } from "@/lib/offline/store";
 import { useOfflineUserId } from "@/hooks/useOfflineUser";
-import { OFFLINE_MESSAGE, useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { OfflineActionNotice, OfflineEmptyState } from "@/components/offline/OfflineNotice";
 import { generatePlan, listPlanVersions, restorePlanVersion } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Download, Utensils, ShoppingBasket, RefreshCw, History, AlertTriangle } from "lucide-react";
+import {
+  Loader2,
+  Download,
+  Utensils,
+  ShoppingBasket,
+  RefreshCw,
+  History,
+  AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
+import { enqueueMutation } from "@/lib/offline/queue";
 
 export const Route = createFileRoute("/_authenticated/plans/$sessionId")({
   head: () => ({
@@ -113,8 +122,7 @@ function PlanView() {
         if (res.error) {
           setGenerationError(res.error);
           toast.error(res.error);
-        }
-        else toast.success("Your plan is ready");
+        } else toast.success("Your plan is ready");
         await load();
       } catch (e: any) {
         const message = e?.message ?? "Generation failed";
@@ -127,10 +135,24 @@ function PlanView() {
   }, [session, versions.length, autoGenerating, generate, sessionId, load, online]);
 
   async function refine() {
-    if (!online) return toast.error(OFFLINE_MESSAGE);
     if (!refineText.trim()) return toast.error("Describe the change you want");
+    if (!userId) return toast.error("Sign in to refine this plan");
     setBusy(true);
     try {
+      if (!online) {
+        const operationId = crypto.randomUUID();
+        await enqueueMutation(userId, {
+          kind: "plan.refine",
+          sessionId,
+          refinement: refineText.trim(),
+          operationId,
+          id: operationId,
+          priority: 2,
+        });
+        setRefineText("");
+        toast.success("Saved offline. Your refinement will run when you reconnect.");
+        return;
+      }
       const res = await generate({
         data: { sessionId, refinement: refineText.trim() },
       });
@@ -151,9 +173,19 @@ function PlanView() {
   }
 
   async function doRestore(version: number) {
-    if (!online) return toast.error(OFFLINE_MESSAGE);
+    if (!userId) return toast.error("Sign in to restore this version");
     setBusy(true);
     try {
+      if (!online) {
+        await enqueueMutation(userId, {
+          kind: "plan.restore",
+          sessionId,
+          version,
+          priority: 2,
+        });
+        toast.success(`Version ${version} will be restored when you reconnect.`);
+        return;
+      }
       await restore({ data: { sessionId, version } });
       setActiveId(null);
       await load();
@@ -188,7 +220,7 @@ function PlanView() {
   if (!session)
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        {online ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <OfflineEmptyState />}
       </div>
     );
 
@@ -201,7 +233,8 @@ function PlanView() {
         <div>
           <h1 className="text-2xl font-bold">Your {session.duration_weeks}-week plan</h1>
           <p className="text-sm text-muted-foreground">
-            {remaining} refinement{remaining === 1 ? "" : "s"} remaining · viewing v{active?.version ?? 1}
+            {remaining} refinement{remaining === 1 ? "" : "s"} remaining · viewing v
+            {active?.version ?? 1}
           </p>
         </div>
         <div className="flex gap-2">
@@ -345,9 +378,7 @@ function PlanView() {
                               {m.ingredients.map((x: any) => `${x.qty} ${x.item}`).join(", ")}
                             </p>
                           ) : null}
-                          {m.instructions && (
-                            <p className="mt-1 text-xs">{m.instructions}</p>
-                          )}
+                          {m.instructions && <p className="mt-1 text-xs">{m.instructions}</p>}
                         </div>
                       ))}
                     </div>
@@ -423,7 +454,7 @@ function PlanView() {
                       View
                     </Button>
                     {!v.is_final && (
-                      <Button size="sm" onClick={() => doRestore(v.version)} disabled={busy || !online}>
+                      <Button size="sm" onClick={() => doRestore(v.version)} disabled={busy}>
                         Restore
                       </Button>
                     )}
@@ -454,7 +485,7 @@ function PlanView() {
             />
             <OfflineActionNotice className="mt-2" />
             <div className="mt-2 flex justify-end">
-              <Button onClick={refine} disabled={busy || !online}>
+              <Button onClick={refine} disabled={busy}>
                 {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Refine plan
               </Button>

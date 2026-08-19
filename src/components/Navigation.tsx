@@ -39,9 +39,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { clearOfflineSession, forgetDeviceCredentials } from "@/lib/offline/credentials";
 import { clearUserCache } from "@/lib/offline/store";
 
-
 export function Navigation() {
-  const { user, displayName, loading } = useAuth();
+  const { user, profile, displayName, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const router = useRouter();
@@ -49,8 +48,6 @@ export function Navigation() {
   const [navCount, setNavCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-
-
 
   useEffect(() => {
     const unsub = router.subscribe("onResolved", () => {
@@ -81,7 +78,7 @@ export function Navigation() {
   async function handleSignOut() {
     // Multi-user isolation: this account's private cache never survives sign-out.
     const signedOutId = user?.id;
-    clearOfflineSession();
+    await clearOfflineSession();
     if (signedOutId) await clearUserCache(signedOutId);
     await supabase.auth.signOut();
     navigate({ to: "/", replace: true });
@@ -127,9 +124,9 @@ export function Navigation() {
             className="text-lg font-extrabold tracking-tight leading-none no-underline hover:no-underline"
             style={{ textDecoration: "none" }}
           >
-            <span className="text-primary">SMARTY</span><span className="text-green-500">DIET</span>
+            <span className="text-primary">SMARTY</span>
+            <span className="text-green-500">DIET</span>
           </Link>
-
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
@@ -147,7 +144,17 @@ export function Navigation() {
                         : "inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary text-primary"
                     }
                   >
-                    {user ? initial : <User className="h-4 w-4" />}
+                    {user && profile?.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt=""
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : user ? (
+                      initial
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -204,9 +211,13 @@ export function Navigation() {
                     }}
                   >
                     {theme === "dark" ? (
-                      <><Sun className="h-4 w-4 mr-2" /> Light mode</>
+                      <>
+                        <Sun className="h-4 w-4 mr-2" /> Light mode
+                      </>
                     ) : (
-                      <><Moon className="h-4 w-4 mr-2" /> Dark mode</>
+                      <>
+                        <Moon className="h-4 w-4 mr-2" /> Dark mode
+                      </>
                     )}
                   </DropdownMenuItem>
 
@@ -235,12 +246,22 @@ export function Navigation() {
         </div>
       </div>
 
-      {menuOpen && <NavDrawer onClose={() => setMenuOpen(false)} isAuthed={!!user} isAdmin={isAdmin} />}
+      {menuOpen && (
+        <NavDrawer onClose={() => setMenuOpen(false)} isAuthed={!!user} isAdmin={isAdmin} />
+      )}
     </header>
   );
 }
 
-function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuthed: boolean; isAdmin: boolean }) {
+function NavDrawer({
+  onClose,
+  isAuthed,
+  isAdmin,
+}: {
+  onClose: () => void;
+  isAuthed: boolean;
+  isAdmin: boolean;
+}) {
   const { freeAccessMode } = useFreeAccessMode();
   const sections: {
     heading: string;
@@ -271,7 +292,6 @@ function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuth
         { to: "/diet-science", label: "The Diet Science", Icon: BookOpen },
         { to: "/nutrition-intelligence", label: "Nutrition Intelligence", Icon: Sparkles },
         { to: "/contact", label: "Contact", Icon: Mail },
-
       ],
     },
     {
@@ -293,7 +313,8 @@ function NavDrawer({ onClose, isAuthed, isAdmin }: { onClose: () => void; isAuth
       >
         <div className="flex h-12 items-center justify-between px-4">
           <div className="text-base font-extrabold">
-            <span className="text-primary">SMARTY</span><span className="text-green-500">DIET</span>
+            <span className="text-primary">SMARTY</span>
+            <span className="text-green-500">DIET</span>
           </div>
 
           <button

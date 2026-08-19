@@ -24,7 +24,7 @@ import {
 } from "./store";
 import { flushQueue } from "./queue";
 import { warmUrls } from "./register-sw";
-import { refreshStoredSession } from "./credentials";
+import { refreshStoredSession, setOfflineSession } from "./credentials";
 import { isOnlineNow, reportRequestFailure, reportRequestSuccess } from "./connectivity";
 
 export const PUBLIC_PAGES = [
@@ -120,7 +120,16 @@ export async function runBackgroundSync(force = false): Promise<void> {
         marketing_opt_in: (profile as { marketing_opt_in?: boolean }).marketing_opt_in ?? false,
       });
       const avatar = (profile as { avatar_url?: string | null }).avatar_url;
-      if (avatar) void cacheMedia(avatar, userId);
+      const cachedAvatar = avatar ? await cacheMedia(avatar, userId) : undefined;
+      await setOfflineSession({
+        id: userId,
+        email: user.email ?? null,
+        displayName:
+          (profile as { display_name?: string | null }).display_name ??
+          (user.user_metadata?.full_name as string | undefined) ??
+          null,
+        avatarUrl: cachedAvatar ?? avatar ?? null,
+      });
     }
 
     await supabase
@@ -156,7 +165,10 @@ export async function runBackgroundSync(force = false): Promise<void> {
       updatedAt: 0,
     };
     // A fresh pass every 6 hours; otherwise resume where the last one stopped.
-    const resume = force || Date.now() - checkpoint.updatedAt > 6 * 60 * 60 * 1000 ? [] : checkpoint.doneSessionIds;
+    const resume =
+      force || Date.now() - checkpoint.updatedAt > 6 * 60 * 60 * 1000
+        ? []
+        : checkpoint.doneSessionIds;
     const done = new Set(resume);
 
     for (const row of rows as { id: string }[]) {

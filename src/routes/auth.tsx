@@ -14,17 +14,25 @@ import {
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { isOnlineNow } from "@/lib/offline/connectivity";
 
-
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>): { next?: string; mode?: "signin" | "signup" | "forgot" } => {
-    const n = typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined;
-    const mode = s.mode === "signup" || s.mode === "forgot" || s.mode === "signin" ? s.mode : undefined;
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { next?: string; mode?: "signin" | "signup" | "forgot" } => {
+    const n =
+      typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//")
+        ? s.next
+        : undefined;
+    const mode =
+      s.mode === "signup" || s.mode === "forgot" || s.mode === "signin" ? s.mode : undefined;
     return { ...(n ? { next: n } : {}), ...(mode ? { mode } : {}) };
   },
   head: () => ({
     meta: [
       { title: "Sign in — SmartyDiet" },
-      { name: "description", content: "Sign in to SmartyDiet to build your personalized nutrition plan." },
+      {
+        name: "description",
+        content: "Sign in to SmartyDiet to build your personalized nutrition plan.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -68,7 +76,6 @@ function Auth() {
     return () => sub.subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, next, mode]);
-
 
   async function ensureProfile(authUser: User | null, fallbackName?: string) {
     if (!authUser) return;
@@ -131,7 +138,7 @@ function Auth() {
     } catch {
       /* expected offline */
     }
-    setOfflineSession(verified.user);
+    await setOfflineSession(verified.user);
     goNext();
     return true;
   }
@@ -168,7 +175,7 @@ function Auth() {
           },
           session: data.session,
         });
-        setOfflineSession({
+        await setOfflineSession({
           id: data.user.id,
           email: data.user.email ?? normalizedEmail,
           displayName:
@@ -183,7 +190,9 @@ function Auth() {
         const ok = await offlineSignIn(normalizedEmail);
         if (ok) return;
       }
-      setAuthError(error instanceof Error ? error.message : "Sign in failed. Check your email and password.");
+      setAuthError(
+        error instanceof Error ? error.message : "Sign in failed. Check your email and password.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -215,29 +224,67 @@ function Auth() {
           <h1 style={{ fontWeight: 800, fontSize: 24, color: "#14213A", letterSpacing: "-0.01em" }}>
             Create your account
           </h1>
-          <p className="-mt-1 text-sm" style={{ color: "#6B7A90" }}>Saved securely to your account.</p>
+          <p className="-mt-1 text-sm" style={{ color: "#6B7A90" }}>
+            Saved securely to your account.
+          </p>
           <div className="space-y-1.5">
             <Label htmlFor="n">Name</Label>
-            <Input id="n" value={name} onChange={(e) => setName(e.target.value)} required className="h-11 rounded-xl" autoComplete="name" />
+            <Input
+              id="n"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="h-11 rounded-xl"
+              autoComplete="name"
+            />
           </div>
           <div className="grid grid-cols-[1fr_90px] gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="e">Email</Label>
-              <Input id="e" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11 rounded-xl" autoComplete="email" />
+              <Input
+                id="e"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-11 rounded-xl"
+                autoComplete="email"
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="a">Age</Label>
-              <Input id="a" type="number" min={12} max={100} value={age} onChange={(e) => setAge(e.target.value ? Number(e.target.value) : "")} required className="h-11 rounded-xl" autoComplete="off" />
+              <Input
+                id="a"
+                type="number"
+                min={12}
+                max={100}
+                value={age}
+                onChange={(e) => setAge(e.target.value ? Number(e.target.value) : "")}
+                required
+                className="h-11 rounded-xl"
+                autoComplete="off"
+              />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="p">Password</Label>
-            <PasswordField id="p" value={password} onChange={setPassword} show={showPassword} onToggle={() => setShowPassword((s) => !s)} autoComplete="new-password" />
+            <PasswordField
+              id="p"
+              value={password}
+              onChange={setPassword}
+              show={showPassword}
+              onToggle={() => setShowPassword((s) => !s)}
+              autoComplete="new-password"
+            />
           </div>
           <Button
             type="submit"
             disabled={submitting || !online}
-            style={{ background: "#FF6B4A", boxShadow: "0 14px 24px -10px rgba(255,107,74,0.55)", color: "#fff" }}
+            style={{
+              background: "#FF6B4A",
+              boxShadow: "0 14px 24px -10px rgba(255,107,74,0.55)",
+              color: "#fff",
+            }}
             className="mt-2 h-12 w-full rounded-2xl text-base font-semibold hover:opacity-95"
           >
             {submitting ? "Saving..." : "Continue"}
@@ -248,11 +295,32 @@ function Auth() {
               still sign in with an account already used on this device.
             </p>
           )}
-          {authNotice && <p className="text-center text-sm font-semibold" style={{ color: "#0E7C86" }}>{authNotice}</p>}
-          {authError && <p className="text-center text-sm font-semibold text-destructive">{authError}</p>}
+          {authNotice && (
+            <p className="text-center text-sm font-semibold" style={{ color: "#0E7C86" }}>
+              {authNotice}
+            </p>
+          )}
+          {authError && (
+            <p className="text-center text-sm font-semibold text-destructive">{authError}</p>
+          )}
           <p className="mt-1 text-center text-sm" style={{ color: "#6B7A90" }}>
             Have an account?{" "}
-            <button type="button" onClick={() => { setAuthError(""); setAuthNotice(""); setMode("signin"); }} style={{ color: "#0E7C86", fontWeight: 700, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthError("");
+                setAuthNotice("");
+                setMode("signin");
+              }}
+              style={{
+                color: "#0E7C86",
+                fontWeight: 700,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
               Sign in
             </button>
           </p>
@@ -262,36 +330,87 @@ function Auth() {
           <h1 style={{ fontWeight: 800, fontSize: 24, color: "#14213A", letterSpacing: "-0.01em" }}>
             Welcome back
           </h1>
-          <p className="-mt-1 text-sm" style={{ color: "#6B7A90" }}>Sign in to continue your nutrition journey.</p>
+          <p className="-mt-1 text-sm" style={{ color: "#6B7A90" }}>
+            Sign in to continue your nutrition journey.
+          </p>
           <div className="space-y-1.5">
             <Label htmlFor="se">Email</Label>
-            <Input id="se" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11 rounded-xl" autoComplete="email" />
+            <Input
+              id="se"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="h-11 rounded-xl"
+              autoComplete="email"
+            />
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="sp">Password</Label>
               <button
                 type="button"
-                onClick={() => { setAuthError(""); setAuthNotice(""); setResetSent(false); setMode("forgot"); }}
-                style={{ color: "#0E7C86", fontWeight: 700, fontSize: 13, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                onClick={() => {
+                  setAuthError("");
+                  setAuthNotice("");
+                  setResetSent(false);
+                  setMode("forgot");
+                }}
+                style={{
+                  color: "#0E7C86",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
               >
                 Forgot password?
               </button>
             </div>
-            <PasswordField id="sp" value={password} onChange={setPassword} show={showPassword} onToggle={() => setShowPassword((s) => !s)} autoComplete="current-password" />
+            <PasswordField
+              id="sp"
+              value={password}
+              onChange={setPassword}
+              show={showPassword}
+              onToggle={() => setShowPassword((s) => !s)}
+              autoComplete="current-password"
+            />
           </div>
           <Button
             type="submit"
             disabled={submitting}
-            style={{ background: "#FF6B4A", boxShadow: "0 14px 24px -10px rgba(255,107,74,0.55)", color: "#fff" }}
+            style={{
+              background: "#FF6B4A",
+              boxShadow: "0 14px 24px -10px rgba(255,107,74,0.55)",
+              color: "#fff",
+            }}
             className="mt-2 h-12 w-full rounded-2xl text-base font-semibold hover:opacity-95"
           >
             {submitting ? "Signing in..." : "Sign in"}
           </Button>
-          {authError && <p className="text-center text-sm font-semibold text-destructive">{authError}</p>}
+          {authError && (
+            <p className="text-center text-sm font-semibold text-destructive">{authError}</p>
+          )}
           <p className="mt-1 text-center text-sm" style={{ color: "#6B7A90" }}>
             New here?{" "}
-            <button type="button" onClick={() => { setAuthError(""); setAuthNotice(""); setMode("signup"); }} style={{ color: "#0E7C86", fontWeight: 700, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthError("");
+                setAuthNotice("");
+                setMode("signup");
+              }}
+              style={{
+                color: "#0E7C86",
+                fontWeight: 700,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
               Create an account
             </button>
           </p>
@@ -306,12 +425,24 @@ function Auth() {
           </p>
           <div className="space-y-1.5">
             <Label htmlFor="fe">Email</Label>
-            <Input id="fe" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11 rounded-xl" autoComplete="email" />
+            <Input
+              id="fe"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="h-11 rounded-xl"
+              autoComplete="email"
+            />
           </div>
           <Button
             type="submit"
             disabled={submitting || resetSent}
-            style={{ background: "#FF6B4A", boxShadow: "0 14px 24px -10px rgba(255,107,74,0.55)", color: "#fff" }}
+            style={{
+              background: "#FF6B4A",
+              boxShadow: "0 14px 24px -10px rgba(255,107,74,0.55)",
+              color: "#fff",
+            }}
             className="mt-2 h-12 w-full rounded-2xl text-base font-semibold hover:opacity-95"
           >
             {resetSent ? "Email sent ✓" : submitting ? "Sending..." : "Send reset link"}
@@ -321,10 +452,27 @@ function Auth() {
               Check your inbox (and spam folder) for the reset link.
             </p>
           )}
-          {authError && <p className="text-center text-sm font-semibold text-destructive">{authError}</p>}
+          {authError && (
+            <p className="text-center text-sm font-semibold text-destructive">{authError}</p>
+          )}
           <p className="mt-1 text-center text-sm" style={{ color: "#6B7A90" }}>
             Remembered it?{" "}
-            <button type="button" onClick={() => { setAuthError(""); setResetSent(false); setMode("signin"); }} style={{ color: "#0E7C86", fontWeight: 700, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthError("");
+                setResetSent(false);
+                setMode("signin");
+              }}
+              style={{
+                color: "#0E7C86",
+                fontWeight: 700,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
               Back to sign in
             </button>
           </p>

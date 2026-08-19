@@ -29,55 +29,70 @@ import {
 import { saveQuestionnaire } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
-import { OFFLINE_MESSAGE, useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
+import { useAuth } from "@/hooks/useAuth";
+import { enqueueMutation } from "@/lib/offline/queue";
+import { OFFLINE_KEYS, readCached, removeLocal, saveLocal } from "@/lib/offline/store";
 
 export const Route = createFileRoute("/_authenticated/questionnaire")({
   head: () => ({
     meta: [
       { title: "Build your plan — SmartyDiet" },
-      { name: "description", content: "Answer a smart nutrition questionnaire to build your personalized plan." },
+      {
+        name: "description",
+        content: "Answer a smart nutrition questionnaire to build your personalized plan.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: QuestionnairePage,
 });
 
-const STORAGE_KEY = "smartydiet.questionnaire.v2";
+type SavedDraft = { data: QuestionnaireData; step: number; durationWeeks: 1 | 2 | 4 };
 
 function QuestionnairePage() {
   const navigate = useNavigate();
   const { freeAccessMode } = useFreeAccessMode();
   const save = useServerFn(saveQuestionnaire);
   const online = useOnlineStatus();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<QuestionnaireData>(DEFAULT_QUESTIONNAIRE);
   const [durationWeeks, setDurationWeeks] = useState<1 | 2 | 4>(2);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.data) setData({ ...DEFAULT_QUESTIONNAIRE, ...parsed.data });
-        if (parsed.step) setStep(parsed.step);
-        if (parsed.durationWeeks) setDurationWeeks(parsed.durationWeeks);
-      }
-    } catch {}
-  }, []);
+    if (!user?.id) return;
+    let active = true;
+    void readCached<SavedDraft>(OFFLINE_KEYS.questionnaireDraft, user.id).then((saved) => {
+      if (!active || !saved) return;
+      setData({ ...DEFAULT_QUESTIONNAIRE, ...saved.data });
+      setStep(saved.step ?? 0);
+      setDurationWeeks(saved.durationWeeks ?? 2);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ data, step, durationWeeks }));
-  }, [data, step, durationWeeks]);
+    if (!user?.id) return;
+    void saveLocal<SavedDraft>(OFFLINE_KEYS.questionnaireDraft, user.id, {
+      data,
+      step,
+      durationWeeks,
+    });
+  }, [data, step, durationWeeks, user?.id]);
 
-  const upd = <K extends keyof QuestionnaireData>(
-    key: K,
-    patch: Partial<QuestionnaireData[K]>,
-  ) => setData((d) => {
-    const cur = d[key] as Record<string, unknown>;
-    return { ...d, [key]: { ...cur, ...(patch as Record<string, unknown>) } as QuestionnaireData[K] };
-  });
+  const upd = <K extends keyof QuestionnaireData>(key: K, patch: Partial<QuestionnaireData[K]>) =>
+    setData((d) => {
+      const cur = d[key] as Record<string, unknown>;
+      return {
+        ...d,
+        [key]: { ...cur, ...(patch as Record<string, unknown>) } as QuestionnaireData[K],
+      };
+    });
 
   function validateStep(): string | null {
     if (step === 0) {
@@ -101,13 +116,42 @@ function QuestionnairePage() {
   }
 
   async function submit() {
-    if (!online) return toast.error(OFFLINE_MESSAGE);
+    if (!user?.id) return toast.error("Sign in to save your questionnaire.");
     setBusy(true);
     try {
+      if (!online) {
+        const questionnaireId = crypto.randomUUID();
+        const sessionId = crypto.randomUUID();
+        await enqueueMutation(user.id, {
+          kind: "questionnaire.save",
+          questionnaireId,
+          data,
+          durationWeeks,
+          questionnaireStatus: "submitted",
+          priority: 3,
+        });
+        if (freeAccessMode) {
+          await enqueueMutation(user.id, {
+            kind: "generation.request",
+            questionnaireId,
+            sessionId,
+            durationWeeks,
+            priority: 2,
+          });
+        }
+        await removeLocal(OFFLINE_KEYS.questionnaireDraft, user.id);
+        toast.success(
+          freeAccessMode
+            ? "Saved offline. Your plan will be built automatically when you reconnect."
+            : "Saved offline. Reconnect to continue to secure payment.",
+        );
+        navigate({ to: "/plans" });
+        return;
+      }
       const res = await save({
         data: { data: data as any, durationWeeks, status: "submitted" as const },
       });
-      localStorage.removeItem(STORAGE_KEY);
+      await removeLocal(OFFLINE_KEYS.questionnaireDraft, user.id);
       navigate({ to: "/checkout", search: { qid: res.id } });
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to save");
@@ -128,9 +172,7 @@ function QuestionnairePage() {
           </p>
           <h1 className="text-2xl font-bold">{STEP_LABELS[step]}</h1>
         </div>
-        {!freeAccessMode && (
-          <p className="text-sm text-muted-foreground">€9.99 at checkout</p>
-        )}
+        {!freeAccessMode && <p className="text-sm text-muted-foreground">€9.99 at checkout</p>}
       </div>
       <Progress value={progress} className="mb-6" />
 
@@ -162,7 +204,7 @@ function QuestionnairePage() {
         >
           Back
         </Button>
-        <Button onClick={next} disabled={busy || (!online && step === STEP_LABELS.length - 1)}>
+        <Button onClick={next} disabled={busy}>
           {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {step === STEP_LABELS.length - 1
             ? freeAccessMode
@@ -180,15 +222,7 @@ type StepProps = {
   upd: <K extends keyof QuestionnaireData>(k: K, p: Partial<QuestionnaireData[K]>) => void;
 };
 
-function Chip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
@@ -237,7 +271,9 @@ function StepBasics({ data, upd }: StepProps) {
             value={data.basics.gender}
             onValueChange={(v) => upd("basics", { gender: v as any })}
           >
-            <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="male">Male</SelectItem>
               <SelectItem value="female">Female</SelectItem>
@@ -384,7 +420,9 @@ function StepActivity({ data, upd }: StepProps) {
               value={data.activity.trainingIntensity}
               onValueChange={(v) => upd("activity", { trainingIntensity: v as any })}
             >
-              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="low">Low</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
@@ -400,7 +438,9 @@ function StepActivity({ data, upd }: StepProps) {
           value={data.activity.activityLevel}
           onValueChange={(v) => upd("activity", { activityLevel: v as any })}
         >
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="sedentary">Sedentary (desk job)</SelectItem>
             <SelectItem value="light">Lightly active</SelectItem>
@@ -416,9 +456,7 @@ function StepActivity({ data, upd }: StepProps) {
           <Input
             type="number"
             value={data.activity.stepsPerDay ?? ""}
-            onChange={(e) =>
-              upd("activity", { stepsPerDay: Number(e.target.value) || undefined })
-            }
+            onChange={(e) => upd("activity", { stepsPerDay: Number(e.target.value) || undefined })}
           />
         </div>
         <div>
@@ -437,7 +475,9 @@ function StepActivity({ data, upd }: StepProps) {
           value={data.activity.sleep}
           onValueChange={(v) => upd("activity", { sleep: v as any })}
         >
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="poor">Poor</SelectItem>
             <SelectItem value="average">Average</SelectItem>
@@ -455,7 +495,9 @@ function StepGoal({ data, upd }: StepProps) {
       <div>
         <Label>Primary goal</Label>
         <Select value={data.goal.goal} onValueChange={(v) => upd("goal", { goal: v as any })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="weight_loss">Weight loss</SelectItem>
             <SelectItem value="maintenance">Maintenance</SelectItem>
@@ -536,7 +578,9 @@ function StepEating({ data, upd }: StepProps) {
           value={data.eating.dietStyle}
           onValueChange={(v) => upd("eating", { dietStyle: v as any })}
         >
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="balanced">Balanced</SelectItem>
             <SelectItem value="mediterranean">Mediterranean</SelectItem>
@@ -569,7 +613,9 @@ function StepEating({ data, upd }: StepProps) {
                 upd("eating", { fasting: { ...(data.eating.fasting ?? {}), window: v as any } })
               }
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="16:8">16:8 (8-hour window)</SelectItem>
                 <SelectItem value="18:6">18:6 (6-hour window)</SelectItem>
@@ -598,7 +644,9 @@ function StepEating({ data, upd }: StepProps) {
                 upd("eating", { fasting: { ...(data.eating.fasting ?? {}), approach: v as any } })
               }
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="balanced">Balanced</SelectItem>
                 <SelectItem value="aggressive">Aggressive (bigger deficit)</SelectItem>
@@ -782,7 +830,9 @@ function StepConstraints({ data, upd }: StepProps) {
             value={data.constraints.cookingSkill}
             onValueChange={(v) => upd("constraints", { cookingSkill: v as any })}
           >
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="beginner">Beginner</SelectItem>
               <SelectItem value="intermediate">Intermediate</SelectItem>
@@ -809,7 +859,9 @@ function StepConstraints({ data, upd }: StepProps) {
           value={data.constraints.budget}
           onValueChange={(v) => upd("constraints", { budget: v as any })}
         >
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="low">Low</SelectItem>
             <SelectItem value="medium">Medium</SelectItem>
@@ -841,10 +893,11 @@ function StepConstraints({ data, upd }: StepProps) {
 }
 
 function StepHealth({ data, upd }: StepProps) {
-  const flagged =
-    !!(data.health.conditions?.trim() ||
-      data.health.medications?.trim() ||
-      (data.health.pregnancyBreastfeeding && data.health.pregnancyBreastfeeding !== "none"));
+  const flagged = !!(
+    data.health.conditions?.trim() ||
+    data.health.medications?.trim() ||
+    (data.health.pregnancyBreastfeeding && data.health.pregnancyBreastfeeding !== "none")
+  );
   return (
     <div className="space-y-4">
       <div>
@@ -868,7 +921,9 @@ function StepHealth({ data, upd }: StepProps) {
           value={data.health.pregnancyBreastfeeding ?? "none"}
           onValueChange={(v) => upd("health", { pregnancyBreastfeeding: v as any })}
         >
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None / not applicable</SelectItem>
             <SelectItem value="pregnant">Pregnant</SelectItem>
@@ -880,22 +935,20 @@ function StepHealth({ data, upd }: StepProps) {
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            You've indicated a medical condition, medication, or pregnancy/breastfeeding.
-            Please consult a doctor or registered dietitian before starting any plan.
-            SmartyDiet is a general wellness tool, not medical advice.
+            You've indicated a medical condition, medication, or pregnancy/breastfeeding. Please
+            consult a doctor or registered dietitian before starting any plan. SmartyDiet is a
+            general wellness tool, not medical advice.
           </AlertDescription>
         </Alert>
       )}
       <label className="flex items-start gap-2 text-sm">
         <Checkbox
           checked={data.health.disclaimerAcknowledged}
-          onCheckedChange={(v) =>
-            upd("health", { disclaimerAcknowledged: v === true })
-          }
+          onCheckedChange={(v) => upd("health", { disclaimerAcknowledged: v === true })}
         />
         <span>
-          I understand SmartyDiet is not medical advice and I take responsibility for
-          consulting a healthcare professional if needed.
+          I understand SmartyDiet is not medical advice and I take responsibility for consulting a
+          healthcare professional if needed.
         </span>
       </label>
     </div>
@@ -940,9 +993,7 @@ function StepNotes({
             >
               <RadioGroupItem value={String(w)} className="sr-only" />
               <span className="text-lg font-bold">{w}</span>
-              <span className="text-xs text-muted-foreground">
-                {w === 1 ? "week" : "weeks"}
-              </span>
+              <span className="text-xs text-muted-foreground">{w === 1 ? "week" : "weeks"}</span>
             </label>
           ))}
         </RadioGroup>

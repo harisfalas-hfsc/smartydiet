@@ -45,7 +45,9 @@ function buildBaseRules(q: any, weeks: number): StrictRules {
 
   const fasting = eating.fasting ?? {};
   const isOMAD = fasting.window === "OMAD";
-  const mealsPerDay: number = isOMAD ? 1 : Math.max(1, Math.min(6, Number(eating.mealsPerDay) || 3));
+  const mealsPerDay: number = isOMAD
+    ? 1
+    : Math.max(1, Math.min(6, Number(eating.mealsPerDay) || 3));
 
   // Compute default calorie target if not provided
   let calorieTarget: number | undefined = Number(goal.calorieTarget) || undefined;
@@ -59,10 +61,15 @@ function buildBaseRules(q: any, weeks: number): StrictRules {
       ? 10 * weight + 6.25 * height - 5 * age + 5
       : 10 * weight + 6.25 * height - 5 * age - 161;
     const mult =
-      activity.activityLevel === "sedentary" ? 1.2 :
-      activity.activityLevel === "light" ? 1.375 :
-      activity.activityLevel === "active" ? 1.725 :
-      activity.activityLevel === "very_active" ? 1.9 : 1.55;
+      activity.activityLevel === "sedentary"
+        ? 1.2
+        : activity.activityLevel === "light"
+          ? 1.375
+          : activity.activityLevel === "active"
+            ? 1.725
+            : activity.activityLevel === "very_active"
+              ? 1.9
+              : 1.55;
     let tdee = Math.round(bmr * mult);
     if (goal.goal === "weight_loss") tdee -= 500;
     else if (goal.goal === "muscle_gain") tdee += 300;
@@ -75,13 +82,14 @@ function buildBaseRules(q: any, weeks: number): StrictRules {
 
   const dislike: string[] = [
     ...((eating.dislikedFoods as string[]) ?? []),
-    ...(String(eating.dislikedFoodsOther ?? "").split(",")),
+    ...String(eating.dislikedFoodsOther ?? "").split(","),
   ]
     .map(normalizeToken)
     .filter(Boolean);
 
-  const allergyTags: string[] = ((eating.allergyTags as string[]) ?? [])
-    .filter((t) => t && t !== "none");
+  const allergyTags: string[] = ((eating.allergyTags as string[]) ?? []).filter(
+    (t) => t && t !== "none",
+  );
   const allergyMap: Record<string, string[]> = {
     nuts: ["almond", "walnut", "cashew", "pecan", "hazelnut", "pistachio", "nut"],
     peanuts: ["peanut"],
@@ -94,7 +102,10 @@ function buildBaseRules(q: any, weeks: number): StrictRules {
     sesame: ["sesame", "tahini"],
   };
   const allergyExcludes = allergyTags.flatMap((t) => allergyMap[t] ?? [t]);
-  const allergyFree = String(eating.allergies ?? "").split(",").map(normalizeToken).filter(Boolean);
+  const allergyFree = String(eating.allergies ?? "")
+    .split(",")
+    .map(normalizeToken)
+    .filter(Boolean);
   const culturalMap: Record<string, string[]> = {
     "no pork": ["pork", "bacon", "ham", "prosciutto"],
     "no beef": ["beef", "steak"],
@@ -109,7 +120,9 @@ function buildBaseRules(q: any, weeks: number): StrictRules {
   );
 
   const dietStyle =
-    eating.dietStyle === "other" ? String(eating.dietStyleOther || "custom") : String(eating.dietStyle || "balanced");
+    eating.dietStyle === "other"
+      ? String(eating.dietStyleOther || "custom")
+      : String(eating.dietStyle || "balanced");
 
   return {
     mealsPerDay,
@@ -179,10 +192,7 @@ export function validatePlan(plan: any, rules: StrictRules): ValidationIssue[] {
         });
       }
       for (const m of meals) {
-        const hay = [
-          m.title,
-          ...(m.ingredients ?? []).map((i: any) => `${i.qty} ${i.item}`),
-        ]
+        const hay = [m.title, ...(m.ingredients ?? []).map((i: any) => `${i.qty} ${i.item}`)]
           .join(" ")
           .toLowerCase();
         for (const bad of rules.excludeFoods) {
@@ -243,12 +253,7 @@ type Plan = {
 No markdown, no code fences, JSON only.`;
 }
 
-function buildUserPrompt(
-  q: any,
-  rules: StrictRules,
-  refinement?: string,
-  previousPlan?: any,
-) {
+function buildUserPrompt(q: any, rules: StrictRules, refinement?: string, previousPlan?: any) {
   const parts = [
     `Duration: ${rules.weeks} week(s). Meals/day: ${rules.mealsPerDay}. Calorie target: ${rules.calorieTarget} kcal/day (±${rules.calorieTolerance}).`,
     `Excluded foods: ${rules.excludeFoods.length ? rules.excludeFoods.join(", ") : "none"}.`,
@@ -266,7 +271,10 @@ function buildUserPrompt(
 // -------------------- AI helpers --------------------
 
 function stripFences(text: string) {
-  const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  const cleaned = text
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
   try {
     return JSON.parse(cleaned);
   } catch {
@@ -345,7 +353,9 @@ async function generateWithRepair(
     const fixMsg = `Your previous plan violated hard rules. Fix ALL of these and return the corrected full JSON plan (same shape). Do not introduce new violations.\n\nViolations:\n- ${issues
       .slice(0, 20)
       .map((i) => i.detail)
-      .join("\n- ")}\n\nRe-verify meal count = ${rules.mealsPerDay} and daily calories = ${rules.calorieTarget}±${rules.calorieTolerance} before responding.\n\nPrior (broken) plan:\n${JSON.stringify(plan)}`;
+      .join(
+        "\n- ",
+      )}\n\nRe-verify meal count = ${rules.mealsPerDay} and daily calories = ${rules.calorieTarget}±${rules.calorieTolerance} before responding.\n\nPrior (broken) plan:\n${JSON.stringify(plan)}`;
     plan = await askModel(system, fixMsg);
     issues = validatePlan(plan, rules);
   }
@@ -357,20 +367,26 @@ async function generateWithRepair(
 export const saveQuestionnaire = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (input: { id?: string; data: any; durationWeeks?: 1 | 2 | 4; status?: "draft" | "submitted" }) => input,
+    (input: {
+      id?: string;
+      data: any;
+      durationWeeks?: 1 | 2 | 4;
+      status?: "draft" | "submitted";
+    }) => input,
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (data.id) {
-      const { error } = await supabase
-        .from("questionnaires")
-        .update({
+      const { error } = await supabase.from("questionnaires").upsert(
+        {
+          id: data.id,
+          user_id: userId,
           data: data.data,
           duration_weeks: data.durationWeeks ?? null,
           status: data.status ?? "draft",
-        })
-        .eq("id", data.id)
-        .eq("user_id", userId);
+        },
+        { onConflict: "id" },
+      );
       if (error) throw new Error(error.message);
       return { id: data.id };
     }
@@ -390,9 +406,27 @@ export const saveQuestionnaire = createServerFn({ method: "POST" })
 
 export const generatePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { sessionId: string; refinement?: string }) => input)
+  .inputValidator(
+    (input: { sessionId: string; refinement?: string; operationId?: string }) => input,
+  )
   .handler(async ({ data, context }): Promise<PlanResult> => {
     const { supabase, userId } = context;
+    if (data.operationId) {
+      const { data: completed } = await supabase
+        .from("diet_plans")
+        .select("plan,rationale")
+        .eq("id", data.operationId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (completed?.plan) {
+        const savedPlan = completed.plan as any;
+        return {
+          plan: savedPlan,
+          rationale: completed.rationale ?? savedPlan?.rationale,
+          warnings: savedPlan?._warnings ?? [],
+        };
+      }
+    }
     const { data: session, error: sErr } = await supabase
       .from("generation_sessions")
       .select("id,questionnaire_id,duration_weeks,status,credits_total,credits_used")
@@ -449,7 +483,12 @@ export const generatePlan = createServerFn({ method: "POST" })
     }
 
     try {
-      const { plan, issues } = await generateWithRepair(q.data, rules, data.refinement, previousPlan);
+      const { plan, issues } = await generateWithRepair(
+        q.data,
+        rules,
+        data.refinement,
+        previousPlan,
+      );
 
       const { data: existing } = await supabase
         .from("diet_plans")
@@ -466,6 +505,7 @@ export const generatePlan = createServerFn({ method: "POST" })
       const planToSave = { ...plan, _warnings: warnings };
 
       const { error: insErr } = await supabase.from("diet_plans").insert({
+        ...(data.operationId ? { id: data.operationId } : {}),
         user_id: userId,
         session_id: session.id,
         version,

@@ -12,6 +12,8 @@ import {
   setNotificationsRead,
   setThreadsRead,
 } from "@/lib/support.functions";
+import { generatePlan, saveQuestionnaire, restorePlanVersion } from "@/lib/plan.functions";
+import { startFreeSession } from "@/lib/free-access.functions";
 import { writeSyncMeta } from "./store";
 
 const store =
@@ -19,13 +21,28 @@ const store =
 
 export const MAX_RETRIES = 6;
 
-type Payload =
+export type Payload =
   | { kind: "notifications.setRead"; ids: string[]; read: boolean }
   | { kind: "notifications.delete"; ids: string[] }
   | { kind: "threads.setRead"; ids: string[]; read: boolean }
-  | { kind: "threads.delete"; ids: string[] };
+  | { kind: "threads.delete"; ids: string[] }
+  | {
+      kind: "questionnaire.save";
+      questionnaireId: string;
+      data: unknown;
+      durationWeeks: 1 | 2 | 4;
+      questionnaireStatus: "draft" | "submitted";
+    }
+  | {
+      kind: "generation.request";
+      questionnaireId: string;
+      sessionId: string;
+      durationWeeks: 1 | 2 | 4;
+    }
+  | { kind: "plan.refine"; sessionId: string; refinement: string; operationId: string }
+  | { kind: "plan.restore"; sessionId: string; version: number };
 
-export type QueuedMutation = Payload & {
+type QueueMeta = {
   id: string;
   createdAt: number;
   retries: number;
@@ -33,6 +50,12 @@ export type QueuedMutation = Payload & {
   lastError: string | null;
   priority: number;
 };
+
+export type QueuedMutation = Payload extends infer Item
+  ? Item extends Payload
+    ? Item & QueueMeta
+    : never
+  : never;
 
 function queueKey(userId: string) {
   return `${userId}::mutation-queue`;
@@ -82,7 +105,7 @@ export async function enqueueMutation(
   const items = await readQueue(userId);
   const id = mutation.id ?? crypto.randomUUID();
   if (items.some((i) => i.id === id)) return; // never duplicate
-  items.push({
+  const queued = {
     ...(mutation as Payload),
     id,
     createdAt: Date.now(),
@@ -90,7 +113,8 @@ export async function enqueueMutation(
     status: "pending",
     lastError: null,
     priority: mutation.priority ?? 1,
-  });
+  } as QueuedMutation;
+  items.push(queued);
   await writeQueue(userId, items);
 }
 
@@ -107,6 +131,47 @@ async function run(mutation: QueuedMutation) {
       return;
     case "threads.delete":
       await deleteMyThreads({ data: { ids: mutation.ids } });
+      return;
+    case "questionnaire.save":
+      await saveQuestionnaire({
+        data: {
+          id: mutation.questionnaireId,
+          data: mutation.data,
+          durationWeeks: mutation.durationWeeks,
+          status: mutation.questionnaireStatus,
+        },
+      });
+      return;
+    case "generation.request": {
+      const started = await startFreeSession({
+        data: {
+          questionnaireId: mutation.questionnaireId,
+          durationWeeks: mutation.durationWeeks,
+          sessionId: mutation.sessionId,
+        },
+      });
+      if ("error" in started) throw new Error(started.error);
+      const generated = await generatePlan({
+        data: { sessionId: started.sessionId, operationId: mutation.id },
+      });
+      if (generated.error) throw new Error(generated.error);
+      return;
+    }
+    case "plan.refine": {
+      const generated = await generatePlan({
+        data: {
+          sessionId: mutation.sessionId,
+          refinement: mutation.refinement,
+          operationId: mutation.operationId,
+        },
+      });
+      if (generated.error) throw new Error(generated.error);
+      return;
+    }
+    case "plan.restore":
+      await restorePlanVersion({
+        data: { sessionId: mutation.sessionId, version: mutation.version },
+      });
       return;
   }
 }
