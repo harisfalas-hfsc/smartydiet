@@ -17,7 +17,7 @@ import { PaymentTestModeBanner } from "../components/PaymentTestModeBanner";
 import { Toaster } from "../components/ui/sonner";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
 import { OfflineBootstrap } from "../components/offline/OfflineBootstrap";
-import { OfflineBanner } from "../components/offline/OfflineNotice";
+import { SyncStatusPill } from "../components/offline/SyncStatus";
 
 const SITE_URL = "https://smartydiet.com";
 const OG_IMAGE =
@@ -356,7 +356,6 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex min-h-screen flex-col bg-background">
-        <OfflineBanner />
         <PaymentTestModeBanner />
         <Navigation />
         <main>
@@ -366,6 +365,7 @@ function RootComponent() {
         <Toaster />
         <SisterAppsPopup />
         <OfflineBootstrap />
+        <SyncStatusPill />
       </div>
     </QueryClientProvider>
   );

@@ -1,17 +1,11 @@
 import { WifiOff } from "lucide-react";
 import { OFFLINE_MESSAGE, useOnlineStatus } from "@/hooks/useOnlineStatus";
 
-/** Slim persistent bar shown whenever the device has no connection. */
-export function OfflineBanner() {
-  const online = useOnlineStatus();
-  if (online) return null;
-  return (
-    <div className="sticky top-0 z-[60] flex items-center justify-center gap-2 bg-amber-500/15 px-4 py-2 text-center text-xs font-semibold text-amber-700 dark:text-amber-300">
-      <WifiOff className="h-3.5 w-3.5" />
-      You&apos;re offline — viewing what&apos;s saved on this device.
-    </div>
-  );
-}
+/* The old sticky global banner was removed on purpose: offline state must
+   never cover the app or block interaction. Status now lives in the small
+   non-blocking SyncStatusPill, plus the inline notices below. */
+
+
 
 /** Inline explanation used next to disabled create/pay/AI actions. */
 export function OfflineActionNotice({ className = "" }: { className?: string }) {
