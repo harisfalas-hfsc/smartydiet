@@ -356,7 +356,6 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex min-h-screen flex-col bg-background">
-        <OfflineBanner />
         <PaymentTestModeBanner />
         <Navigation />
         <main>
