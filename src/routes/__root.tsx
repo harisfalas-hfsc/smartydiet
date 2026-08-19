@@ -17,7 +17,7 @@ import { PaymentTestModeBanner } from "../components/PaymentTestModeBanner";
 import { Toaster } from "../components/ui/sonner";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
 import { OfflineBootstrap } from "../components/offline/OfflineBootstrap";
-import { OfflineBanner } from "../components/offline/OfflineNotice";
+import { SyncStatusPill } from "../components/offline/SyncStatus";
 
 const SITE_URL = "https://smartydiet.com";
 const OG_IMAGE =
@@ -365,6 +365,7 @@ function RootComponent() {
         <Toaster />
         <SisterAppsPopup />
         <OfflineBootstrap />
+        <SyncStatusPill />
       </div>
     </QueryClientProvider>
   );

@@ -37,6 +37,7 @@ import {
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import { useTheme } from "@/hooks/useTheme";
 import { clearOfflineSession, forgetDeviceCredentials } from "@/lib/offline/credentials";
+import { clearUserCache } from "@/lib/offline/store";
 
 
 export function Navigation() {
@@ -70,7 +71,10 @@ export function Navigation() {
   const canGoBack = navCount > 0 && pathname !== "/";
 
   async function handleSignOut() {
+    // Multi-user isolation: this account's private cache never survives sign-out.
+    const signedOutId = user?.id;
     clearOfflineSession();
+    if (signedOutId) await clearUserCache(signedOutId);
     await supabase.auth.signOut();
     navigate({ to: "/", replace: true });
   }
