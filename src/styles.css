@@ -152,3 +152,11 @@ body {
   -webkit-overflow-scrolling: touch;
   -webkit-text-size-adjust: 100%;
 }
+
+/* On phones, keep normal page scrolling but stop the browser's pull-to-refresh gesture. */
+@media (max-width: 640px) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+}
