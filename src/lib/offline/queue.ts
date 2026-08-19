@@ -31,7 +31,7 @@ export type Payload =
       questionnaireId: string;
       data: unknown;
       durationWeeks: 1 | 2 | 4;
-      status: "draft" | "submitted";
+      questionnaireStatus: "draft" | "submitted";
     }
   | {
       kind: "generation.request";
@@ -42,7 +42,7 @@ export type Payload =
   | { kind: "plan.refine"; sessionId: string; refinement: string; operationId: string }
   | { kind: "plan.restore"; sessionId: string; version: number };
 
-export type QueuedMutation = Payload & {
+type QueueMeta = {
   id: string;
   createdAt: number;
   retries: number;
@@ -50,6 +50,12 @@ export type QueuedMutation = Payload & {
   lastError: string | null;
   priority: number;
 };
+
+export type QueuedMutation = Payload extends infer Item
+  ? Item extends Payload
+    ? Item & QueueMeta
+    : never
+  : never;
 
 function queueKey(userId: string) {
   return `${userId}::mutation-queue`;
@@ -99,7 +105,7 @@ export async function enqueueMutation(
   const items = await readQueue(userId);
   const id = mutation.id ?? crypto.randomUUID();
   if (items.some((i) => i.id === id)) return; // never duplicate
-  items.push({
+  const queued = {
     ...(mutation as Payload),
     id,
     createdAt: Date.now(),
@@ -107,7 +113,8 @@ export async function enqueueMutation(
     status: "pending",
     lastError: null,
     priority: mutation.priority ?? 1,
-  });
+  } as QueuedMutation;
+  items.push(queued);
   await writeQueue(userId, items);
 }
 
@@ -131,7 +138,7 @@ async function run(mutation: QueuedMutation) {
           id: mutation.questionnaireId,
           data: mutation.data,
           durationWeeks: mutation.durationWeeks,
-          status: mutation.status,
+          status: mutation.questionnaireStatus,
         },
       });
       return;
