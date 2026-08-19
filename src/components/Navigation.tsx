@@ -118,7 +118,12 @@ export function Navigation() {
           )}
           <Link
             to="/"
-            aria-label="SmartyDiet home"
+            aria-label={pathname === "/" ? "Refresh SmartyDiet" : "SmartyDiet home"}
+            onClick={(event) => {
+              if (pathname !== "/") return;
+              event.preventDefault();
+              window.location.reload();
+            }}
             className="text-lg font-extrabold tracking-tight leading-none no-underline hover:no-underline"
             style={{ textDecoration: "none" }}
           >
