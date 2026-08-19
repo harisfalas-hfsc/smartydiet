@@ -40,7 +40,7 @@ export const adminSetFreeAccessMode = createServerFn({ method: "POST" })
  */
 export const startFreeSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { questionnaireId: string; durationWeeks: 1 | 2 | 4 }) => input)
+  .inputValidator((input: { questionnaireId: string; durationWeeks: 1 | 2 | 4; sessionId?: string }) => input)
   .handler(async ({ data, context }): Promise<{ sessionId: string } | { error: string }> => {
     const { readFreeAccessMode } = await import("@/lib/free-access.server");
     if (!(await readFreeAccessMode())) return { error: "Free access mode is not enabled" };
@@ -54,9 +54,20 @@ export const startFreeSession = createServerFn({ method: "POST" })
       .maybeSingle();
     if (qErr || !q) return { error: "Questionnaire not found" };
 
+    if (data.sessionId) {
+      const { data: existing } = await supabase
+        .from("generation_sessions")
+        .select("id")
+        .eq("id", data.sessionId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (existing) return { sessionId: existing.id };
+    }
+
     const { data: session, error: sErr } = await supabase
       .from("generation_sessions")
       .insert({
+        ...(data.sessionId ? { id: data.sessionId } : {}),
         user_id: userId,
         questionnaire_id: data.questionnaireId,
         duration_weeks: data.durationWeeks,

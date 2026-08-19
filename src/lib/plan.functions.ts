@@ -364,13 +364,13 @@ export const saveQuestionnaire = createServerFn({ method: "POST" })
     if (data.id) {
       const { error } = await supabase
         .from("questionnaires")
-        .update({
+        .upsert({
+          id: data.id,
+          user_id: userId,
           data: data.data,
           duration_weeks: data.durationWeeks ?? null,
           status: data.status ?? "draft",
-        })
-        .eq("id", data.id)
-        .eq("user_id", userId);
+        }, { onConflict: "id" });
       if (error) throw new Error(error.message);
       return { id: data.id };
     }
@@ -390,9 +390,25 @@ export const saveQuestionnaire = createServerFn({ method: "POST" })
 
 export const generatePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { sessionId: string; refinement?: string }) => input)
+  .inputValidator((input: { sessionId: string; refinement?: string; operationId?: string }) => input)
   .handler(async ({ data, context }): Promise<PlanResult> => {
     const { supabase, userId } = context;
+    if (data.operationId) {
+      const { data: completed } = await supabase
+        .from("diet_plans")
+        .select("plan,rationale")
+        .eq("id", data.operationId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (completed?.plan) {
+        const savedPlan = completed.plan as any;
+        return {
+          plan: savedPlan,
+          rationale: completed.rationale ?? savedPlan?.rationale,
+          warnings: savedPlan?._warnings ?? [],
+        };
+      }
+    }
     const { data: session, error: sErr } = await supabase
       .from("generation_sessions")
       .select("id,questionnaire_id,duration_weeks,status,credits_total,credits_used")
@@ -466,6 +482,7 @@ export const generatePlan = createServerFn({ method: "POST" })
       const planToSave = { ...plan, _warnings: warnings };
 
       const { error: insErr } = await supabase.from("diet_plans").insert({
+        ...(data.operationId ? { id: data.operationId } : {}),
         user_id: userId,
         session_id: session.id,
         version,

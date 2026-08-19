@@ -7,7 +7,7 @@
  * The raw password is never stored.
  *
  * With no internet, the typed password is verified against the stored verifier
- * and the cached session is restored in read-only mode.
+ * and the cached identity/session snapshot is restored for local-first use.
  */
 import { del, get, keys, set, createStore } from "idb-keyval";
 
@@ -22,6 +22,7 @@ export interface CachedUser {
   id: string;
   email: string | null;
   displayName: string | null;
+  avatarUrl?: string | null;
 }
 
 interface StoredCredential {
@@ -148,23 +149,41 @@ export async function forgetDeviceCredentials(email?: string) {
   }
 }
 
-/* ---------- offline session (read-only) ---------- */
+/* ---------- durable offline identity snapshot ---------- */
 
 export interface OfflineSession {
   user: CachedUser;
-  readOnly: true;
   startedAt: number;
 }
 
-export function setOfflineSession(user: CachedUser) {
+const SESSION_RECORD_KEY = "device::offline-session";
+
+export async function setOfflineSession(user: CachedUser) {
+  const snapshot: OfflineSession = { user, startedAt: Date.now() };
+  if (store) {
+    try {
+      await set(SESSION_RECORD_KEY, snapshot, store);
+    } catch {
+      /* localStorage mirror below still supports synchronous first paint */
+    }
+  }
   try {
-    localStorage.setItem(
-      OFFLINE_SESSION_KEY,
-      JSON.stringify({ user, readOnly: true, startedAt: Date.now() } satisfies OfflineSession),
-    );
+    localStorage.setItem(OFFLINE_SESSION_KEY, JSON.stringify(snapshot));
   } catch {
     /* noop */
   }
+}
+
+export async function getOfflineSessionAsync(): Promise<OfflineSession | null> {
+  if (store) {
+    try {
+      const saved = (await get(SESSION_RECORD_KEY, store)) as OfflineSession | undefined;
+      if (saved?.user?.id) return saved;
+    } catch {
+      /* fall back to the synchronous mirror */
+    }
+  }
+  return getOfflineSession();
 }
 
 export function getOfflineSession(): OfflineSession | null {
@@ -179,7 +198,14 @@ export function getOfflineSession(): OfflineSession | null {
   }
 }
 
-export function clearOfflineSession() {
+export async function clearOfflineSession() {
+  if (store) {
+    try {
+      await del(SESSION_RECORD_KEY, store);
+    } catch {
+      /* noop */
+    }
+  }
   try {
     localStorage.removeItem(OFFLINE_SESSION_KEY);
   } catch {

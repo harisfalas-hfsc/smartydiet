@@ -20,6 +20,7 @@ export const OFFLINE_KEYS = {
   freeAccess: "free-access",
   sessions: "sessions",
   questionnaires: "questionnaires",
+  questionnaireDraft: "questionnaire-draft",
   notifications: "notifications",
   threads: "threads",
   settings: "settings",
@@ -39,6 +40,7 @@ const PROTECTED_PREFIXES = [
   OFFLINE_KEYS.freeAccess,
   OFFLINE_KEYS.sessions,
   OFFLINE_KEYS.questionnaires,
+  OFFLINE_KEYS.questionnaireDraft,
   OFFLINE_KEYS.notifications,
   OFFLINE_KEYS.threads,
   OFFLINE_KEYS.settings,
@@ -78,8 +80,8 @@ export async function saveLocal<T>(key: string, userId: string | null | undefine
   if (!store) return;
   try {
     await set(scopedKey(key, userId), { data, savedAt: Date.now() } satisfies Envelope<T>, store);
-  } catch {
-    /* quota / private mode — never surface to the user */
+  } catch (error) {
+    if (import.meta.env.DEV) console.error("Offline save failed", { key, error });
   }
 }
 
