@@ -165,7 +165,10 @@ export async function runBackgroundSync(force = false): Promise<void> {
       updatedAt: 0,
     };
     // A fresh pass every 6 hours; otherwise resume where the last one stopped.
-    const resume = force || Date.now() - checkpoint.updatedAt > 6 * 60 * 60 * 1000 ? [] : checkpoint.doneSessionIds;
+    const resume =
+      force || Date.now() - checkpoint.updatedAt > 6 * 60 * 60 * 1000
+        ? []
+        : checkpoint.doneSessionIds;
     const done = new Set(resume);
 
     for (const row of rows as { id: string }[]) {

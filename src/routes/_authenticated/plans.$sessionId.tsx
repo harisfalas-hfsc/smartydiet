@@ -11,7 +11,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Download, Utensils, ShoppingBasket, RefreshCw, History, AlertTriangle } from "lucide-react";
+import {
+  Loader2,
+  Download,
+  Utensils,
+  ShoppingBasket,
+  RefreshCw,
+  History,
+  AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
 import { enqueueMutation } from "@/lib/offline/queue";
@@ -114,8 +122,7 @@ function PlanView() {
         if (res.error) {
           setGenerationError(res.error);
           toast.error(res.error);
-        }
-        else toast.success("Your plan is ready");
+        } else toast.success("Your plan is ready");
         await load();
       } catch (e: any) {
         const message = e?.message ?? "Generation failed";
@@ -226,7 +233,8 @@ function PlanView() {
         <div>
           <h1 className="text-2xl font-bold">Your {session.duration_weeks}-week plan</h1>
           <p className="text-sm text-muted-foreground">
-            {remaining} refinement{remaining === 1 ? "" : "s"} remaining · viewing v{active?.version ?? 1}
+            {remaining} refinement{remaining === 1 ? "" : "s"} remaining · viewing v
+            {active?.version ?? 1}
           </p>
         </div>
         <div className="flex gap-2">
@@ -370,9 +378,7 @@ function PlanView() {
                               {m.ingredients.map((x: any) => `${x.qty} ${x.item}`).join(", ")}
                             </p>
                           ) : null}
-                          {m.instructions && (
-                            <p className="mt-1 text-xs">{m.instructions}</p>
-                          )}
+                          {m.instructions && <p className="mt-1 text-xs">{m.instructions}</p>}
                         </div>
                       ))}
                     </div>
@@ -448,7 +454,11 @@ function PlanView() {
                       View
                     </Button>
                     {!v.is_final && (
-                      <Button size="sm" onClick={() => doRestore(v.version)} disabled={busy || !online}>
+                      <Button
+                        size="sm"
+                        onClick={() => doRestore(v.version)}
+                        disabled={busy || !online}
+                      >
                         Restore
                       </Button>
                     )}

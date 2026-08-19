@@ -39,7 +39,10 @@ export const Route = createFileRoute("/_authenticated/questionnaire")({
   head: () => ({
     meta: [
       { title: "Build your plan — SmartyDiet" },
-      { name: "description", content: "Answer a smart nutrition questionnaire to build your personalized plan." },
+      {
+        name: "description",
+        content: "Answer a smart nutrition questionnaire to build your personalized plan.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -82,13 +85,14 @@ function QuestionnairePage() {
     });
   }, [data, step, durationWeeks, user?.id]);
 
-  const upd = <K extends keyof QuestionnaireData>(
-    key: K,
-    patch: Partial<QuestionnaireData[K]>,
-  ) => setData((d) => {
-    const cur = d[key] as Record<string, unknown>;
-    return { ...d, [key]: { ...cur, ...(patch as Record<string, unknown>) } as QuestionnaireData[K] };
-  });
+  const upd = <K extends keyof QuestionnaireData>(key: K, patch: Partial<QuestionnaireData[K]>) =>
+    setData((d) => {
+      const cur = d[key] as Record<string, unknown>;
+      return {
+        ...d,
+        [key]: { ...cur, ...(patch as Record<string, unknown>) } as QuestionnaireData[K],
+      };
+    });
 
   function validateStep(): string | null {
     if (step === 0) {
@@ -168,9 +172,7 @@ function QuestionnairePage() {
           </p>
           <h1 className="text-2xl font-bold">{STEP_LABELS[step]}</h1>
         </div>
-        {!freeAccessMode && (
-          <p className="text-sm text-muted-foreground">€9.99 at checkout</p>
-        )}
+        {!freeAccessMode && <p className="text-sm text-muted-foreground">€9.99 at checkout</p>}
       </div>
       <Progress value={progress} className="mb-6" />
 
@@ -220,15 +222,7 @@ type StepProps = {
   upd: <K extends keyof QuestionnaireData>(k: K, p: Partial<QuestionnaireData[K]>) => void;
 };
 
-function Chip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
@@ -277,7 +271,9 @@ function StepBasics({ data, upd }: StepProps) {
             value={data.basics.gender}
             onValueChange={(v) => upd("basics", { gender: v as any })}
           >
-            <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="male">Male</SelectItem>
               <SelectItem value="female">Female</SelectItem>
@@ -424,7 +420,9 @@ function StepActivity({ data, upd }: StepProps) {
               value={data.activity.trainingIntensity}
               onValueChange={(v) => upd("activity", { trainingIntensity: v as any })}
             >
-              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="low">Low</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
@@ -440,7 +438,9 @@ function StepActivity({ data, upd }: StepProps) {
           value={data.activity.activityLevel}
           onValueChange={(v) => upd("activity", { activityLevel: v as any })}
         >
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="sedentary">Sedentary (desk job)</SelectItem>
             <SelectItem value="light">Lightly active</SelectItem>
@@ -456,9 +456,7 @@ function StepActivity({ data, upd }: StepProps) {
           <Input
             type="number"
             value={data.activity.stepsPerDay ?? ""}
-            onChange={(e) =>
-              upd("activity", { stepsPerDay: Number(e.target.value) || undefined })
-            }
+            onChange={(e) => upd("activity", { stepsPerDay: Number(e.target.value) || undefined })}
           />
         </div>
         <div>
@@ -477,7 +475,9 @@ function StepActivity({ data, upd }: StepProps) {
           value={data.activity.sleep}
           onValueChange={(v) => upd("activity", { sleep: v as any })}
         >
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="poor">Poor</SelectItem>
             <SelectItem value="average">Average</SelectItem>
@@ -495,7 +495,9 @@ function StepGoal({ data, upd }: StepProps) {
       <div>
         <Label>Primary goal</Label>
         <Select value={data.goal.goal} onValueChange={(v) => upd("goal", { goal: v as any })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="weight_loss">Weight loss</SelectItem>
             <SelectItem value="maintenance">Maintenance</SelectItem>
@@ -576,7 +578,9 @@ function StepEating({ data, upd }: StepProps) {
           value={data.eating.dietStyle}
           onValueChange={(v) => upd("eating", { dietStyle: v as any })}
         >
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="balanced">Balanced</SelectItem>
             <SelectItem value="mediterranean">Mediterranean</SelectItem>
@@ -609,7 +613,9 @@ function StepEating({ data, upd }: StepProps) {
                 upd("eating", { fasting: { ...(data.eating.fasting ?? {}), window: v as any } })
               }
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="16:8">16:8 (8-hour window)</SelectItem>
                 <SelectItem value="18:6">18:6 (6-hour window)</SelectItem>
@@ -638,7 +644,9 @@ function StepEating({ data, upd }: StepProps) {
                 upd("eating", { fasting: { ...(data.eating.fasting ?? {}), approach: v as any } })
               }
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="balanced">Balanced</SelectItem>
                 <SelectItem value="aggressive">Aggressive (bigger deficit)</SelectItem>
@@ -822,7 +830,9 @@ function StepConstraints({ data, upd }: StepProps) {
             value={data.constraints.cookingSkill}
             onValueChange={(v) => upd("constraints", { cookingSkill: v as any })}
           >
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="beginner">Beginner</SelectItem>
               <SelectItem value="intermediate">Intermediate</SelectItem>
@@ -849,7 +859,9 @@ function StepConstraints({ data, upd }: StepProps) {
           value={data.constraints.budget}
           onValueChange={(v) => upd("constraints", { budget: v as any })}
         >
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="low">Low</SelectItem>
             <SelectItem value="medium">Medium</SelectItem>
@@ -881,10 +893,11 @@ function StepConstraints({ data, upd }: StepProps) {
 }
 
 function StepHealth({ data, upd }: StepProps) {
-  const flagged =
-    !!(data.health.conditions?.trim() ||
-      data.health.medications?.trim() ||
-      (data.health.pregnancyBreastfeeding && data.health.pregnancyBreastfeeding !== "none"));
+  const flagged = !!(
+    data.health.conditions?.trim() ||
+    data.health.medications?.trim() ||
+    (data.health.pregnancyBreastfeeding && data.health.pregnancyBreastfeeding !== "none")
+  );
   return (
     <div className="space-y-4">
       <div>
@@ -908,7 +921,9 @@ function StepHealth({ data, upd }: StepProps) {
           value={data.health.pregnancyBreastfeeding ?? "none"}
           onValueChange={(v) => upd("health", { pregnancyBreastfeeding: v as any })}
         >
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None / not applicable</SelectItem>
             <SelectItem value="pregnant">Pregnant</SelectItem>
@@ -920,22 +935,20 @@ function StepHealth({ data, upd }: StepProps) {
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            You've indicated a medical condition, medication, or pregnancy/breastfeeding.
-            Please consult a doctor or registered dietitian before starting any plan.
-            SmartyDiet is a general wellness tool, not medical advice.
+            You've indicated a medical condition, medication, or pregnancy/breastfeeding. Please
+            consult a doctor or registered dietitian before starting any plan. SmartyDiet is a
+            general wellness tool, not medical advice.
           </AlertDescription>
         </Alert>
       )}
       <label className="flex items-start gap-2 text-sm">
         <Checkbox
           checked={data.health.disclaimerAcknowledged}
-          onCheckedChange={(v) =>
-            upd("health", { disclaimerAcknowledged: v === true })
-          }
+          onCheckedChange={(v) => upd("health", { disclaimerAcknowledged: v === true })}
         />
         <span>
-          I understand SmartyDiet is not medical advice and I take responsibility for
-          consulting a healthcare professional if needed.
+          I understand SmartyDiet is not medical advice and I take responsibility for consulting a
+          healthcare professional if needed.
         </span>
       </label>
     </div>
@@ -980,9 +993,7 @@ function StepNotes({
             >
               <RadioGroupItem value={String(w)} className="sr-only" />
               <span className="text-lg font-bold">{w}</span>
-              <span className="text-xs text-muted-foreground">
-                {w === 1 ? "week" : "weeks"}
-              </span>
+              <span className="text-xs text-muted-foreground">{w === 1 ? "week" : "weeks"}</span>
             </label>
           ))}
         </RadioGroup>

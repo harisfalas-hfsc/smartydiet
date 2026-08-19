@@ -142,7 +142,9 @@ export async function forgetDeviceCredentials(email?: string) {
     }
     const all = (await keys(store)) as string[];
     await Promise.all(
-      all.filter((k) => typeof k === "string" && k.startsWith(CRED_PREFIX)).map((k) => del(k, store)),
+      all
+        .filter((k) => typeof k === "string" && k.startsWith(CRED_PREFIX))
+        .map((k) => del(k, store)),
     );
   } catch {
     /* noop */

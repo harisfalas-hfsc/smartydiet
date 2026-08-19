@@ -171,7 +171,9 @@ export async function clearUserCache(userId: string) {
   try {
     const all = (await keys(store)) as string[];
     await Promise.all(
-      all.filter((k) => typeof k === "string" && k.startsWith(`${userId}::`)).map((k) => del(k, store)),
+      all
+        .filter((k) => typeof k === "string" && k.startsWith(`${userId}::`))
+        .map((k) => del(k, store)),
     );
   } catch {
     /* noop */

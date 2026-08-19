@@ -40,7 +40,9 @@ export const adminSetFreeAccessMode = createServerFn({ method: "POST" })
  */
 export const startFreeSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { questionnaireId: string; durationWeeks: 1 | 2 | 4; sessionId?: string }) => input)
+  .inputValidator(
+    (input: { questionnaireId: string; durationWeeks: 1 | 2 | 4; sessionId?: string }) => input,
+  )
   .handler(async ({ data, context }): Promise<{ sessionId: string } | { error: string }> => {
     const { readFreeAccessMode } = await import("@/lib/free-access.server");
     if (!(await readFreeAccessMode())) return { error: "Free access mode is not enabled" };

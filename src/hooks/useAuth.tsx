@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { OFFLINE_KEYS, cacheMedia, offlineFirst, readCached } from "@/lib/offline/store";
-import { getOfflineSession, getOfflineSessionAsync, setOfflineSession } from "@/lib/offline/credentials";
+import {
+  getOfflineSession,
+  getOfflineSessionAsync,
+  setOfflineSession,
+} from "@/lib/offline/credentials";
 import { isOnlineNow } from "@/lib/offline/connectivity";
 
 type ProfileSummary = {
