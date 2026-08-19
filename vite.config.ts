@@ -18,25 +18,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serverEnv = loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
 
-const offlineRoutes = [
-  "/",
-  "/about",
-  "/how-it-works",
-  "/pricing",
-  "/faq",
-  "/contact",
-  "/tools",
-  "/tools/bmr-calculator",
-  "/tools/calorie-counter",
-  "/tools/macro-calculator",
-  "/diet-science",
-  "/nutrition-intelligence",
-  "/glossary",
-  "/privacy",
-  "/terms",
-  "/disclaimer",
-  "/auth",
-];
 
 export default defineConfig({
   tanstackStart: {
