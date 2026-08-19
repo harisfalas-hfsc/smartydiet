@@ -26,4 +26,8 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
   requestMiddleware: [errorMiddleware],
+  // One codebase for web/PWA/native: on native the WebView origin is the
+  // device, so server-function calls are rewritten onto the backend origin.
+  serverFns: { fetch: platformFetch },
 }));
+
