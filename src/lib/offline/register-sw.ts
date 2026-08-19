@@ -1,34 +1,71 @@
-/** Service worker registration — fully silent, never prompts the user. */
-let registration: ServiceWorkerRegistration | null = null;
-let reloadedForUpdate = false;
+/** Service worker registration — fully silent and disabled in previews/dev. */
+let registrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
 
-export function registerServiceWorker() {
-  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
-  if (!import.meta.env.PROD) return;
+function isPreviewHost(hostname: string) {
+  return (
+    hostname.startsWith("id-preview--") ||
+    hostname.startsWith("preview--") ||
+    hostname === "lovableproject.com" ||
+    hostname.endsWith(".lovableproject.com") ||
+    hostname === "lovableproject-dev.com" ||
+    hostname.endsWith(".lovableproject-dev.com") ||
+    hostname === "beta.lovable.dev" ||
+    hostname.endsWith(".beta.lovable.dev")
+  );
+}
 
-  const register = async () => {
+async function unregisterAppWorker() {
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  await Promise.all(
+    registrations
+      .filter((item) => {
+        const worker = item.active ?? item.waiting ?? item.installing;
+        return worker ? new URL(worker.scriptURL).pathname === "/sw.js" : false;
+      })
+      .map((item) => item.unregister()),
+  );
+}
+
+export function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+  if (registrationPromise) return registrationPromise;
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    return Promise.resolve(null);
+  }
+
+  const refused =
+    !import.meta.env.PROD ||
+    window.self !== window.top ||
+    isPreviewHost(window.location.hostname) ||
+    new URLSearchParams(window.location.search).get("sw") === "off";
+
+  if (refused) {
+    registrationPromise = unregisterAppWorker().then(() => null).catch(() => null);
+    return registrationPromise;
+  }
+
+  registrationPromise = (async () => {
     try {
-      registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      // A brand new worker taking control means the app code changed: reload
-      // once, quietly, so the user never sees a stale shell or an update prompt.
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (reloadedForUpdate) return;
-        reloadedForUpdate = true;
-        window.location.reload();
-      });
+      const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      await navigator.serviceWorker.ready;
       // Periodic update check (hourly) so long-lived PWA sessions stay fresh.
-      window.setInterval(() => registration?.update().catch(() => undefined), 60 * 60 * 1000);
+      window.setInterval(() => registration.update().catch(() => undefined), 60 * 60 * 1000);
+      return registration;
     } catch {
-      /* offline or unsupported — ignore */
+      return null;
     }
-  };
-
-  if (document.readyState === "complete") void register();
-  else window.addEventListener("load", () => void register());
+  })();
+  return registrationPromise;
 }
 
 /** Asks the service worker to pre-cache a list of same-origin URLs. */
-export function warmUrls(urls: string[]) {
-  if (typeof navigator === "undefined" || !navigator.serviceWorker?.controller) return;
-  navigator.serviceWorker.controller.postMessage({ type: "WARM", urls });
+export async function warmUrls(urls: string[]): Promise<void> {
+  if (typeof window === "undefined" || !("caches" in window)) return;
+  await caches.open("smartydiet-pages").then(async (cache) => {
+    await Promise.allSettled(
+      urls.map(async (url) => {
+        const response = await fetch(url, { credentials: "same-origin" });
+        if (response.ok) await cache.put(url, response);
+      }),
+    );
+  });
 }

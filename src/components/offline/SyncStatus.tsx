@@ -26,7 +26,9 @@ function relative(ts: number | null) {
  */
 export function SyncStatusPill() {
   const [state, setState] = useState<ConnectivityState>("online");
-  const [syncing, setSyncing] = useState(false);
+  // Visible immediately on cold start while the local shell/session is restored;
+  // the background sync then owns this state until it finishes.
+  const [syncing, setSyncing] = useState(true);
   const [meta, setMeta] = useState<SyncMeta | null>(null);
   const [expanded, setExpanded] = useState(false);
 
