@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { OFFLINE_KEYS, offlineFirst } from "@/lib/offline/store";
 import { useOfflineUserId } from "@/hooks/useOfflineUser";
-import { OFFLINE_MESSAGE, useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
 import { generatePlan, listPlanVersions, restorePlanVersion } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Download, Utensils, ShoppingBasket, RefreshCw, History, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
+import { enqueueMutation } from "@/lib/offline/queue";
 
 export const Route = createFileRoute("/_authenticated/plans/$sessionId")({
   head: () => ({
@@ -127,10 +128,24 @@ function PlanView() {
   }, [session, versions.length, autoGenerating, generate, sessionId, load, online]);
 
   async function refine() {
-    if (!online) return toast.error(OFFLINE_MESSAGE);
     if (!refineText.trim()) return toast.error("Describe the change you want");
+    if (!userId) return toast.error("Sign in to refine this plan");
     setBusy(true);
     try {
+      if (!online) {
+        const operationId = crypto.randomUUID();
+        await enqueueMutation(userId, {
+          kind: "plan.refine",
+          sessionId,
+          refinement: refineText.trim(),
+          operationId,
+          id: operationId,
+          priority: 2,
+        });
+        setRefineText("");
+        toast.success("Saved offline. Your refinement will run when you reconnect.");
+        return;
+      }
       const res = await generate({
         data: { sessionId, refinement: refineText.trim() },
       });
@@ -151,9 +166,19 @@ function PlanView() {
   }
 
   async function doRestore(version: number) {
-    if (!online) return toast.error(OFFLINE_MESSAGE);
+    if (!userId) return toast.error("Sign in to restore this version");
     setBusy(true);
     try {
+      if (!online) {
+        await enqueueMutation(userId, {
+          kind: "plan.restore",
+          sessionId,
+          version,
+          priority: 2,
+        });
+        toast.success(`Version ${version} will be restored when you reconnect.`);
+        return;
+      }
       await restore({ data: { sessionId, version } });
       setActiveId(null);
       await load();
