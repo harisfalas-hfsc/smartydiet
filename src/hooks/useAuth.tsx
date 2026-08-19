@@ -7,7 +7,6 @@ import {
   getOfflineSessionAsync,
   setOfflineSession,
 } from "@/lib/offline/credentials";
-import { isOnlineNow } from "@/lib/offline/connectivity";
 
 type ProfileSummary = {
   display_name: string | null;
