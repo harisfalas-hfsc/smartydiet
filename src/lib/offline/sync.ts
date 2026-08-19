@@ -104,7 +104,7 @@ export async function runBackgroundSync(force = false): Promise<void> {
     ]);
 
     if (!user || !uid) {
-      warmUrls(PUBLIC_PAGES);
+      await warmUrls(PUBLIC_PAGES);
       await writeSyncMeta(null, { lastSuccessAt: Date.now() });
       return;
     }
@@ -191,7 +191,7 @@ export async function runBackgroundSync(force = false): Promise<void> {
     }
 
     /* -------- P3: shell + queue + housekeeping -------- */
-    warmUrls([...PUBLIC_PAGES, ...MEMBER_PAGES]);
+    await warmUrls([...PUBLIC_PAGES, ...MEMBER_PAGES]);
     await flushQueue(userId);
     await trimCache();
 

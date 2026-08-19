@@ -55,9 +55,9 @@ export function registerServiceWorker(): Promise<ServiceWorkerRegistration | nul
 }
 
 /** Asks the service worker to pre-cache a list of same-origin URLs. */
-export function warmUrls(urls: string[]) {
+export async function warmUrls(urls: string[]): Promise<void> {
   if (typeof window === "undefined" || !("caches" in window)) return;
-  void caches.open("smartydiet-pages").then(async (cache) => {
+  await caches.open("smartydiet-pages").then(async (cache) => {
     await Promise.allSettled(
       urls.map(async (url) => {
         const response = await fetch(url, { credentials: "same-origin" });
