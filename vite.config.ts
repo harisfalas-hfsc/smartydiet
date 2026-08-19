@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
+import { VitePWA } from "vite-plugin-pwa";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,6 +18,26 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serverEnv = loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
 
+const offlineRoutes = [
+  "/",
+  "/about",
+  "/how-it-works",
+  "/pricing",
+  "/faq",
+  "/contact",
+  "/tools",
+  "/tools/bmr-calculator",
+  "/tools/calorie-counter",
+  "/tools/macro-calculator",
+  "/diet-science",
+  "/nutrition-intelligence",
+  "/glossary",
+  "/privacy",
+  "/terms",
+  "/disclaimer",
+  "/auth",
+];
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
@@ -24,7 +45,47 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    plugins: [mcpPlugin()],
+    plugins: [
+      mcpPlugin(),
+      VitePWA({
+        registerType: "autoUpdate",
+        injectRegister: null,
+        strategies: "generateSW",
+        filename: "sw.js",
+        manifest: false,
+        devOptions: { enabled: false },
+        workbox: {
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
+          navigateFallback: "/",
+          navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn/],
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,avif,woff,woff2,ttf,otf,json,txt}"],
+          additionalManifestEntries: offlineRoutes.map((url) => ({ url, revision: null })),
+          runtimeCaching: [
+            {
+              urlPattern: ({ request }) => request.mode === "navigate",
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "smartydiet-pages",
+                networkTimeoutSeconds: 3,
+                expiration: { maxEntries: 80, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              },
+            },
+            {
+              urlPattern: ({ request, url }) =>
+                url.origin === self.location.origin &&
+                ["script", "style", "font", "image"].includes(request.destination),
+              handler: "CacheFirst",
+              options: {
+                cacheName: "smartydiet-assets",
+                expiration: { maxEntries: 250, maxAgeSeconds: 90 * 24 * 60 * 60 },
+              },
+            },
+          ],
+        },
+      }),
+    ],
     resolve: {
       alias: {
         "entities/lib/decode.js": path.resolve(__dirname, "node_modules/entities/lib/decode.js"),

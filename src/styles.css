@@ -144,8 +144,11 @@
 /* Installed-app scrolling must always work: never lock the document. */
 html,
 body {
+  background-color: var(--color-background);
   overscroll-behavior-y: auto;
-  overflow-y: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
   min-height: 100%;
+  -webkit-overflow-scrolling: touch;
   -webkit-text-size-adjust: 100%;
 }

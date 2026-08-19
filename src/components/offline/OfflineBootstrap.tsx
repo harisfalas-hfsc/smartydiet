@@ -20,8 +20,10 @@ export function OfflineBootstrap() {
     // native cold start in airplane mode races the network layer and fails.
     void initConnectivity()
       .then(() => migrateLocalDatabase())
-      .then(() => {
-        registerServiceWorker();
+      .then(async () => {
+        // On published installs, wait until the generated offline shell and all
+        // of its JS/CSS dependencies are ready before warming application data.
+        await registerServiceWorker();
         void runBackgroundSync();
         unsubscribe = subscribeConnectivity((online) => {
           if (!online) return;
