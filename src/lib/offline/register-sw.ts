@@ -1,20 +1,20 @@
-/** Service worker registration with auto-update detection. */
+/** Service worker registration — fully silent, never prompts the user. */
 let registration: ServiceWorkerRegistration | null = null;
+let reloadedForUpdate = false;
 
-export function registerServiceWorker(onUpdateReady: () => void) {
+export function registerServiceWorker() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
   if (!import.meta.env.PROD) return;
 
   const register = async () => {
     try {
       registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      if (registration.waiting) onUpdateReady();
-      registration.addEventListener("updatefound", () => {
-        const next = registration?.installing;
-        if (!next) return;
-        next.addEventListener("statechange", () => {
-          if (next.state === "installed" && navigator.serviceWorker.controller) onUpdateReady();
-        });
+      // A brand new worker taking control means the app code changed: reload
+      // once, quietly, so the user never sees a stale shell or an update prompt.
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloadedForUpdate) return;
+        reloadedForUpdate = true;
+        window.location.reload();
       });
       // Periodic update check (hourly) so long-lived PWA sessions stay fresh.
       window.setInterval(() => registration?.update().catch(() => undefined), 60 * 60 * 1000);
@@ -25,13 +25,6 @@ export function registerServiceWorker(onUpdateReady: () => void) {
 
   if (document.readyState === "complete") void register();
   else window.addEventListener("load", () => void register());
-}
-
-export function applyUpdate() {
-  registration?.waiting?.postMessage("SKIP_WAITING");
-  navigator.serviceWorker?.addEventListener("controllerchange", () => window.location.reload(), {
-    once: true,
-  });
 }
 
 /** Asks the service worker to pre-cache a list of same-origin URLs. */
