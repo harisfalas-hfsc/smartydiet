@@ -39,6 +39,7 @@ function appShellPlugin() {
       const css = new Set<string>();
       for (const chunk of Object.values(bundle) as any[]) {
         for (const file of chunk?.viteMetadata?.importedCss ?? []) css.add(file);
+        if (chunk?.type === "asset" && chunk.fileName?.endsWith(".css")) css.add(chunk.fileName);
       }
       const html = [
         "<!doctype html>",
