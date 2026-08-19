@@ -18,25 +18,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serverEnv = loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
 
-const offlineRoutes = [
-  "/",
-  "/about",
-  "/how-it-works",
-  "/pricing",
-  "/faq",
-  "/contact",
-  "/tools",
-  "/tools/bmr-calculator",
-  "/tools/calorie-counter",
-  "/tools/macro-calculator",
-  "/diet-science",
-  "/nutrition-intelligence",
-  "/glossary",
-  "/privacy",
-  "/terms",
-  "/disclaimer",
-  "/auth",
-];
+
+// Routes precached at install time so a direct offline load of these URLs works.
+const offlineRoutes = ["/", "/about", "/how-it-works", "/plans", "/questionnaire", "/inbox"];
 
 export default defineConfig({
   tanstackStart: {
@@ -54,14 +38,18 @@ export default defineConfig({
         filename: "sw.js",
         manifest: false,
         devOptions: { enabled: false },
+        // The static client bundle is emitted to dist/client — the worker and
+        // its precache manifest MUST live there or /sw.js is never served.
+        outDir: "dist/client",
+
         workbox: {
           cleanupOutdatedCaches: true,
           clientsClaim: true,
           skipWaiting: true,
           navigateFallback: "/",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn/],
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,avif,woff,woff2,ttf,otf,json,txt}"],
           additionalManifestEntries: offlineRoutes.map((url) => ({ url, revision: null })),
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,avif,woff,woff2,ttf,otf,json,txt}"],
           runtimeCaching: [
             {
               urlPattern: ({ request }) => request.mode === "navigate",

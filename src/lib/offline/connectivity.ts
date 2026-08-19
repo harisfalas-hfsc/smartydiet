@@ -21,7 +21,9 @@ type StateListener = (state: ConnectivityState) => void;
 const listeners = new Set<Listener>();
 const stateListeners = new Set<StateListener>();
 
-const HEALTH_URL = "/api/public/health";
+import { apiUrl, isNativePlatform } from "@/lib/platform";
+
+const HEALTH_PATH = "/api/public/health";
 const PROBE_TIMEOUT_MS = 6000;
 const PROBE_INTERVAL_MS = 30_000;
 const MIN_PROBE_GAP_MS = 3000;
@@ -34,9 +36,7 @@ let probing: Promise<boolean> | null = null;
 let timer: ReturnType<typeof setInterval> | undefined;
 
 function isNative(): boolean {
-  if (typeof window === "undefined") return false;
-  const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
-  return typeof cap?.isNativePlatform === "function" ? cap.isNativePlatform() : false;
+  return isNativePlatform();
 }
 
 function setState(next: ConnectivityState) {
@@ -100,7 +100,7 @@ export async function probeBackend(force = false): Promise<boolean> {
     const controller = new AbortController();
     const abort = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
     try {
-      const res = await fetch(`${HEALTH_URL}?t=${Date.now()}`, {
+      const res = await fetch(`${apiUrl(HEALTH_PATH)}?t=${Date.now()}`, {
         method: "GET",
         cache: "no-store",
         signal: controller.signal,

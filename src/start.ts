@@ -2,6 +2,8 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
+import { platformFetch } from "@/lib/platform";
+
 
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   if (request && new URL(request.url).pathname.startsWith("/lovable/")) {
@@ -24,4 +26,8 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
   requestMiddleware: [errorMiddleware],
+  // One codebase for web/PWA/native: on native the WebView origin is the
+  // device, so server-function calls are rewritten onto the backend origin.
+  serverFns: { fetch: platformFetch },
 }));
+
