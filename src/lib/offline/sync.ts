@@ -24,7 +24,7 @@ import {
 } from "./store";
 import { flushQueue } from "./queue";
 import { warmUrls } from "./register-sw";
-import { refreshStoredSession } from "./credentials";
+import { refreshStoredSession, setOfflineSession } from "./credentials";
 import { isOnlineNow, reportRequestFailure, reportRequestSuccess } from "./connectivity";
 
 export const PUBLIC_PAGES = [

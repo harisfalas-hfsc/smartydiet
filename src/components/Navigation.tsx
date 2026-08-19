@@ -41,7 +41,7 @@ import { clearUserCache } from "@/lib/offline/store";
 
 
 export function Navigation() {
-  const { user, displayName, loading } = useAuth();
+  const { user, profile, displayName, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const router = useRouter();
