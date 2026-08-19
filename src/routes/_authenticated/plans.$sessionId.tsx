@@ -220,11 +220,7 @@ function PlanView() {
   if (!session)
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        {online ? (
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        ) : (
-          <OfflineEmptyState />
-        )}
+        {online ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <OfflineEmptyState />}
       </div>
     );
 
@@ -458,11 +454,7 @@ function PlanView() {
                       View
                     </Button>
                     {!v.is_final && (
-                      <Button
-                        size="sm"
-                        onClick={() => doRestore(v.version)}
-                        disabled={busy}
-                      >
+                      <Button size="sm" onClick={() => doRestore(v.version)} disabled={busy}>
                         Restore
                       </Button>
                     )}
