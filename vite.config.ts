@@ -43,6 +43,10 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    // Emit a static app shell (dist/client/index.html). It is the offline
+    // navigation fallback for the PWA AND the entry document of the native
+    // iOS/Android wrapper, so the app boots with no network at all.
+    pages: [{ path: "/", prerender: { enabled: true } }],
   },
   vite: {
     plugins: [
@@ -62,10 +66,9 @@ export default defineConfig({
           cleanupOutdatedCaches: true,
           clientsClaim: true,
           skipWaiting: true,
-          navigateFallback: "/",
+          navigateFallback: "/index.html",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn/],
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,avif,woff,woff2,ttf,otf,json,txt}"],
-          additionalManifestEntries: offlineRoutes.map((url) => ({ url, revision: null })),
           runtimeCaching: [
             {
               urlPattern: ({ request }) => request.mode === "navigate",
