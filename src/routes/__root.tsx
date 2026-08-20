@@ -109,7 +109,7 @@ const JSONLD_GRAPH = {
       name: "SmartyDiet",
       alternateName: ["Smarty Diet", "SmartyDiet AI", "AI Nutrition Intelligence Platform"],
       url: SITE_URL,
-      logo: `${SITE_URL}/icon-512x512.png`,
+      logo: `${SITE_URL}/icon-512x512.v2.png`,
       description:
         "SmartyDiet is the AI Nutrition Intelligence Platform — a pocket dietitian, nutrition consultant and diet coach powered by AI.",
       foundingDate: "2024",
@@ -307,9 +307,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+      { rel: "icon", type: "image/png", href: "/favicon.v2.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.v2.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
+
     ],
     scripts: [
       {
