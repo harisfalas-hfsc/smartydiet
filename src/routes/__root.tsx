@@ -109,7 +109,7 @@ const JSONLD_GRAPH = {
       name: "SmartyDiet",
       alternateName: ["Smarty Diet", "SmartyDiet AI", "AI Nutrition Intelligence Platform"],
       url: SITE_URL,
-      logo: `${SITE_URL}/icon-512x512.png`,
+      logo: `${SITE_URL}/icon-512x512.v2.png`,
       description:
         "SmartyDiet is the AI Nutrition Intelligence Platform — a pocket dietitian, nutrition consultant and diet coach powered by AI.",
       foundingDate: "2024",
