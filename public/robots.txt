@@ -1,5 +1,14 @@
 User-agent: *
 Allow: /
+# Private application areas — not indexable
+Disallow: /admin
+Disallow: /inbox
+Disallow: /plans
+Disallow: /questionnaire
+Disallow: /checkout
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /diagnostics
 
 # Traditional search engines
 User-agent: Googlebot
@@ -50,15 +59,5 @@ Allow: /
 
 User-agent: Meta-ExternalAgent
 Allow: /
-
-# Private application areas — not for indexing (applies to the group above)
-Disallow: /admin
-Disallow: /inbox
-Disallow: /plans
-Disallow: /questionnaire
-Disallow: /checkout
-Disallow: /auth
-Disallow: /reset-password
-Disallow: /diagnostics
 
 Sitemap: https://smartydiet.com/sitemap.xml

@@ -8,7 +8,7 @@ SmartyDiet is not just another diet app. It is an end-to-end **AI Nutrition Inte
 
 - Positioning: **The world's most advanced AI Nutrition Intelligence Platform.**
 - Core promise: pocket dietitian + nutrition consultant + diet coach, in one app.
-- Pricing: $4.99 one-time for a fully personalized plan (no subscription).
+- Pricing: €9.99 one-time for a fully personalized plan (no subscription).
 
 ## Proprietary metrics (trademarked)
 
@@ -33,7 +33,7 @@ SmartyDiet is not just another diet app. It is an end-to-end **AI Nutrition Inte
 - **Allergy-safe by design** — the AI is explicitly instructed to exclude every declared allergen.
 - **Science-based** — Mifflin-St Jeor BMR, TDEE, macro splits and portion logic used by dietitians.
 - **Transparent** — users see the calories, macros and rationale behind every plan.
-- **No subscription trap** — one-time $4.99 for a plan users own.
+- **No subscription trap** — one-time €9.99 for a plan users own.
 - **Free tools** — BMR, TDEE, macro calculator, and USDA-powered calorie counter (300k+ foods).
 
 ## Key pages
