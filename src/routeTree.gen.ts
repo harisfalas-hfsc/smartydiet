@@ -10,11 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SportsNutritionRouteImport } from './routes/sports-nutrition'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as NutritionIntelligenceRouteImport } from './routes/nutrition-intelligence'
+import { Route as MealPlanningRouteImport } from './routes/meal-planning'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as GlossaryRouteImport } from './routes/glossary'
@@ -29,10 +31,14 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
+import { Route as DietPlansIndexRouteImport } from './routes/diet-plans.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ToolsMacroCalculatorRouteImport } from './routes/tools.macro-calculator'
 import { Route as ToolsCalorieCounterRouteImport } from './routes/tools.calorie-counter'
 import { Route as ToolsBmrCalculatorRouteImport } from './routes/tools.bmr-calculator'
+import { Route as DietPlansWeightLossRouteImport } from './routes/diet-plans.weight-loss'
+import { Route as DietPlansMuscleGainRouteImport } from './routes/diet-plans.muscle-gain'
+import { Route as DietPlansHighProteinRouteImport } from './routes/diet-plans.high-protein'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
 import { Route as AuthenticatedQuestionnaireRouteImport } from './routes/_authenticated/questionnaire'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
@@ -49,6 +55,11 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SportsNutritionRoute = SportsNutritionRouteImport.update({
+  id: '/sports-nutrition',
+  path: '/sports-nutrition',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -74,6 +85,11 @@ const PricingRoute = PricingRouteImport.update({
 const NutritionIntelligenceRoute = NutritionIntelligenceRouteImport.update({
   id: '/nutrition-intelligence',
   path: '/nutrition-intelligence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MealPlanningRoute = MealPlanningRouteImport.update({
+  id: '/meal-planning',
+  path: '/meal-planning',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -145,6 +161,11 @@ const ToolsIndexRoute = ToolsIndexRouteImport.update({
   path: '/tools/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DietPlansIndexRoute = DietPlansIndexRouteImport.update({
+  id: '/diet-plans/',
+  path: '/diet-plans/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -163,6 +184,21 @@ const ToolsCalorieCounterRoute = ToolsCalorieCounterRouteImport.update({
 const ToolsBmrCalculatorRoute = ToolsBmrCalculatorRouteImport.update({
   id: '/tools/bmr-calculator',
   path: '/tools/bmr-calculator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DietPlansWeightLossRoute = DietPlansWeightLossRouteImport.update({
+  id: '/diet-plans/weight-loss',
+  path: '/diet-plans/weight-loss',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DietPlansMuscleGainRoute = DietPlansMuscleGainRouteImport.update({
+  id: '/diet-plans/muscle-gain',
+  path: '/diet-plans/muscle-gain',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DietPlansHighProteinRoute = DietPlansHighProteinRouteImport.update({
+  id: '/diet-plans/high-protein',
+  path: '/diet-plans/high-protein',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
@@ -246,11 +282,13 @@ export interface FileRoutesByFullPath {
   '/glossary': typeof GlossaryRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mcp': typeof McpRoute
+  '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sports-nutrition': typeof SportsNutritionRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -258,10 +296,14 @@ export interface FileRoutesByFullPath {
   '/plans': typeof AuthenticatedPlansRouteWithChildren
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/diet-plans/high-protein': typeof DietPlansHighProteinRoute
+  '/diet-plans/muscle-gain': typeof DietPlansMuscleGainRoute
+  '/diet-plans/weight-loss': typeof DietPlansWeightLossRoute
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/admin/': typeof AdminIndexRoute
+  '/diet-plans/': typeof DietPlansIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -283,11 +325,13 @@ export interface FileRoutesByTo {
   '/glossary': typeof GlossaryRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mcp': typeof McpRoute
+  '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sports-nutrition': typeof SportsNutritionRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -295,10 +339,14 @@ export interface FileRoutesByTo {
   '/plans': typeof AuthenticatedPlansRouteWithChildren
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/diet-plans/high-protein': typeof DietPlansHighProteinRoute
+  '/diet-plans/muscle-gain': typeof DietPlansMuscleGainRoute
+  '/diet-plans/weight-loss': typeof DietPlansWeightLossRoute
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/admin': typeof AdminIndexRoute
+  '/diet-plans': typeof DietPlansIndexRoute
   '/tools': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -322,11 +370,13 @@ export interface FileRoutesById {
   '/glossary': typeof GlossaryRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mcp': typeof McpRoute
+  '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sports-nutrition': typeof SportsNutritionRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -334,10 +384,14 @@ export interface FileRoutesById {
   '/_authenticated/plans': typeof AuthenticatedPlansRouteWithChildren
   '/_authenticated/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/diet-plans/high-protein': typeof DietPlansHighProteinRoute
+  '/diet-plans/muscle-gain': typeof DietPlansMuscleGainRoute
+  '/diet-plans/weight-loss': typeof DietPlansWeightLossRoute
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/admin/': typeof AdminIndexRoute
+  '/diet-plans/': typeof DietPlansIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -361,11 +415,13 @@ export interface FileRouteTypes {
     | '/glossary'
     | '/how-it-works'
     | '/mcp'
+    | '/meal-planning'
     | '/nutrition-intelligence'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/sports-nutrition'
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -373,10 +429,14 @@ export interface FileRouteTypes {
     | '/plans'
     | '/questionnaire'
     | '/checkout/return'
+    | '/diet-plans/high-protein'
+    | '/diet-plans/muscle-gain'
+    | '/diet-plans/weight-loss'
     | '/tools/bmr-calculator'
     | '/tools/calorie-counter'
     | '/tools/macro-calculator'
     | '/admin/'
+    | '/diet-plans/'
     | '/tools/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -398,11 +458,13 @@ export interface FileRouteTypes {
     | '/glossary'
     | '/how-it-works'
     | '/mcp'
+    | '/meal-planning'
     | '/nutrition-intelligence'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/sports-nutrition'
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -410,10 +472,14 @@ export interface FileRouteTypes {
     | '/plans'
     | '/questionnaire'
     | '/checkout/return'
+    | '/diet-plans/high-protein'
+    | '/diet-plans/muscle-gain'
+    | '/diet-plans/weight-loss'
     | '/tools/bmr-calculator'
     | '/tools/calorie-counter'
     | '/tools/macro-calculator'
     | '/admin'
+    | '/diet-plans'
     | '/tools'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -436,11 +502,13 @@ export interface FileRouteTypes {
     | '/glossary'
     | '/how-it-works'
     | '/mcp'
+    | '/meal-planning'
     | '/nutrition-intelligence'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/sports-nutrition'
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -448,10 +516,14 @@ export interface FileRouteTypes {
     | '/_authenticated/plans'
     | '/_authenticated/questionnaire'
     | '/checkout/return'
+    | '/diet-plans/high-protein'
+    | '/diet-plans/muscle-gain'
+    | '/diet-plans/weight-loss'
     | '/tools/bmr-calculator'
     | '/tools/calorie-counter'
     | '/tools/macro-calculator'
     | '/admin/'
+    | '/diet-plans/'
     | '/tools/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -475,18 +547,24 @@ export interface RootRouteChildren {
   GlossaryRoute: typeof GlossaryRoute
   HowItWorksRoute: typeof HowItWorksRoute
   McpRoute: typeof McpRoute
+  MealPlanningRoute: typeof MealPlanningRoute
   NutritionIntelligenceRoute: typeof NutritionIntelligenceRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SportsNutritionRoute: typeof SportsNutritionRoute
   TermsRoute: typeof TermsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  DietPlansHighProteinRoute: typeof DietPlansHighProteinRoute
+  DietPlansMuscleGainRoute: typeof DietPlansMuscleGainRoute
+  DietPlansWeightLossRoute: typeof DietPlansWeightLossRoute
   ToolsBmrCalculatorRoute: typeof ToolsBmrCalculatorRoute
   ToolsCalorieCounterRoute: typeof ToolsCalorieCounterRoute
   ToolsMacroCalculatorRoute: typeof ToolsMacroCalculatorRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  DietPlansIndexRoute: typeof DietPlansIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -502,6 +580,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sports-nutrition': {
+      id: '/sports-nutrition'
+      path: '/sports-nutrition'
+      fullPath: '/sports-nutrition'
+      preLoaderRoute: typeof SportsNutritionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -537,6 +622,13 @@ declare module '@tanstack/react-router' {
       path: '/nutrition-intelligence'
       fullPath: '/nutrition-intelligence'
       preLoaderRoute: typeof NutritionIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meal-planning': {
+      id: '/meal-planning'
+      path: '/meal-planning'
+      fullPath: '/meal-planning'
+      preLoaderRoute: typeof MealPlanningRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -637,6 +729,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/diet-plans/': {
+      id: '/diet-plans/'
+      path: '/diet-plans'
+      fullPath: '/diet-plans/'
+      preLoaderRoute: typeof DietPlansIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/admin'
@@ -663,6 +762,27 @@ declare module '@tanstack/react-router' {
       path: '/tools/bmr-calculator'
       fullPath: '/tools/bmr-calculator'
       preLoaderRoute: typeof ToolsBmrCalculatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diet-plans/weight-loss': {
+      id: '/diet-plans/weight-loss'
+      path: '/diet-plans/weight-loss'
+      fullPath: '/diet-plans/weight-loss'
+      preLoaderRoute: typeof DietPlansWeightLossRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diet-plans/muscle-gain': {
+      id: '/diet-plans/muscle-gain'
+      path: '/diet-plans/muscle-gain'
+      fullPath: '/diet-plans/muscle-gain'
+      preLoaderRoute: typeof DietPlansMuscleGainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diet-plans/high-protein': {
+      id: '/diet-plans/high-protein'
+      path: '/diet-plans/high-protein'
+      fullPath: '/diet-plans/high-protein'
+      preLoaderRoute: typeof DietPlansHighProteinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout/return': {
@@ -804,19 +924,25 @@ const rootRouteChildren: RootRouteChildren = {
   GlossaryRoute: GlossaryRoute,
   HowItWorksRoute: HowItWorksRoute,
   McpRoute: McpRoute,
+  MealPlanningRoute: MealPlanningRoute,
   NutritionIntelligenceRoute: NutritionIntelligenceRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SportsNutritionRoute: SportsNutritionRoute,
   TermsRoute: TermsRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  DietPlansHighProteinRoute: DietPlansHighProteinRoute,
+  DietPlansMuscleGainRoute: DietPlansMuscleGainRoute,
+  DietPlansWeightLossRoute: DietPlansWeightLossRoute,
   ToolsBmrCalculatorRoute: ToolsBmrCalculatorRoute,
   ToolsCalorieCounterRoute: ToolsCalorieCounterRoute,
   ToolsMacroCalculatorRoute: ToolsMacroCalculatorRoute,
   AdminIndexRoute: AdminIndexRoute,
+  DietPlansIndexRoute: DietPlansIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,

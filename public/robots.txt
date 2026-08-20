@@ -1,5 +1,14 @@
 User-agent: *
 Allow: /
+# Private application areas — not indexable
+Disallow: /admin
+Disallow: /inbox
+Disallow: /plans
+Disallow: /questionnaire
+Disallow: /checkout
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /diagnostics
 
 # Traditional search engines
 User-agent: Googlebot

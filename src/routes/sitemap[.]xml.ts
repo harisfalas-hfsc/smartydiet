@@ -27,6 +27,13 @@ const ENTRIES: SitemapEntry[] = [
   { path: "/diet-science", changefreq: "monthly", priority: "0.85" },
 
 
+  { path: "/diet-plans", changefreq: "monthly", priority: "0.95" },
+  { path: "/diet-plans/weight-loss", changefreq: "monthly", priority: "0.9" },
+  { path: "/diet-plans/muscle-gain", changefreq: "monthly", priority: "0.9" },
+  { path: "/diet-plans/high-protein", changefreq: "monthly", priority: "0.85" },
+  { path: "/meal-planning", changefreq: "monthly", priority: "0.85" },
+  { path: "/sports-nutrition", changefreq: "monthly", priority: "0.85" },
+
   { path: "/tools", changefreq: "monthly", priority: "0.8" },
   { path: "/tools/bmr-calculator", changefreq: "monthly", priority: "0.8" },
   { path: "/tools/macro-calculator", changefreq: "monthly", priority: "0.8" },
