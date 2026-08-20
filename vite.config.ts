@@ -50,7 +50,21 @@ export default defineConfig({
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn/],
           additionalManifestEntries: offlineRoutes.map((url) => ({ url, revision: null })),
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,avif,woff,woff2,ttf,otf,json,txt}"],
+          // App-identity files must never be served stale after a reinstall or
+          // an offline session: they are revalidated, not precached.
+          globIgnores: ["**/manifest.webmanifest", "**/icon-*.png", "**/apple-touch-icon*.png", "**/favicon*.png"],
           runtimeCaching: [
+            {
+              urlPattern: ({ url }) =>
+                url.pathname === "/manifest.webmanifest" ||
+                /^\/(icon-|apple-touch-icon|favicon)/.test(url.pathname),
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "smartydiet-app-identity",
+                networkTimeoutSeconds: 3,
+                expiration: { maxEntries: 20, maxAgeSeconds: 7 * 24 * 60 * 60 },
+              },
+            },
             {
               urlPattern: ({ request }) => request.mode === "navigate",
               handler: "NetworkFirst",
@@ -71,6 +85,7 @@ export default defineConfig({
             },
           ],
         },
+
       }),
     ],
     resolve: {
