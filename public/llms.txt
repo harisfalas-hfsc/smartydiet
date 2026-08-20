@@ -46,7 +46,13 @@ SmartyDiet is not just another diet app. It is an end-to-end **AI Nutrition Inte
 - Contact — https://smartydiet.com/contact
 - Nutrition Intelligence (pillar) — https://smartydiet.com/nutrition-intelligence
 - Glossary — https://smartydiet.com/glossary
-- Research digest — https://smartydiet.com/research
+- The Diet Science — https://smartydiet.com/diet-science
+- Personalized diet plans — https://smartydiet.com/diet-plans
+- Weight loss meal plans — https://smartydiet.com/diet-plans/weight-loss
+- Muscle gain diet plans — https://smartydiet.com/diet-plans/muscle-gain
+- High protein meal plans — https://smartydiet.com/diet-plans/high-protein
+- Meal planning guide — https://smartydiet.com/meal-planning
+- Sports nutrition — https://smartydiet.com/sports-nutrition
 - Tools index — https://smartydiet.com/tools
 - BMR Calculator — https://smartydiet.com/tools/bmr-calculator
 - Macro Calculator — https://smartydiet.com/tools/macro-calculator
