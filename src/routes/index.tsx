@@ -153,6 +153,66 @@ function Home() {
           </div>
         </div>
       </section>
+
+      {/* SEO / discovery — visible on every viewport */}
+      <section className="mt-10 sm:mt-14">
+        <h2 className="text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">
+          Personalized nutrition, built around you
+        </h2>
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-[15px]">
+          SmartyDiet is an online diet planner that turns a short questionnaire into a personalized
+          diet plan: your daily calories from BMR and TDEE, protein, carbohydrate and fat targets,
+          a meal-by-meal menu for 1, 2 or 4 weeks, and a weekly grocery list. Plans respect your
+          goal — weight loss, muscle gain, body recomposition or maintenance — along with your
+          allergies, disliked foods, budget, cooking time and preferred eating pattern, including
+          balanced, Mediterranean, high-protein, low-carb, keto, vegetarian and vegan.
+        </p>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            {
+              to: "/diet-plans",
+              label: "Personalized diet plans",
+              description: "What a custom meal plan includes and how it is calculated.",
+            },
+            {
+              to: "/diet-plans/weight-loss",
+              label: "Weight loss meal plans",
+              description: "Calorie deficit, protein and hunger control for fat loss.",
+            },
+            {
+              to: "/diet-plans/muscle-gain",
+              label: "Muscle gain diet plans",
+              description: "Calorie surplus, protein distribution and training fuel.",
+            },
+            {
+              to: "/diet-plans/high-protein",
+              label: "High protein meal plans",
+              description: "How much protein you need and where to get it.",
+            },
+            {
+              to: "/meal-planning",
+              label: "Meal planning guide",
+              description: "Plan a week of meals, prep smart and shop once.",
+            },
+            {
+              to: "/sports-nutrition",
+              label: "Sports nutrition",
+              description: "Pre-workout, post-workout and meal timing for training.",
+            },
+          ].map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className="rounded-2xl border border-border bg-card p-4 no-underline transition-colors hover:border-primary"
+            >
+              <span className="block text-sm font-bold text-foreground">{l.label}</span>
+              <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                {l.description}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
