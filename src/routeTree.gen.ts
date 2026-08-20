@@ -15,6 +15,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as NutritionIntelligenceRouteImport } from './routes/nutrition-intelligence'
+import { Route as MealPlanningRouteImport } from './routes/meal-planning'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as GlossaryRouteImport } from './routes/glossary'
@@ -78,6 +79,11 @@ const PricingRoute = PricingRouteImport.update({
 const NutritionIntelligenceRoute = NutritionIntelligenceRouteImport.update({
   id: '/nutrition-intelligence',
   path: '/nutrition-intelligence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MealPlanningRoute = MealPlanningRouteImport.update({
+  id: '/meal-planning',
+  path: '/meal-planning',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/glossary': typeof GlossaryRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mcp': typeof McpRoute
+  '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -311,6 +318,7 @@ export interface FileRoutesByTo {
   '/glossary': typeof GlossaryRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mcp': typeof McpRoute
+  '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -354,6 +362,7 @@ export interface FileRoutesById {
   '/glossary': typeof GlossaryRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mcp': typeof McpRoute
+  '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -397,6 +406,7 @@ export interface FileRouteTypes {
     | '/glossary'
     | '/how-it-works'
     | '/mcp'
+    | '/meal-planning'
     | '/nutrition-intelligence'
     | '/pricing'
     | '/privacy'
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/glossary'
     | '/how-it-works'
     | '/mcp'
+    | '/meal-planning'
     | '/nutrition-intelligence'
     | '/pricing'
     | '/privacy'
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/glossary'
     | '/how-it-works'
     | '/mcp'
+    | '/meal-planning'
     | '/nutrition-intelligence'
     | '/pricing'
     | '/privacy'
@@ -523,6 +535,7 @@ export interface RootRouteChildren {
   GlossaryRoute: typeof GlossaryRoute
   HowItWorksRoute: typeof HowItWorksRoute
   McpRoute: typeof McpRoute
+  MealPlanningRoute: typeof MealPlanningRoute
   NutritionIntelligenceRoute: typeof NutritionIntelligenceRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -589,6 +602,13 @@ declare module '@tanstack/react-router' {
       path: '/nutrition-intelligence'
       fullPath: '/nutrition-intelligence'
       preLoaderRoute: typeof NutritionIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meal-planning': {
+      id: '/meal-planning'
+      path: '/meal-planning'
+      fullPath: '/meal-planning'
+      preLoaderRoute: typeof MealPlanningRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -884,6 +904,7 @@ const rootRouteChildren: RootRouteChildren = {
   GlossaryRoute: GlossaryRoute,
   HowItWorksRoute: HowItWorksRoute,
   McpRoute: McpRoute,
+  MealPlanningRoute: MealPlanningRoute,
   NutritionIntelligenceRoute: NutritionIntelligenceRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
