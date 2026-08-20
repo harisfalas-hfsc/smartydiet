@@ -27,12 +27,12 @@ export const Route = createFileRoute("/")({
       {
         property: "og:image",
         content:
-          "https://smartydiet.com/__l5e/assets-v1/d1e59921-5974-44b4-96d8-9bfbec15c971/smartydiet-social.png",
+          "https://smartydiet.com/__l5e/assets-v1/d1e59921-5974-44b4-96d8-9bfbec15c871/smartydiet-social.png",
       },
       {
         name: "twitter:image",
         content:
-          "https://smartydiet.com/__l5e/assets-v1/d1e59921-5974-44b4-96d8-9bfbec15c971/smartydiet-social.png",
+          "https://smartydiet.com/__l5e/assets-v1/d1e59921-5974-44b4-96d8-9bfbec15c871/smartydiet-social.png",
       },
     ],
     links: [{ rel: "canonical", href: "https://smartydiet.com/" }],
