@@ -51,8 +51,7 @@ Allow: /
 User-agent: Meta-ExternalAgent
 Allow: /
 
-# Private application areas — not for indexing
-User-agent: *
+# Private application areas — not for indexing (applies to the group above)
 Disallow: /admin
 Disallow: /inbox
 Disallow: /plans
