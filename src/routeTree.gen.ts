@@ -35,6 +35,7 @@ import { Route as ToolsMacroCalculatorRouteImport } from './routes/tools.macro-c
 import { Route as ToolsCalorieCounterRouteImport } from './routes/tools.calorie-counter'
 import { Route as ToolsBmrCalculatorRouteImport } from './routes/tools.bmr-calculator'
 import { Route as DietPlansWeightLossRouteImport } from './routes/diet-plans.weight-loss'
+import { Route as DietPlansMuscleGainRouteImport } from './routes/diet-plans.muscle-gain'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
 import { Route as AuthenticatedQuestionnaireRouteImport } from './routes/_authenticated/questionnaire'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
@@ -177,6 +178,11 @@ const DietPlansWeightLossRoute = DietPlansWeightLossRouteImport.update({
   path: '/diet-plans/weight-loss',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DietPlansMuscleGainRoute = DietPlansMuscleGainRouteImport.update({
+  id: '/diet-plans/muscle-gain',
+  path: '/diet-plans/muscle-gain',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/return',
   path: '/return',
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof AuthenticatedPlansRouteWithChildren
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/diet-plans/muscle-gain': typeof DietPlansMuscleGainRoute
   '/diet-plans/weight-loss': typeof DietPlansWeightLossRoute
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
@@ -309,6 +316,7 @@ export interface FileRoutesByTo {
   '/plans': typeof AuthenticatedPlansRouteWithChildren
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/diet-plans/muscle-gain': typeof DietPlansMuscleGainRoute
   '/diet-plans/weight-loss': typeof DietPlansWeightLossRoute
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
@@ -350,6 +358,7 @@ export interface FileRoutesById {
   '/_authenticated/plans': typeof AuthenticatedPlansRouteWithChildren
   '/_authenticated/questionnaire': typeof AuthenticatedQuestionnaireRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/diet-plans/muscle-gain': typeof DietPlansMuscleGainRoute
   '/diet-plans/weight-loss': typeof DietPlansWeightLossRoute
   '/tools/bmr-calculator': typeof ToolsBmrCalculatorRoute
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
@@ -391,6 +400,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/questionnaire'
     | '/checkout/return'
+    | '/diet-plans/muscle-gain'
     | '/diet-plans/weight-loss'
     | '/tools/bmr-calculator'
     | '/tools/calorie-counter'
@@ -430,6 +440,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/questionnaire'
     | '/checkout/return'
+    | '/diet-plans/muscle-gain'
     | '/diet-plans/weight-loss'
     | '/tools/bmr-calculator'
     | '/tools/calorie-counter'
@@ -470,6 +481,7 @@ export interface FileRouteTypes {
     | '/_authenticated/plans'
     | '/_authenticated/questionnaire'
     | '/checkout/return'
+    | '/diet-plans/muscle-gain'
     | '/diet-plans/weight-loss'
     | '/tools/bmr-calculator'
     | '/tools/calorie-counter'
@@ -507,6 +519,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  DietPlansMuscleGainRoute: typeof DietPlansMuscleGainRoute
   DietPlansWeightLossRoute: typeof DietPlansWeightLossRoute
   ToolsBmrCalculatorRoute: typeof ToolsBmrCalculatorRoute
   ToolsCalorieCounterRoute: typeof ToolsCalorieCounterRoute
@@ -705,6 +718,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DietPlansWeightLossRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/diet-plans/muscle-gain': {
+      id: '/diet-plans/muscle-gain'
+      path: '/diet-plans/muscle-gain'
+      fullPath: '/diet-plans/muscle-gain'
+      preLoaderRoute: typeof DietPlansMuscleGainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/return': {
       id: '/checkout/return'
       path: '/return'
@@ -853,6 +873,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  DietPlansMuscleGainRoute: DietPlansMuscleGainRoute,
   DietPlansWeightLossRoute: DietPlansWeightLossRoute,
   ToolsBmrCalculatorRoute: ToolsBmrCalculatorRoute,
   ToolsCalorieCounterRoute: ToolsCalorieCounterRoute,
