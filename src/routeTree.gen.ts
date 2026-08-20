@@ -29,6 +29,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
+import { Route as DietPlansIndexRouteImport } from './routes/diet-plans.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ToolsMacroCalculatorRouteImport } from './routes/tools.macro-calculator'
 import { Route as ToolsCalorieCounterRouteImport } from './routes/tools.calorie-counter'
@@ -143,6 +144,11 @@ const IndexRoute = IndexRouteImport.update({
 const ToolsIndexRoute = ToolsIndexRouteImport.update({
   id: '/tools/',
   path: '/tools/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DietPlansIndexRoute = DietPlansIndexRouteImport.update({
+  id: '/diet-plans/',
+  path: '/diet-plans/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/admin/': typeof AdminIndexRoute
+  '/diet-plans/': typeof DietPlansIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -299,6 +306,7 @@ export interface FileRoutesByTo {
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/admin': typeof AdminIndexRoute
+  '/diet-plans': typeof DietPlansIndexRoute
   '/tools': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -338,6 +346,7 @@ export interface FileRoutesById {
   '/tools/calorie-counter': typeof ToolsCalorieCounterRoute
   '/tools/macro-calculator': typeof ToolsMacroCalculatorRoute
   '/admin/': typeof AdminIndexRoute
+  '/diet-plans/': typeof DietPlansIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -377,6 +386,7 @@ export interface FileRouteTypes {
     | '/tools/calorie-counter'
     | '/tools/macro-calculator'
     | '/admin/'
+    | '/diet-plans/'
     | '/tools/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -414,6 +424,7 @@ export interface FileRouteTypes {
     | '/tools/calorie-counter'
     | '/tools/macro-calculator'
     | '/admin'
+    | '/diet-plans'
     | '/tools'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -452,6 +463,7 @@ export interface FileRouteTypes {
     | '/tools/calorie-counter'
     | '/tools/macro-calculator'
     | '/admin/'
+    | '/diet-plans/'
     | '/tools/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -487,6 +499,7 @@ export interface RootRouteChildren {
   ToolsCalorieCounterRoute: typeof ToolsCalorieCounterRoute
   ToolsMacroCalculatorRoute: typeof ToolsMacroCalculatorRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  DietPlansIndexRoute: typeof DietPlansIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -635,6 +648,13 @@ declare module '@tanstack/react-router' {
       path: '/tools'
       fullPath: '/tools/'
       preLoaderRoute: typeof ToolsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diet-plans/': {
+      id: '/diet-plans/'
+      path: '/diet-plans'
+      fullPath: '/diet-plans/'
+      preLoaderRoute: typeof DietPlansIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -817,6 +837,7 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsCalorieCounterRoute: ToolsCalorieCounterRoute,
   ToolsMacroCalculatorRoute: ToolsMacroCalculatorRoute,
   AdminIndexRoute: AdminIndexRoute,
+  DietPlansIndexRoute: DietPlansIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
