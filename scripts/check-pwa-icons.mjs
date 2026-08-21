@@ -1,7 +1,7 @@
 // Build-time guard: the PWA manifest icon set must be stable and complete
 // across deployments, otherwise Chrome shows an "app identity changed" warning
 // on reinstall. Fails the build when an icon entry is missing, mis-sized, or
-// when the expected any/maskable variants are not both present.
+// when multiple same-size variants could make Android alternate identity art.
 import { readFileSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
@@ -46,12 +46,10 @@ for (const icon of manifest.icons ?? []) {
   icon.hash = createHash("sha256").update(buf).digest("hex").slice(0, 12);
 }
 
-for (const purpose of ["any", "maskable"]) {
-  for (const size of ["192x192", "512x512"]) {
-    const hit = (manifest.icons ?? []).some(
-      (i) => i.purpose === purpose && i.sizes === size,
-    );
-    if (!hit) errors.push(`missing ${purpose} icon at ${size}`);
+for (const size of ["192x192", "512x512"]) {
+  const candidates = (manifest.icons ?? []).filter((icon) => icon.sizes === size);
+  if (candidates.length !== 1 || candidates[0]?.purpose !== "any") {
+    errors.push(`${size} must have exactly one stable 'any' icon candidate`);
   }
 }
 

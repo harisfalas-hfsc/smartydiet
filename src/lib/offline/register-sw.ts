@@ -26,6 +26,11 @@ async function unregisterAppWorker() {
   );
 }
 
+async function deleteLegacyIdentityCache() {
+  if (!("caches" in window)) return;
+  await caches.delete("smartydiet-app-identity");
+}
+
 export function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (registrationPromise) return registrationPromise;
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
@@ -39,12 +44,15 @@ export function registerServiceWorker(): Promise<ServiceWorkerRegistration | nul
     new URLSearchParams(window.location.search).get("sw") === "off";
 
   if (refused) {
-    registrationPromise = unregisterAppWorker().then(() => null).catch(() => null);
+    registrationPromise = Promise.all([unregisterAppWorker(), deleteLegacyIdentityCache()])
+      .then(() => null)
+      .catch(() => null);
     return registrationPromise;
   }
 
   registrationPromise = (async () => {
     try {
+      await deleteLegacyIdentityCache();
       const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
       await navigator.serviceWorker.ready;
       // Periodic update check (hourly) so long-lived PWA sessions stay fresh.
