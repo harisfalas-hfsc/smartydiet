@@ -22,6 +22,12 @@ Object.assign(process.env, serverEnv);
 // Routes precached at install time so a direct offline load of these URLs works.
 const offlineRoutes = ["/", "/about", "/how-it-works", "/plans", "/questionnaire", "/inbox"];
 
+// Each build gets a fresh revision so precached HTML is re-fetched on deploy.
+// Without this (revision: null) the service worker keeps serving the HTML of an
+// older build, which points at hashed CSS/JS files that no longer exist -> the
+// page renders completely unstyled.
+const BUILD_REVISION = `${Date.now().toString(36)}`;
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
