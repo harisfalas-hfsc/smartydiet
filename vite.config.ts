@@ -54,7 +54,7 @@ export default defineConfig({
           skipWaiting: true,
           navigateFallback: "/",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn/],
-          additionalManifestEntries: offlineRoutes.map((url) => ({ url, revision: null })),
+          additionalManifestEntries: offlineRoutes.map((url) => ({ url, revision: BUILD_REVISION })),
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,avif,woff,woff2,ttf,otf,json,txt}"],
           // App-identity files must never be served stale after a reinstall or
           // an offline session: they are revalidated, not precached.
@@ -83,7 +83,7 @@ export default defineConfig({
             {
               urlPattern: ({ request }) =>
                 ["script", "style", "font", "image"].includes(request.destination),
-              handler: "CacheFirst",
+              handler: "StaleWhileRevalidate",
               options: {
                 cacheName: "smartydiet-assets",
                 expiration: { maxEntries: 250, maxAgeSeconds: 90 * 24 * 60 * 60 },
