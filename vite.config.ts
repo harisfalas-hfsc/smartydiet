@@ -22,6 +22,12 @@ Object.assign(process.env, serverEnv);
 // Routes precached at install time so a direct offline load of these URLs works.
 const offlineRoutes = ["/", "/about", "/how-it-works", "/plans", "/questionnaire", "/inbox"];
 
+// Each build gets a fresh revision so precached HTML is re-fetched on deploy.
+// Without this (revision: null) the service worker keeps serving the HTML of an
+// older build, which points at hashed CSS/JS files that no longer exist -> the
+// page renders completely unstyled.
+const BUILD_REVISION = `${Date.now().toString(36)}`;
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
@@ -48,7 +54,7 @@ export default defineConfig({
           skipWaiting: true,
           navigateFallback: "/",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn/],
-          additionalManifestEntries: offlineRoutes.map((url) => ({ url, revision: null })),
+          additionalManifestEntries: offlineRoutes.map((url) => ({ url, revision: BUILD_REVISION })),
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,avif,woff,woff2,ttf,otf,json,txt}"],
           // App-identity files must never be served stale after a reinstall or
           // an offline session: they are revalidated, not precached.
@@ -77,7 +83,7 @@ export default defineConfig({
             {
               urlPattern: ({ request }) =>
                 ["script", "style", "font", "image"].includes(request.destination),
-              handler: "CacheFirst",
+              handler: "StaleWhileRevalidate",
               options: {
                 cacheName: "smartydiet-assets",
                 expiration: { maxEntries: 250, maxAgeSeconds: 90 * 24 * 60 * 60 },
