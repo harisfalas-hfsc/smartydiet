@@ -1,7 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { BookOpen, Compass } from "lucide-react";
+import { SmartyCard, SmartyRow, toneClasses } from "@/components/SmartyCard";
+import { cn } from "@/lib/utils";
 
 const URL = "https://smartydiet.com/glossary";
-const TITLE = "Nutrition Glossary — 25+ terms defined | SmartyDiet";
+const TITLE = "Nutrition Glossary — 25+ diet & nutrition terms | SmartyDiet";
 const DESCRIPTION =
   "Definitions of every nutrition, diet and metabolism term SmartyDiet uses — from BMR and TDEE to Smarty Nutrition Score™ and Smarty Metabolic Age™.";
 
@@ -112,6 +115,45 @@ const TERMS: { term: string; def: string }[] = [
   },
 ];
 
+const EXPLORE: { to: string; label: string; description: string; icon: string }[] = [
+  {
+    to: "/diet-plans",
+    label: "Personalized diet plans",
+    description: "What a custom meal plan includes and how it is calculated.",
+    icon: "📋",
+  },
+  {
+    to: "/diet-plans/weight-loss",
+    label: "Weight loss meal plans",
+    description: "Calorie deficit, protein and hunger control for fat loss.",
+    icon: "⚖️",
+  },
+  {
+    to: "/diet-plans/muscle-gain",
+    label: "Muscle gain diet plans",
+    description: "Calorie surplus, protein distribution and training fuel.",
+    icon: "💪",
+  },
+  {
+    to: "/diet-plans/high-protein",
+    label: "High protein meal plans",
+    description: "How much protein you need and where to get it.",
+    icon: "🥩",
+  },
+  {
+    to: "/meal-planning",
+    label: "Meal planning guide",
+    description: "Plan a week of meals, prep smart and shop once.",
+    icon: "🗓️",
+  },
+  {
+    to: "/sports-nutrition",
+    label: "Sports nutrition",
+    description: "Pre-workout, post-workout and meal timing for training.",
+    icon: "🏃",
+  },
+];
+
 const JSONLD = {
   "@context": "https://schema.org",
   "@graph": [
@@ -145,6 +187,7 @@ export const Route = createFileRoute("/glossary")({
       { property: "og:description", content: DESCRIPTION },
       { property: "og:url", content: URL },
       { property: "og:type", content: "article" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: URL }],
     scripts: [{ type: "application/ld+json", children: JSON.stringify(JSONLD) }],
@@ -153,23 +196,71 @@ export const Route = createFileRoute("/glossary")({
 });
 
 function GlossaryPage() {
-  return (
-    <article className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
-      <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-        Nutrition Glossary
-      </h1>
-      <p className="mt-3 text-muted-foreground">
-        Every metric, diet pattern and concept SmartyDiet uses, defined in plain language.
-      </p>
+  const cyan = toneClasses("cyan");
+  const green = toneClasses("green");
 
-      <dl className="mt-8 divide-y divide-border">
-        {TERMS.map((t) => (
-          <div key={t.term} className="py-4">
-            <dt className="text-lg font-semibold text-foreground">{t.term}</dt>
-            <dd className="mt-1 text-muted-foreground">{t.def}</dd>
-          </div>
-        ))}
-      </dl>
-    </article>
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      <div className="mb-8 text-center">
+        <p className="text-xs font-semibold uppercase tracking-wider text-primary">Resources</p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+          Nutrition <span className="text-primary">Glossary</span>
+        </h1>
+        <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
+          Every metric, diet pattern and concept SmartyDiet uses, defined in plain language.
+        </p>
+      </div>
+
+      <SmartyCard
+        tone="green"
+        eyebrow="Personalized nutrition, built around you"
+        eyebrowIcon="🍏"
+        cornerIcon={Compass}
+        title="How SmartyDiet"
+        accent="works."
+        description="SmartyDiet is an online diet planner that turns a short questionnaire into a personalized diet plan: daily calories from BMR and TDEE, protein, carbohydrate and fat targets, a meal-by-meal menu for 1, 2 or 4 weeks, and a weekly grocery list. Plans respect your goal — weight loss, muscle gain, body recomposition or maintenance — along with allergies, disliked foods, budget, cooking time and eating pattern, including balanced, Mediterranean, high-protein, low-carb, keto, vegetarian and vegan."
+      >
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {EXPLORE.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className={cn(
+                "rounded-2xl border p-4 no-underline transition-colors hover:border-emerald-400",
+                green.softBorder,
+                green.softBg,
+              )}
+              style={{ textDecoration: "none" }}
+            >
+              <SmartyRow tone="green" icon={l.icon} title={l.label} subtitle={l.description} />
+            </Link>
+          ))}
+        </div>
+      </SmartyCard>
+
+      <div className="mt-8">
+        <SmartyCard
+          tone="cyan"
+          eyebrow={`${TERMS.length} terms defined`}
+          eyebrowIcon="📖"
+          cornerIcon={BookOpen}
+          title="Nutrition terms,"
+          accent="explained."
+          description="From BMR and TDEE to the Smarty metrics behind your plan."
+        >
+          <dl className="grid gap-3 sm:grid-cols-2">
+            {TERMS.map((t) => (
+              <div
+                key={t.term}
+                className={cn("rounded-2xl border p-4", cyan.softBorder, cyan.softBg)}
+              >
+                <dt className="text-sm font-bold text-foreground">{t.term}</dt>
+                <dd className="mt-1 text-xs leading-5 text-muted-foreground">{t.def}</dd>
+              </div>
+            ))}
+          </dl>
+        </SmartyCard>
+      </div>
+    </div>
   );
 }

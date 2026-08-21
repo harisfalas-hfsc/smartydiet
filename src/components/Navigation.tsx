@@ -305,7 +305,12 @@ function NavDrawer({
         { to: "/disclaimer", label: "Disclaimer", Icon: AlertTriangle },
       ],
     },
+    {
+      heading: "Resources",
+      items: [{ to: "/glossary", label: "Glossary", Icon: BookOpen }],
+    },
   ];
+
 
   return (
     <div className="fixed inset-0 z-[90]" role="dialog" aria-modal="true">
