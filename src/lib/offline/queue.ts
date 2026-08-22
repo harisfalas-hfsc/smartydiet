@@ -15,6 +15,7 @@ import {
 import { generatePlan, saveQuestionnaire, restorePlanVersion } from "@/lib/plan.functions";
 import { startFreeSession } from "@/lib/free-access.functions";
 import { writeSyncMeta } from "./store";
+import { mirrorOutbox } from "./db";
 
 const store =
   typeof indexedDB !== "undefined" ? createStore("smartydiet-offline", "kv") : undefined;
