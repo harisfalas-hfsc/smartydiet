@@ -15,6 +15,7 @@ import {
 import { generatePlan, saveQuestionnaire, restorePlanVersion } from "@/lib/plan.functions";
 import { startFreeSession } from "@/lib/free-access.functions";
 import { writeSyncMeta } from "./store";
+import { mirrorOutbox } from "./db";
 
 const store =
   typeof indexedDB !== "undefined" ? createStore("smartydiet-offline", "kv") : undefined;
@@ -87,6 +88,18 @@ async function writeQueue(userId: string, items: QueuedMutation[]) {
       pending: items.filter((i) => i.status === "pending").length,
       failed: items.filter((i) => i.status === "failed").length,
     });
+    // Keep the inspectable outbox table in step with the queue.
+    await mirrorOutbox(
+      userId,
+      items.map((i) => ({
+        id: i.id,
+        kind: i.kind,
+        status: i.status,
+        retries: i.retries,
+        lastError: i.lastError,
+        createdAt: i.createdAt,
+      })),
+    );
   } catch {
     /* noop */
   }

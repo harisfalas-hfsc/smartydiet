@@ -11,6 +11,7 @@ import { getConnectivityState, probeBackend } from "@/lib/offline/connectivity";
 import { getOfflineSessionAsync } from "@/lib/offline/credentials";
 import { OFFLINE_KEYS, LOCAL_DB_VERSION, readCached, readSyncMeta } from "@/lib/offline/store";
 import { runBackgroundSync } from "@/lib/offline/sync";
+import { collectDbStats } from "@/lib/offline/db";
 import { getApiOrigin, getPlatform, isNativePlatform, isStandalone } from "@/lib/platform";
 
 export const Route = createFileRoute("/diagnostics")({
@@ -84,6 +85,27 @@ function DiagnosticsPage() {
     out.push({ label: "Plans cached", value: String(sessions?.length ?? 0) });
     out.push({ label: "Questionnaires cached", value: String(questionnaires?.length ?? 0) });
     out.push({ label: "Notifications cached", value: String(notifications?.length ?? 0) });
+
+    // Structured local database (Dexie) — the real proof data is on device.
+    const stats = await collectDbStats(uid);
+    for (const stat of stats) {
+      out.push({
+        label: `DB table "${stat.table}"`,
+        value:
+          `${stat.rows} rows` +
+          (stat.lastSyncedAt ? ` · synced ${fmt(stat.lastSyncedAt)}` : " · never synced"),
+      });
+    }
+
+    if (navigator.storage?.estimate) {
+      const est = await navigator.storage.estimate();
+      const mb = (n?: number) => `${((n ?? 0) / 1_048_576).toFixed(2)} MB`;
+      out.push({ label: "Storage used", value: `${mb(est.usage)} of ${mb(est.quota)}` });
+    }
+    if (navigator.storage?.persisted) {
+      out.push({ label: "Storage persisted", value: String(await navigator.storage.persisted()) });
+    }
+
 
     const meta = await readSyncMeta(uid);
     out.push({ label: "Pending operations", value: String(meta.pending) });

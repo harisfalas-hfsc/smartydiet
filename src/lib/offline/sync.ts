@@ -25,6 +25,7 @@ import {
 import { flushQueue } from "./queue";
 import { warmUrls } from "./register-sw";
 import { refreshStoredSession, setOfflineSession } from "./credentials";
+import { mirrorUserData } from "./mirror";
 import { isOnlineNow, reportRequestFailure, reportRequestSuccess } from "./connectivity";
 
 export const PUBLIC_PAGES = [
@@ -159,6 +160,10 @@ export async function runBackgroundSync(force = false): Promise<void> {
       .order("created_at", { ascending: false });
     const rows = sessionRows ?? [];
     await saveLocal(OFFLINE_KEYS.sessions, userId, rows);
+
+    // Structured mirror: every per-user row lands in its own Dexie table.
+    await mirrorUserData(userId, force);
+
 
     const checkpoint = (await readCached<Checkpoint>(CHECKPOINT, userId)) ?? {
       doneSessionIds: [],

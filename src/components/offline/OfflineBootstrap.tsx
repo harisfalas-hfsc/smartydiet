@@ -16,14 +16,19 @@ export function OfflineBootstrap() {
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
 
+    // The worker registers immediately and independently: it must never be
+    // blocked by a slow connectivity probe or a local DB migration.
+    void registerServiceWorker();
+
+    // Ask the browser to keep our data (prevents silent eviction on mobile).
+    void navigator.storage?.persist?.().catch(() => undefined);
+
+
     // Connectivity MUST be resolved before the first data read, otherwise a
     // native cold start in airplane mode races the network layer and fails.
     void initConnectivity()
       .then(() => migrateLocalDatabase())
       .then(async () => {
-        // On published installs, wait until the generated offline shell and all
-        // of its JS/CSS dependencies are ready before warming application data.
-        await registerServiceWorker();
         void runBackgroundSync();
         unsubscribe = subscribeConnectivity((online) => {
           if (!online) return;
@@ -33,10 +38,14 @@ export function OfflineBootstrap() {
         });
       });
 
+    // Periodic top-up while the app stays open (multi-device convergence).
+    const interval = window.setInterval(() => void runBackgroundSync(), 5 * 60 * 1000);
+
     const onVisible = () => {
       if (document.visibilityState === "visible") void runBackgroundSync();
     };
     document.addEventListener("visibilitychange", onVisible);
+
 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
@@ -47,6 +56,7 @@ export function OfflineBootstrap() {
     return () => {
       sub.subscription.unsubscribe();
       document.removeEventListener("visibilitychange", onVisible);
+      window.clearInterval(interval);
       unsubscribe?.();
     };
   }, []);
