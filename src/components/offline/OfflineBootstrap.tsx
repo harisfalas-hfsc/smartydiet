@@ -52,6 +52,7 @@ export function OfflineBootstrap() {
     return () => {
       sub.subscription.unsubscribe();
       document.removeEventListener("visibilitychange", onVisible);
+      window.clearInterval(interval);
       unsubscribe?.();
     };
   }, []);
