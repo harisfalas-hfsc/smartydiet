@@ -160,6 +160,10 @@ export async function runBackgroundSync(force = false): Promise<void> {
     const rows = sessionRows ?? [];
     await saveLocal(OFFLINE_KEYS.sessions, userId, rows);
 
+    // Structured mirror: every per-user row lands in its own Dexie table.
+    await mirrorUserData(userId, force);
+
+
     const checkpoint = (await readCached<Checkpoint>(CHECKPOINT, userId)) ?? {
       doneSessionIds: [],
       updatedAt: 0,
