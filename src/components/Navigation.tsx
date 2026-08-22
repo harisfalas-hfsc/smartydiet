@@ -1,4 +1,5 @@
 import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
+import { registerDebugTap } from "@/lib/offline/debug-gesture";
 import {
   LogOut,
   Menu,
