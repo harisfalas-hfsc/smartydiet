@@ -117,6 +117,11 @@ export function Navigation() {
             to="/"
             aria-label={pathname === "/" ? "Refresh SmartyDiet" : "SmartyDiet home"}
             onClick={(event) => {
+              if (registerDebugTap()) {
+                event.preventDefault();
+                window.location.assign("/diagnostics?qa=1");
+                return;
+              }
               if (pathname !== "/") return;
               event.preventDefault();
               window.location.reload();
