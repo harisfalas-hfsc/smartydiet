@@ -25,6 +25,7 @@ import {
 import { flushQueue } from "./queue";
 import { warmUrls } from "./register-sw";
 import { refreshStoredSession, setOfflineSession } from "./credentials";
+import { mirrorUserData } from "./mirror";
 import { isOnlineNow, reportRequestFailure, reportRequestSuccess } from "./connectivity";
 
 export const PUBLIC_PAGES = [
