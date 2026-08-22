@@ -20,6 +20,10 @@ export function OfflineBootstrap() {
     // blocked by a slow connectivity probe or a local DB migration.
     void registerServiceWorker();
 
+    // Ask the browser to keep our data (prevents silent eviction on mobile).
+    void navigator.storage?.persist?.().catch(() => undefined);
+
+
     // Connectivity MUST be resolved before the first data read, otherwise a
     // native cold start in airplane mode races the network layer and fails.
     void initConnectivity()
