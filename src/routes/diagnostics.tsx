@@ -11,6 +11,7 @@ import { getConnectivityState, probeBackend } from "@/lib/offline/connectivity";
 import { getOfflineSessionAsync } from "@/lib/offline/credentials";
 import { OFFLINE_KEYS, LOCAL_DB_VERSION, readCached, readSyncMeta } from "@/lib/offline/store";
 import { runBackgroundSync } from "@/lib/offline/sync";
+import { collectDbStats } from "@/lib/offline/db";
 import { getApiOrigin, getPlatform, isNativePlatform, isStandalone } from "@/lib/platform";
 
 export const Route = createFileRoute("/diagnostics")({
