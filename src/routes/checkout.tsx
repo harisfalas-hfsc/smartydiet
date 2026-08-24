@@ -13,6 +13,8 @@ import { generatePlan } from "@/lib/plan.functions";
 import { analytics } from "@/lib/analytics";
 import { getPurchaseChannel, NATIVE_PURCHASE_UNAVAILABLE_MESSAGE } from "@/lib/purchases";
 import { TrustBar } from "@/components/Testimonials";
+import { isAdminEmail } from "@/lib/admin";
+import { useAuth } from "@/hooks/useAuth";
 
 type Search = { qid?: string; weeks?: number };
 
@@ -41,7 +43,10 @@ function CheckoutPage() {
   const create = useServerFn(createDietCheckout);
   const startFree = useServerFn(startFreeSession);
   const generate = useServerFn(generatePlan);
-  const { freeAccessMode, loading: freeLoading } = useFreeAccessMode();
+  const { freeAccessMode: freeModeSetting, loading: freeLoading } = useFreeAccessMode();
+  const { user } = useAuth();
+  // Admins never pay: they take the same complimentary path as Free Access Mode.
+  const freeAccessMode = freeModeSetting || isAdminEmail(user?.email);
   const [freeMessage, setFreeMessage] = useState("Building your plan… this can take up to 2 minutes.");
   const [weeks, setWeeks] = useState<1 | 2 | 4 | null>(null);
   const [ready, setReady] = useState(false);

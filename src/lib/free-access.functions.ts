@@ -45,7 +45,22 @@ export const startFreeSession = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<{ sessionId: string } | { error: string }> => {
     const { readFreeAccessMode } = await import("@/lib/free-access.server");
-    if (!(await readFreeAccessMode())) return { error: "Free access mode is not enabled" };
+    if (!(await readFreeAccessMode())) {
+      // Admins always get complimentary access, even in normal paid mode.
+      const email = (context.claims as { email?: string } | null)?.email;
+      let allowed = isAdminEmail(email);
+      if (!allowed) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: role } = await supabaseAdmin
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", context.userId)
+          .eq("role", "admin")
+          .maybeSingle();
+        allowed = !!role;
+      }
+      if (!allowed) return { error: "Free access mode is not enabled" };
+    }
 
     const { supabase, userId } = context;
     const { data: q, error: qErr } = await supabase
