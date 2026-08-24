@@ -5,8 +5,8 @@ import { Compass, BookOpen, Brain } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
-import {
 import { StartPlanLink } from "@/components/StartPlanLink";
+import {
   SmartyCard,
   SmartyPill,
   SmartyRow,
