@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import heroNutrition from "@/assets/hero-nutrition.jpg";
+import { Testimonials } from "@/components/Testimonials";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -153,6 +154,8 @@ function Home() {
           </div>
         </div>
       </section>
+
+      <Testimonials />
 
     </div>
   );

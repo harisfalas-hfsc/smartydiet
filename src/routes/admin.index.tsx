@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   Users,
   Lock,
+  Sparkles,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import { AdminUsersTab } from "@/components/admin/AdminUsersTab";
 import { AdminRevenueTab } from "@/components/admin/AdminRevenueTab";
 import { AdminPlansTab } from "@/components/admin/AdminPlansTab";
 import { AdminPaymentsTab } from "@/components/admin/AdminPaymentsTab";
+import { AdminGrowthTab } from "@/components/admin/AdminGrowthTab";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
@@ -37,7 +39,14 @@ export const Route = createFileRoute("/admin/")({
   component: AdminPage,
 });
 
-type SectionKey = "revenue" | "plans" | "messages" | "members" | "customers" | "payments";
+type SectionKey =
+  | "revenue"
+  | "plans"
+  | "messages"
+  | "members"
+  | "customers"
+  | "payments"
+  | "growth";
 
 const SECTIONS: Array<{
   key: SectionKey;
@@ -51,6 +60,7 @@ const SECTIONS: Array<{
   { key: "members", label: "Members", description: "All accounts", Icon: Users },
   { key: "customers", label: "Customers", description: "Paying members", Icon: Crown },
   { key: "payments", label: "Payments", description: "Free access mode", Icon: Lock },
+  { key: "growth", label: "Growth", description: "Testimonials & emails", Icon: Sparkles },
 ];
 
 function AdminPage() {
@@ -185,6 +195,7 @@ function AdminPage() {
           {section === "members" && <AdminUsersTab />}
           {section === "customers" && <AdminUsersTab onlyCustomers />}
           {section === "payments" && <AdminPaymentsTab />}
+          {section === "growth" && <AdminGrowthTab />}
         </div>
       )}
     </div>
