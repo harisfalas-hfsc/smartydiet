@@ -1,17 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+
 export type AccountExport = {
   exported_at: string;
   account: { id: string; email: string | null };
-  profile: unknown;
-  questionnaires: unknown[];
-  generation_sessions: unknown[];
-  diet_plans: unknown[];
-  purchases: unknown[];
-  notifications: unknown[];
-  support_threads: unknown[];
-  support_messages: unknown[];
+  profile: Json | null;
+  questionnaires: Json[];
+  generation_sessions: Json[];
+  diet_plans: Json[];
+  purchases: Json[];
+  notifications: Json[];
+  support_threads: Json[];
+  support_messages: Json[];
 };
 
 /** Right to Data Portability: returns every row belonging to the caller. */
@@ -30,7 +32,7 @@ export const exportMyAccountData = createServerFn({ method: "POST" })
     ]);
 
     const threadRows = threads.data ?? [];
-    let messages: unknown[] = [];
+    let messages: Json[] = [];
     if (threadRows.length) {
       const { data } = await supabase
         .from("support_messages")
@@ -39,7 +41,7 @@ export const exportMyAccountData = createServerFn({ method: "POST" })
           "thread_id",
           threadRows.map((t: { id: string }) => t.id),
         );
-      messages = data ?? [];
+      messages = (data ?? []) as Json[];
     }
 
     const sessionRows = sessions.data ?? [];
@@ -47,9 +49,9 @@ export const exportMyAccountData = createServerFn({ method: "POST" })
     return {
       exported_at: new Date().toISOString(),
       account: { id: userId, email: (claims?.email as string | undefined) ?? null },
-      profile: profile.data ?? null,
-      questionnaires: questionnaires.data ?? [],
-      generation_sessions: sessionRows,
+      profile: (profile.data ?? null) as Json | null,
+      questionnaires: (questionnaires.data ?? []) as Json[],
+      generation_sessions: sessionRows as Json[],
       diet_plans: plans.data ?? [],
       // Purchase history is the payment side of each generation session.
       purchases: sessionRows
@@ -62,9 +64,9 @@ export const exportMyAccountData = createServerFn({ method: "POST" })
           stripe_session_id: s['stripe_session_id'],
           stripe_payment_intent: s['stripe_payment_intent'],
           created_at: s['created_at'],
-        })),
-      notifications: notifications.data ?? [],
-      support_threads: threadRows,
+        })) as Json[],
+      notifications: (notifications.data ?? []) as Json[],
+      support_threads: threadRows as Json[],
       support_messages: messages,
     };
   });
