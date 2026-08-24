@@ -60,10 +60,11 @@ function Home() {
   }, [user, loading]);
 
 
-  const heroCtaLabel =
-    cta.kind === "member" ? "View my diet plans" : "Get started";
-  const heroCtaTo =
-    cta.kind === "member" ? "/plans" : "/questionnaire";
+  const isMember = cta.kind === "member";
+  const heroCtaLabel = isMember ? "Create a plan" : "Get started";
+  const heroCtaTo = "/questionnaire" as const;
+  const secondaryLabel = isMember ? "View my diet plans" : "How it works";
+  const secondaryTo = isMember ? "/plans" : "/how-it-works";
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col px-4 pb-8 pt-0 sm:pb-12">
