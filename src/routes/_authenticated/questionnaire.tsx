@@ -77,6 +77,10 @@ function QuestionnairePage() {
   }, [user?.id]);
 
   useEffect(() => {
+    analytics.questionnaireStart();
+  }, []);
+
+  useEffect(() => {
     if (!user?.id) return;
     void saveLocal<SavedDraft>(OFFLINE_KEYS.questionnaireDraft, user.id, {
       data,
@@ -84,6 +88,7 @@ function QuestionnairePage() {
       durationWeeks,
     });
   }, [data, step, durationWeeks, user?.id]);
+
 
   const upd = <K extends keyof QuestionnaireData>(key: K, patch: Partial<QuestionnaireData[K]>) =>
     setData((d) => {
