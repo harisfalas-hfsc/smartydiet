@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+import type { Json } from "@/integrations/supabase/types";
 
 export type AccountExport = {
   exported_at: string;
