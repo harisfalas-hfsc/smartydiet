@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { SmartyCard, SmartyRow, SmartyPill, toneClasses } from "@/components/SmartyCard";
 import { cn } from "@/lib/utils";
+import { StartPlanLink } from "@/components/StartPlanLink";
 
 const URL = "https://smartydiet.com/nutrition-intelligence";
 const TITLE =
@@ -261,7 +262,7 @@ function NutritionIntelligencePage() {
       {/* CTA */}
       <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Button asChild size="lg">
-          <Link to="/questionnaire">Create my diet plan</Link>
+          <StartPlanLink>Create my diet plan</StartPlanLink>
         </Button>
         <Button asChild size="lg" variant="outline">
           <Link to="/about">About SmartyDiet</Link>

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import heroNutrition from "@/assets/hero-nutrition.jpg";
 import { Testimonials } from "@/components/Testimonials";
+import { useStartPlanTarget } from "@/components/StartPlanLink";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -62,7 +63,9 @@ function Home() {
 
   const isMember = cta.kind === "member";
   const heroCtaLabel = isMember ? "Create a plan" : "Get started";
-  const heroCtaTo = "/questionnaire" as const;
+  const startTarget = useStartPlanTarget();
+  const heroCtaTo = startTarget.to;
+  const heroCtaSearch = startTarget.search as never;
   const secondaryLabel = isMember ? "View my diet plans" : "How it works";
   const secondaryTo = isMember ? "/plans" : "/how-it-works";
 
@@ -84,6 +87,7 @@ function Home() {
         <div className="mt-8 flex flex-col gap-3">
           <Link
             to={heroCtaTo}
+            search={heroCtaSearch}
             className="flex h-14 w-full items-center justify-center rounded-full bg-primary text-[16px] font-extrabold text-primary-foreground no-underline"
             style={{ textDecoration: "none" }}
           >
@@ -138,6 +142,7 @@ function Home() {
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link
                 to={heroCtaTo}
+                search={heroCtaSearch}
                 className="inline-flex h-12 items-center rounded-full bg-primary px-8 text-base font-bold text-primary-foreground no-underline hover:opacity-95"
               >
                 {heroCtaLabel}
