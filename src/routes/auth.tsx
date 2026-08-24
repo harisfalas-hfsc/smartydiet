@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
+import { analytics } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,6 +111,7 @@ function Auth() {
         },
       });
       if (error) throw error;
+      analytics.signUp();
       if (data.session) {
         await ensureProfile(data.user, cleanName);
         goNext();
@@ -160,6 +162,7 @@ function Auth() {
         password,
       });
       if (error) throw error;
+      analytics.login();
       await ensureProfile(data.user);
       if (data.user && data.session) {
         const meta = data.user.user_metadata ?? {};

@@ -29,6 +29,7 @@ import {
 import { saveQuestionnaire } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+import { analytics } from "@/lib/analytics";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
 import { useAuth } from "@/hooks/useAuth";
@@ -77,6 +78,10 @@ function QuestionnairePage() {
   }, [user?.id]);
 
   useEffect(() => {
+    analytics.questionnaireStart();
+  }, []);
+
+  useEffect(() => {
     if (!user?.id) return;
     void saveLocal<SavedDraft>(OFFLINE_KEYS.questionnaireDraft, user.id, {
       data,
@@ -84,6 +89,7 @@ function QuestionnairePage() {
       durationWeeks,
     });
   }, [data, step, durationWeeks, user?.id]);
+
 
   const upd = <K extends keyof QuestionnaireData>(key: K, patch: Partial<QuestionnaireData[K]>) =>
     setData((d) => {
@@ -117,6 +123,7 @@ function QuestionnairePage() {
 
   async function submit() {
     if (!user?.id) return toast.error("Sign in to save your questionnaire.");
+    analytics.questionnaireComplete(durationWeeks);
     setBusy(true);
     try {
       if (!online) {

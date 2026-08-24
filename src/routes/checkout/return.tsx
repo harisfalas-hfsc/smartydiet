@@ -6,6 +6,7 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { analytics } from "@/lib/analytics";
 
 export const Route = createFileRoute("/checkout/return")({
   ssr: false,
@@ -45,6 +46,7 @@ function Return() {
           setMessage("We could not confirm your payment yet. Please contact support.");
           return;
         }
+        analytics.purchase(session_id);
         setMessage("Payment confirmed. Building your plan… this can take up to 2 minutes.");
         const planRes = await generate({ data: { sessionId: paidRes.generationSessionId } });
         if (planRes.error && planRes.error !== "No credits remaining") {
@@ -52,6 +54,7 @@ function Return() {
           setMessage(planRes.error);
           return;
         }
+        analytics.planReady(false);
         setStatus("done");
         setMessage("Your plan is ready. Opening it now…");
         navigate({
