@@ -60,10 +60,11 @@ function Home() {
   }, [user, loading]);
 
 
-  const heroCtaLabel =
-    cta.kind === "member" ? "View my diet plans" : "Get started";
-  const heroCtaTo =
-    cta.kind === "member" ? "/plans" : "/questionnaire";
+  const isMember = cta.kind === "member";
+  const heroCtaLabel = isMember ? "Create a plan" : "Get started";
+  const heroCtaTo = "/questionnaire" as const;
+  const secondaryLabel = isMember ? "View my diet plans" : "How it works";
+  const secondaryTo = isMember ? "/plans" : "/how-it-works";
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col px-4 pb-8 pt-0 sm:pb-12">
@@ -89,11 +90,11 @@ function Home() {
             {heroCtaLabel}
           </Link>
           <Link
-            to="/how-it-works"
+            to={secondaryTo}
             className="flex h-14 w-full items-center justify-center rounded-full border-2 border-primary text-[16px] font-bold text-primary no-underline"
             style={{ textDecoration: "none" }}
           >
-            How it works
+            {secondaryLabel}
           </Link>
           <Link
             to="/tools"
@@ -142,10 +143,16 @@ function Home() {
                 {heroCtaLabel}
               </Link>
               <Link
-                to="/how-it-works"
+                to={secondaryTo}
                 className="inline-flex h-12 items-center rounded-full border-2 border-white/80 bg-white/10 px-8 text-base font-bold text-white no-underline backdrop-blur-sm hover:bg-white/20"
               >
-                How it works
+                {secondaryLabel}
+              </Link>
+              <Link
+                to="/tools"
+                className="inline-flex h-12 items-center rounded-full border-2 border-white/40 px-8 text-base font-bold text-white no-underline hover:bg-white/10"
+              >
+                Free nutrition tools
               </Link>
             </div>
             <p className="mt-4 text-sm text-white/60">
