@@ -11,6 +11,8 @@ import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import { startFreeSession } from "@/lib/free-access.functions";
 import { generatePlan } from "@/lib/plan.functions";
 import { analytics } from "@/lib/analytics";
+import { getPurchaseChannel, NATIVE_PURCHASE_UNAVAILABLE_MESSAGE } from "@/lib/purchases";
+import { TrustBar } from "@/components/Testimonials";
 
 type Search = { qid?: string; weeks?: number };
 
@@ -116,6 +118,17 @@ function CheckoutPage() {
     );
   }
 
+  if (getPurchaseChannel() === "unavailable") {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <h1 className="text-xl font-extrabold">Almost there</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {NATIVE_PURCHASE_UNAVAILABLE_MESSAGE}
+        </p>
+      </div>
+    );
+  }
+
   if (!ready) {
     return (
       <div className="mx-auto flex min-h-[50vh] max-w-md items-center justify-center px-4">
@@ -137,6 +150,7 @@ function CheckoutPage() {
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
       </div>
+      <TrustBar className="mt-6" />
       <button
         onClick={() => navigate({ to: "/questionnaire" })}
         className="mt-4 text-sm text-muted-foreground underline"

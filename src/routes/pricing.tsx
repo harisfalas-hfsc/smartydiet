@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { HandCoins } from "lucide-react";
 import { SmartyCard, SmartyPill, toneClasses } from "@/components/SmartyCard";
 import { cn } from "@/lib/utils";
+import { EmailCapture } from "@/components/EmailCapture";
+import { Testimonials, TrustBar } from "@/components/Testimonials";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -124,6 +126,15 @@ function PricingPage() {
           Not medical advice. Consult a professional for medical conditions.
         </p>
       </SmartyCard>
+
+      <TrustBar className="mt-6" />
+      <Testimonials />
+      <EmailCapture
+        source="pricing"
+        className="mt-6"
+        title="Not ready yet? Get free nutrition tips"
+        subtitle="Leave your email and we'll send practical tips plus new tools. No spam, unsubscribe any time."
+      />
     </div>
   );
 }
