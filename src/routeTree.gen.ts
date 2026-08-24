@@ -40,6 +40,7 @@ import { Route as DietPlansWeightLossRouteImport } from './routes/diet-plans.wei
 import { Route as DietPlansMuscleGainRouteImport } from './routes/diet-plans.muscle-gain'
 import { Route as DietPlansHighProteinRouteImport } from './routes/diet-plans.high-protein'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQuestionnaireRouteImport } from './routes/_authenticated/questionnaire'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
 import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
@@ -206,6 +207,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/return',
   getParentRoute: () => CheckoutRoute,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQuestionnaireRoute =
   AuthenticatedQuestionnaireRouteImport.update({
     id: '/questionnaire',
@@ -295,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/inbox': typeof AuthenticatedInboxRoute
   '/plans': typeof AuthenticatedPlansRouteWithChildren
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/diet-plans/high-protein': typeof DietPlansHighProteinRoute
   '/diet-plans/muscle-gain': typeof DietPlansMuscleGainRoute
@@ -338,6 +345,7 @@ export interface FileRoutesByTo {
   '/inbox': typeof AuthenticatedInboxRoute
   '/plans': typeof AuthenticatedPlansRouteWithChildren
   '/questionnaire': typeof AuthenticatedQuestionnaireRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/diet-plans/high-protein': typeof DietPlansHighProteinRoute
   '/diet-plans/muscle-gain': typeof DietPlansMuscleGainRoute
@@ -383,6 +391,7 @@ export interface FileRoutesById {
   '/_authenticated/inbox': typeof AuthenticatedInboxRoute
   '/_authenticated/plans': typeof AuthenticatedPlansRouteWithChildren
   '/_authenticated/questionnaire': typeof AuthenticatedQuestionnaireRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/diet-plans/high-protein': typeof DietPlansHighProteinRoute
   '/diet-plans/muscle-gain': typeof DietPlansMuscleGainRoute
@@ -428,6 +437,7 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/plans'
     | '/questionnaire'
+    | '/settings'
     | '/checkout/return'
     | '/diet-plans/high-protein'
     | '/diet-plans/muscle-gain'
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/plans'
     | '/questionnaire'
+    | '/settings'
     | '/checkout/return'
     | '/diet-plans/high-protein'
     | '/diet-plans/muscle-gain'
@@ -515,6 +526,7 @@ export interface FileRouteTypes {
     | '/_authenticated/inbox'
     | '/_authenticated/plans'
     | '/_authenticated/questionnaire'
+    | '/_authenticated/settings'
     | '/checkout/return'
     | '/diet-plans/high-protein'
     | '/diet-plans/muscle-gain'
@@ -792,6 +804,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof CheckoutRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/questionnaire': {
       id: '/_authenticated/questionnaire'
       path: '/questionnaire'
@@ -887,12 +906,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInboxRoute: typeof AuthenticatedInboxRoute
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRouteWithChildren
   AuthenticatedQuestionnaireRoute: typeof AuthenticatedQuestionnaireRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInboxRoute: AuthenticatedInboxRoute,
   AuthenticatedPlansRoute: AuthenticatedPlansRouteWithChildren,
   AuthenticatedQuestionnaireRoute: AuthenticatedQuestionnaireRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
