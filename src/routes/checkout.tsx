@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import { startFreeSession } from "@/lib/free-access.functions";
 import { generatePlan } from "@/lib/plan.functions";
+import { analytics } from "@/lib/analytics";
 
 type Search = { qid?: string; weeks?: number };
 
@@ -75,6 +76,7 @@ function CheckoutPage() {
         toast.error(planRes.error);
         return;
       }
+      analytics.planReady(true);
       navigate({ to: "/plans/$sessionId", params: { sessionId: res.sessionId }, replace: true });
     })();
     return () => {
@@ -86,6 +88,7 @@ function CheckoutPage() {
     () => ({
       fetchClientSecret: async () => {
         if (!qid || !weeks) throw new Error("Missing questionnaire");
+        analytics.beginCheckout(weeks);
         const res = await create({
           data: {
             questionnaireId: qid,

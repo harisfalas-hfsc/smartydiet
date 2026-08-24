@@ -29,6 +29,7 @@ import {
 import { saveQuestionnaire } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+import { analytics } from "@/lib/analytics";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
 import { useAuth } from "@/hooks/useAuth";
@@ -122,6 +123,7 @@ function QuestionnairePage() {
 
   async function submit() {
     if (!user?.id) return toast.error("Sign in to save your questionnaire.");
+    analytics.questionnaireComplete(durationWeeks);
     setBusy(true);
     try {
       if (!online) {
