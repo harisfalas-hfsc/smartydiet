@@ -90,11 +90,11 @@ function Home() {
             {heroCtaLabel}
           </Link>
           <Link
-            to="/how-it-works"
+            to={secondaryTo}
             className="flex h-14 w-full items-center justify-center rounded-full border-2 border-primary text-[16px] font-bold text-primary no-underline"
             style={{ textDecoration: "none" }}
           >
-            How it works
+            {secondaryLabel}
           </Link>
           <Link
             to="/tools"
