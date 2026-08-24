@@ -21,6 +21,7 @@ import {
   Sun,
   Moon,
   ShieldOff,
+  Settings,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -184,6 +185,11 @@ export function Navigation() {
                       <DropdownMenuItem asChild>
                         <Link to="/inbox" search={{ tab: "updates" as const, compose: false }}>
                           Inbox
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings">
+                          <Settings className="h-4 w-4 mr-2" /> Settings
                         </Link>
                       </DropdownMenuItem>
                       {isAdmin && (
