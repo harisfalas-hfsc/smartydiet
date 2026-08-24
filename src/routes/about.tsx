@@ -6,6 +6,7 @@ import { Compass, BookOpen, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import {
+import { StartPlanLink } from "@/components/StartPlanLink";
   SmartyCard,
   SmartyPill,
   SmartyRow,
@@ -149,7 +150,7 @@ function AboutPage() {
 
       <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Button asChild size="lg">
-          <Link to="/questionnaire">Create my diet plan</Link>
+          <StartPlanLink>Create my diet plan</StartPlanLink>
         </Button>
         <Button asChild size="lg" variant="outline">
           <Link to="/tools">Explore free tools</Link>

@@ -6,6 +6,7 @@ import { SmartyCard, SmartyPill, toneClasses } from "@/components/SmartyCard";
 import { cn } from "@/lib/utils";
 import { EmailCapture } from "@/components/EmailCapture";
 import { Testimonials, TrustBar } from "@/components/Testimonials";
+import { StartPlanLink } from "@/components/StartPlanLink";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -116,7 +117,7 @@ function PricingPage() {
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Button asChild size="lg">
-            <Link to="/questionnaire">Create my diet plan — €9.99</Link>
+            <StartPlanLink>Create my diet plan — €9.99</StartPlanLink>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link to="/how-it-works">How it works</Link>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Flame, PieChart, Calculator } from "lucide-react";
 import { SmartyCard, SmartyRow } from "@/components/SmartyCard";
+import { StartPlanLink } from "@/components/StartPlanLink";
 
 export const Route = createFileRoute("/tools/")({
   head: () => ({
@@ -93,9 +94,9 @@ function ToolsPage() {
 
       <div className="mt-8 text-center text-xs text-muted-foreground">
         Want a full plan built from your numbers?{" "}
-        <Link to="/questionnaire" className="font-semibold text-primary">
+        <StartPlanLink className="font-semibold text-primary">
           Create your Smarty Meal Plan™ →
-        </Link>
+        </StartPlanLink>
       </div>
     </div>
   );

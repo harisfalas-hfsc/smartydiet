@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
 import { SmartyCard } from "@/components/SmartyCard";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+import { StartPlanLink } from "@/components/StartPlanLink";
 
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
@@ -112,7 +113,7 @@ function HowItWorks() {
 
       <div className="mt-8 flex justify-center">
         <Button asChild size="lg">
-          <Link to="/questionnaire">{freeAccessMode ? "Start my plan" : "Start my plan — €9.99"}</Link>
+          <StartPlanLink>{freeAccessMode ? "Start my plan" : "Start my plan — €9.99"}</StartPlanLink>
         </Button>
       </div>
     </div>
