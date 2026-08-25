@@ -16,6 +16,7 @@ import { TrustBar } from "@/components/Testimonials";
 import { isAdminEmail } from "@/lib/admin";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { waitForPlanGeneration } from "@/lib/generation-client";
 
 type Search = { qid?: string; weeks?: number };
 
@@ -89,24 +90,34 @@ function CheckoutPage() {
     setFreeError(false);
     setFreeMessage("Building your plan… this can take up to 2 minutes.");
     (async () => {
-      const res = await startFree({ data: { questionnaireId: qid, durationWeeks: weeks } });
-      if (cancelled) return;
-      if ("error" in res) {
+      try {
+        const res = await startFree({ data: { questionnaireId: qid, durationWeeks: weeks } });
+        if (cancelled) return;
+        if ("error" in res) {
+          setFreeError(true);
+          setFreeMessage(res.error);
+          toast.error(res.error);
+          return;
+        }
+        const planRes = await waitForPlanGeneration(
+          generate({ data: { sessionId: res.sessionId } }),
+        );
+        if (cancelled) return;
+        if (planRes.error) {
+          setFreeError(true);
+          setFreeMessage(planRes.error);
+          toast.error(planRes.error);
+          return;
+        }
+        analytics.planReady(true);
+        navigate({ to: "/plans/$sessionId", params: { sessionId: res.sessionId }, replace: true });
+      } catch (error) {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : "Plan generation failed.";
         setFreeError(true);
-        setFreeMessage(res.error);
-        toast.error(res.error);
-        return;
+        setFreeMessage(message);
+        toast.error(message);
       }
-      const planRes = await generate({ data: { sessionId: res.sessionId } });
-      if (cancelled) return;
-      if (planRes.error) {
-        setFreeError(true);
-        setFreeMessage(planRes.error);
-        toast.error(planRes.error);
-        return;
-      }
-      analytics.planReady(true);
-      navigate({ to: "/plans/$sessionId", params: { sessionId: res.sessionId }, replace: true });
     })();
     return () => {
       cancelled = true;

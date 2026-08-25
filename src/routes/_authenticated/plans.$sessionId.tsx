@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
 import { enqueueMutation } from "@/lib/offline/queue";
+import { waitForPlanGeneration } from "@/lib/generation-client";
 
 export const Route = createFileRoute("/_authenticated/plans/$sessionId")({
   head: () => ({
@@ -112,7 +113,7 @@ function PlanView() {
     setAutoGenerating(true);
     setGenerationError(null);
     try {
-      const res = await generate({ data: { sessionId } });
+      const res = await waitForPlanGeneration(generate({ data: { sessionId } }));
       if (res.error) {
         setGenerationError(res.error);
         toast.error(res.error);
@@ -132,13 +133,13 @@ function PlanView() {
   // Recovery: paid, no plan → auto-generate.
   useEffect(() => {
     if (!online) return;
-    if (!session || versions.length > 0 || autoGenerating) return;
+    if (!session || versions.length > 0 || autoGenerating || generationError) return;
     if (session.status !== "paid") return;
     if ((session.credits_used ?? 0) > 0) return;
     setAutoGenerating(true);
     setGenerationError(null);
     void runGeneration();
-  }, [session, versions.length, autoGenerating, online]);
+  }, [session, versions.length, autoGenerating, generationError, online]);
 
   async function refine() {
     if (!refineText.trim()) return toast.error("Describe the change you want");
@@ -159,9 +160,9 @@ function PlanView() {
         toast.success("Saved offline. Your refinement will run when you reconnect.");
         return;
       }
-      const res = await generate({
-        data: { sessionId, refinement: refineText.trim() },
-      });
+      const res = await waitForPlanGeneration(
+        generate({ data: { sessionId, refinement: refineText.trim() } }),
+      );
       if (res.error) throw new Error(res.error);
       setRefineText("");
       setActiveId(null); // let load() pick the new active
