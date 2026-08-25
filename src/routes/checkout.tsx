@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
-import { startFreeSession } from "@/lib/free-access.functions";
+import { getComplimentaryAccess, startFreeSession } from "@/lib/free-access.functions";
 import { generatePlan } from "@/lib/plan.functions";
 import { analytics } from "@/lib/analytics";
 import { getPurchaseChannel, NATIVE_PURCHASE_UNAVAILABLE_MESSAGE } from "@/lib/purchases";
@@ -43,11 +43,13 @@ function CheckoutPage() {
   const { qid } = Route.useSearch();
   const create = useServerFn(createDietCheckout);
   const startFree = useServerFn(startFreeSession);
+  const getAccess = useServerFn(getComplimentaryAccess);
   const generate = useServerFn(generatePlan);
   const { freeAccessMode: freeModeSetting, loading: freeLoading } = useFreeAccessMode();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [serverComplimentaryAccess, setServerComplimentaryAccess] = useState<boolean | null>(null);
   // Admins never pay: they take the same complimentary path as Free Access Mode.
-  const freeAccessMode = freeModeSetting || isAdminEmail(user?.email);
+  const freeAccessMode = freeModeSetting || serverComplimentaryAccess === true || isAdminEmail(user?.email);
   const [freeMessage, setFreeMessage] = useState("Building your plan… this can take up to 2 minutes.");
   const [freeError, setFreeError] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -67,6 +69,19 @@ function CheckoutPage() {
       setReady(true);
     })();
   }, [qid]);
+
+  useEffect(() => {
+    if (authLoading || !user?.id) return;
+    let cancelled = false;
+    void getAccess({}).then((res) => {
+      if (!cancelled) setServerComplimentaryAccess(res.complimentaryAccess);
+    }).catch(() => {
+      if (!cancelled) setServerComplimentaryAccess(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user?.id, getAccess]);
 
   useEffect(() => {
     if (freeLoading || !freeAccessMode || !ready || !qid || !weeks) return;
@@ -121,7 +136,15 @@ function CheckoutPage() {
     [qid, weeks, create],
   );
 
-  if (freeLoading || freeAccessMode) {
+  if (freeLoading || authLoading || (serverComplimentaryAccess === null && !!user?.id)) {
+    return (
+      <div className="mx-auto flex min-h-[50vh] max-w-md items-center justify-center px-4">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (freeAccessMode) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
         {freeError ? (

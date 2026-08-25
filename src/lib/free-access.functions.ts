@@ -7,6 +7,18 @@ export const getFreeAccessMode = createServerFn({ method: "GET" }).handler(async
   return { freeAccessMode: await readFreeAccessMode() };
 });
 
+/** Signed-in read — true when either global free mode is on or this member is an app admin. */
+export const getComplimentaryAccess = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ complimentaryAccess: boolean }> => {
+    const { readFreeAccessMode } = await import("@/lib/free-access.server");
+    if (await readFreeAccessMode()) return { complimentaryAccess: true };
+    const { data: isAdmin } = await context.supabase.rpc("is_app_admin", {
+      _user_id: context.userId,
+    });
+    return { complimentaryAccess: isAdmin === true };
+  });
+
 /** Admin-only write of the master switch. */
 export const adminSetFreeAccessMode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
