@@ -6,6 +6,7 @@ import { createDietCheckout } from "@/lib/payments.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import { startFreeSession } from "@/lib/free-access.functions";
@@ -15,6 +16,7 @@ import { getPurchaseChannel, NATIVE_PURCHASE_UNAVAILABLE_MESSAGE } from "@/lib/p
 import { TrustBar } from "@/components/Testimonials";
 import { isAdminEmail } from "@/lib/admin";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 type Search = { qid?: string; weeks?: number };
 
@@ -48,6 +50,8 @@ function CheckoutPage() {
   // Admins never pay: they take the same complimentary path as Free Access Mode.
   const freeAccessMode = freeModeSetting || isAdminEmail(user?.email);
   const [freeMessage, setFreeMessage] = useState("Building your plan… this can take up to 2 minutes.");
+  const [freeError, setFreeError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [weeks, setWeeks] = useState<1 | 2 | 4 | null>(null);
   const [ready, setReady] = useState(false);
   const navigate = useNavigate();
@@ -68,10 +72,13 @@ function CheckoutPage() {
   useEffect(() => {
     if (freeLoading || !freeAccessMode || !ready || !qid || !weeks) return;
     let cancelled = false;
+    setFreeError(false);
+    setFreeMessage("Building your plan… this can take up to 2 minutes.");
     (async () => {
       const res = await startFree({ data: { questionnaireId: qid, durationWeeks: weeks } });
       if (cancelled) return;
       if ("error" in res) {
+        setFreeError(true);
         setFreeMessage(res.error);
         toast.error(res.error);
         return;
@@ -79,6 +86,7 @@ function CheckoutPage() {
       const planRes = await generate({ data: { sessionId: res.sessionId } });
       if (cancelled) return;
       if (planRes.error && planRes.error !== "No credits remaining") {
+        setFreeError(true);
         setFreeMessage(planRes.error);
         toast.error(planRes.error);
         return;
@@ -89,7 +97,7 @@ function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [freeLoading, freeAccessMode, ready, qid, weeks, startFree, generate, navigate]);
+  }, [freeLoading, freeAccessMode, ready, qid, weeks, startFree, generate, navigate, attempt]);
 
   const options = useMemo(
     () => ({
@@ -117,8 +125,23 @@ function CheckoutPage() {
   if (freeLoading || freeAccessMode) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
-        <p className="mt-4 text-sm text-muted-foreground">{freeMessage}</p>
+        {freeError ? (
+          <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
+        ) : (
+          <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
+        )}
+        <h1 className="mt-4 text-xl font-bold">
+          {freeError ? "Plan generation paused" : "Building your plan"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">{freeMessage}</p>
+        {freeError && (
+          <div className="mt-6 flex justify-center gap-3">
+            <Button variant="outline" onClick={() => navigate({ to: "/plans" })}>
+              My plans
+            </Button>
+            <Button onClick={() => setAttempt((value) => value + 1)}>Try again</Button>
+          </div>
+        )}
       </div>
     );
   }

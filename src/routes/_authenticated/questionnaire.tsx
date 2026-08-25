@@ -33,6 +33,7 @@ import { analytics } from "@/lib/analytics";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
 import { useAuth } from "@/hooks/useAuth";
+import { isAdminEmail } from "@/lib/admin";
 import { enqueueMutation } from "@/lib/offline/queue";
 import { OFFLINE_KEYS, readCached, removeLocal, saveLocal } from "@/lib/offline/store";
 
@@ -58,6 +59,7 @@ function QuestionnairePage() {
   const save = useServerFn(saveQuestionnaire);
   const online = useOnlineStatus();
   const { user } = useAuth();
+  const complimentaryAccess = freeAccessMode || isAdminEmail(user?.email);
   const [step, setStep] = useState(0);
   const [data, setData] = useState<QuestionnaireData>(DEFAULT_QUESTIONNAIRE);
   const [durationWeeks, setDurationWeeks] = useState<1 | 2 | 4>(2);
@@ -137,7 +139,7 @@ function QuestionnairePage() {
           questionnaireStatus: "submitted",
           priority: 3,
         });
-        if (freeAccessMode) {
+        if (complimentaryAccess) {
           await enqueueMutation(user.id, {
             kind: "generation.request",
             questionnaireId,
@@ -148,7 +150,7 @@ function QuestionnairePage() {
         }
         await removeLocal(OFFLINE_KEYS.questionnaireDraft, user.id);
         toast.success(
-          freeAccessMode
+          complimentaryAccess
             ? "Saved offline. Your plan will be built automatically when you reconnect."
             : "Saved offline. Reconnect to continue to secure payment.",
         );
@@ -179,7 +181,7 @@ function QuestionnairePage() {
           </p>
           <h1 className="text-2xl font-bold">{STEP_LABELS[step]}</h1>
         </div>
-        {!freeAccessMode && <p className="text-sm text-muted-foreground">€9.99 at checkout</p>}
+      {!complimentaryAccess && <p className="text-sm text-muted-foreground">€9.99 at checkout</p>}
       </div>
       <Progress value={progress} className="mb-6" />
 
@@ -214,7 +216,7 @@ function QuestionnairePage() {
         <Button onClick={next} disabled={busy}>
           {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {step === STEP_LABELS.length - 1
-            ? freeAccessMode
+            ? complimentaryAccess
               ? "Build my plan"
               : "Continue to payment"
             : "Next"}
