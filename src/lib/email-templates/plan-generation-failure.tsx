@@ -9,17 +9,19 @@ interface Props {
   sessionId?: string;
   questionnaireId?: string;
   stage?: string;
+  outcomeLabel?: string;
+  paymentState?: string;
   reason?: string;
   occurredAt?: string;
 }
 
-const Email = ({ userName, userEmail, userId, sessionId, questionnaireId, stage, reason, occurredAt }: Props) => (
+const Email = ({ userName, userEmail, userId, sessionId, questionnaireId, stage, outcomeLabel, paymentState, reason, occurredAt }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>SmartyDiet plan generation failed</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={heading}>Diet plan generation failed</Heading>
+        <Heading style={heading}>{outcomeLabel || "Generation failed — technical issue"}</Heading>
         <Text style={intro}>A customer could not generate a SmartyDiet plan. Review the failure details below.</Text>
         <Hr style={rule} />
         <Text style={detail}><strong>User:</strong> {userName || "Unknown"}</Text>
@@ -28,6 +30,7 @@ const Email = ({ userName, userEmail, userId, sessionId, questionnaireId, stage,
         <Text style={detail}><strong>Session ID:</strong> {sessionId || "Unavailable"}</Text>
         <Text style={detail}><strong>Questionnaire ID:</strong> {questionnaireId || "Unavailable"}</Text>
         <Text style={detail}><strong>Stage:</strong> {stage || "Plan generation"}</Text>
+        <Text style={detail}><strong>Payment state:</strong> {paymentState || "Payment completed"}</Text>
         <Text style={detail}><strong>Time:</strong> {occurredAt || "Unavailable"}</Text>
         <Hr style={rule} />
         <Text style={label}>Technical reason</Text>
@@ -41,9 +44,8 @@ const Email = ({ userName, userEmail, userId, sessionId, questionnaireId, stage,
 export const template = {
   component: Email,
   subject: (data: Record<string, unknown>) =>
-    `[SmartyDiet alert] Diet generation failed${typeof data.userEmail === "string" ? ` — ${data.userEmail}` : ""}`,
+    `[SmartyDiet alert] ${typeof data.outcomeLabel === "string" ? data.outcomeLabel : "Generation failed — technical issue"}${typeof data.userEmail === "string" ? ` — ${data.userEmail}` : ""}`,
   displayName: "Plan generation failure alert",
-  to: "smartydiet@outlook.com",
   previewData: {
     userName: "Jane Doe",
     userEmail: "jane@example.com",
@@ -51,6 +53,8 @@ export const template = {
     sessionId: "session-id",
     questionnaireId: "questionnaire-id",
     stage: "Initial plan generation",
+    outcomeLabel: "Generation failed — no AI balance",
+    paymentState: "Payment completed",
     reason: "AI service returned an error",
     occurredAt: "2026-08-25T20:42:00.000Z",
   },

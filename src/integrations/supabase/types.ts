@@ -39,8 +39,14 @@ export type Database = {
           completed_at: string | null
           created_at: string
           currency: string
+          email_dispatched_at: string | null
+          email_error: string | null
+          email_message_id: string | null
+          email_recipient: string | null
+          email_status: string | null
           environment: string
           failed_at: string | null
+          failure_kind: string | null
           failure_reason: string | null
           failure_stage: string | null
           generation_session_id: string | null
@@ -61,8 +67,14 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           currency?: string
+          email_dispatched_at?: string | null
+          email_error?: string | null
+          email_message_id?: string | null
+          email_recipient?: string | null
+          email_status?: string | null
           environment?: string
           failed_at?: string | null
+          failure_kind?: string | null
           failure_reason?: string | null
           failure_stage?: string | null
           generation_session_id?: string | null
@@ -83,8 +95,14 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           currency?: string
+          email_dispatched_at?: string | null
+          email_error?: string | null
+          email_message_id?: string | null
+          email_recipient?: string | null
+          email_status?: string | null
           environment?: string
           failed_at?: string | null
+          failure_kind?: string | null
           failure_reason?: string | null
           failure_stage?: string | null
           generation_session_id?: string | null
@@ -275,9 +293,12 @@ export type Database = {
       }
       plan_generation_failures: {
         Row: {
+          email_dispatched_at: string | null
           email_error: string | null
           email_message_id: string | null
+          email_recipient: string | null
           email_status: string
+          failure_kind: string
           id: string
           occurred_at: string
           questionnaire_id: string | null
@@ -290,9 +311,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          email_dispatched_at?: string | null
           email_error?: string | null
           email_message_id?: string | null
+          email_recipient?: string | null
           email_status?: string
+          failure_kind?: string
           id: string
           occurred_at?: string
           questionnaire_id?: string | null
@@ -305,9 +329,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          email_dispatched_at?: string | null
           email_error?: string | null
           email_message_id?: string | null
+          email_recipient?: string | null
           email_status?: string
+          failure_kind?: string
           id?: string
           occurred_at?: string
           questionnaire_id?: string | null

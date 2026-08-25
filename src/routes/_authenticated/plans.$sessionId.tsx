@@ -10,21 +10,20 @@ import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Loader2,
-  Download,
-  Utensils,
-  ShoppingBasket,
   RefreshCw,
+  Download,
+  ShoppingBasket,
   History,
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
 import { enqueueMutation } from "@/lib/offline/queue";
 import { waitForPlanGeneration } from "@/lib/generation-client";
 import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
+import { PlanContent } from "@/components/plans/PlanContent";
+import { exportGroceryPdf, exportPlanPdf } from "@/lib/pdf-export";
 
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
 
@@ -246,8 +245,8 @@ function PlanView() {
     if (!active) return;
     try {
       await exportPlanPdf(active.plan, session?.duration_weeks ?? 1);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Could not build PDF");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not build PDF");
     }
   }
 
@@ -255,8 +254,8 @@ function PlanView() {
     if (!active?.plan?.weeks) return;
     try {
       await exportGroceryPdf(active.plan);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Could not build PDF");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not build PDF");
     }
   }
 
@@ -280,8 +279,6 @@ function PlanView() {
     );
 
   const remaining = session.credits_total - session.credits_used;
-  const warnings: string[] = active?.plan?._warnings ?? [];
-
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -328,107 +325,7 @@ function PlanView() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6">
-          {warnings.length > 0 && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <p className="font-semibold mb-1">The generator couldn't fully match your rules:</p>
-                <ul className="list-disc pl-4 text-xs">
-                  {warnings.slice(0, 5).map((w, i) => (
-                    <li key={i}>{w}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {active.plan?.summary && (
-            <Card>
-              <CardContent className="p-4 text-sm">
-                <p className="font-semibold">
-                  {active.plan.summary.calorieTarget} kcal / day ·{" "}
-                  <span className="text-muted-foreground">
-                    P {active.plan.summary.macros?.protein_g}g · C{" "}
-                    {active.plan.summary.macros?.carbs_g}g · F {active.plan.summary.macros?.fat_g}g
-                  </span>
-                </p>
-                <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">
-                  {active.plan.summary.dietStyle} · {active.plan.summary.goal}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {(active.plan?.weeks ?? []).map((w: any) => (
-            <div key={w.weekNumber} className="space-y-3">
-              <h2 className="text-lg font-bold">Week {w.weekNumber}</h2>
-              {(w.days ?? []).map((d: any) => (
-                <Card key={d.day}>
-                  <CardContent className="p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="font-semibold">Day {d.day}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {d.totals?.calories ?? "-"} kcal
-                      </p>
-                    </div>
-                    <div className="space-y-3">
-                      {(d.meals ?? []).map((m: any, i: number) => (
-                        <div key={i} className="rounded-md border p-3 text-sm">
-                          <div className="flex flex-wrap items-baseline justify-between gap-2">
-                            <p className="font-medium">
-                              <Utensils className="mr-1.5 inline h-3.5 w-3.5 text-primary" />
-                              {m.name}: {m.title}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {m.calories} kcal · P{m.protein_g} C{m.carbs_g} F{m.fat_g}
-                            </p>
-                          </div>
-                          {m.ingredients?.length ? (
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {m.ingredients.map((x: any) => `${x.qty} ${x.item}`).join(", ")}
-                            </p>
-                          ) : null}
-                          {m.instructions && <p className="mt-1 text-xs">{m.instructions}</p>}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {w.groceryList?.length ? (
-                <Card>
-                  <CardContent className="p-4">
-                    <p className="mb-2 font-semibold">
-                      <ShoppingBasket className="mr-1.5 inline h-4 w-4 text-primary" />
-                      Grocery list — week {w.weekNumber}
-                    </p>
-                    <ul className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
-                      {w.groceryList.map((g: any, i: number) => (
-                        <li key={i} className="text-muted-foreground">
-                          • {g.qty} {g.item}
-                          {g.category ? ` (${g.category})` : ""}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              ) : null}
-            </div>
-          ))}
-
-          {active.plan?.rationale && (
-            <Card>
-              <CardContent className="p-4">
-                <p className="font-semibold">Why this plan fits you</p>
-                <p className="mt-1 text-sm text-muted-foreground">{active.plan.rationale}</p>
-              </CardContent>
-            </Card>
-          )}
-          {active.plan?.disclaimer && (
-            <p className="text-xs text-muted-foreground">{active.plan.disclaimer}</p>
-          )}
-        </div>
+        <PlanContent plan={active.plan} durationWeeks={session.duration_weeks} />
       )}
 
       {versions.length > 1 && (

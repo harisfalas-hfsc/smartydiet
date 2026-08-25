@@ -482,23 +482,22 @@ export const generatePlan = createServerFn({ method: "POST" })
     if (qErr || !q)
       return fail(`Questionnaire lookup failed: ${qErr?.message ?? "Questionnaire not found"}`);
 
-    let rules = buildBaseRules(q.data, session.duration_weeks);
-
-    let previousPlan: any | undefined;
-    if (data.refinement) {
-      const { data: prev } = await supabase
-        .from("diet_plans")
-        .select("plan,version")
-        .eq("session_id", session.id)
-        .order("version", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      previousPlan = prev?.plan;
-      const extra = await extractRefinementConstraints(data.refinement);
-      rules = mergeConstraints(rules, extra);
-    }
-
     try {
+      let rules = buildBaseRules(q.data, session.duration_weeks);
+      let previousPlan: any | undefined;
+      if (data.refinement) {
+        const { data: prev } = await supabase
+          .from("diet_plans")
+          .select("plan,version")
+          .eq("session_id", session.id)
+          .order("version", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        previousPlan = prev?.plan;
+        const extra = await extractRefinementConstraints(data.refinement);
+        rules = mergeConstraints(rules, extra);
+      }
+
       const { plan, issues } = await generateWithRepair(
         q.data,
         rules,

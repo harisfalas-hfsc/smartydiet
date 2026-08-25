@@ -46,6 +46,7 @@ import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as ApiPublicRecoverAbandonedRouteImport } from './routes/api/public/recover-abandoned'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedPlansSessionIdRouteImport } from './routes/_authenticated/plans.$sessionId'
@@ -241,6 +242,11 @@ const Char91DotmcpChar93ListToolsRoute =
     path: '/.mcp/list-tools',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRecoverAbandonedRoute =
   ApiPublicRecoverAbandonedRouteImport.update({
     id: '/api/public/recover-abandoned',
@@ -324,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/plans/$sessionId': typeof AuthenticatedPlansSessionIdRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/recover-abandoned': typeof ApiPublicRecoverAbandonedRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -369,6 +376,7 @@ export interface FileRoutesByTo {
   '/plans/$sessionId': typeof AuthenticatedPlansSessionIdRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/recover-abandoned': typeof ApiPublicRecoverAbandonedRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -416,6 +424,7 @@ export interface FileRoutesById {
   '/_authenticated/plans/$sessionId': typeof AuthenticatedPlansSessionIdRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/recover-abandoned': typeof ApiPublicRecoverAbandonedRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -463,6 +472,7 @@ export interface FileRouteTypes {
     | '/plans/$sessionId'
     | '/api/public/health'
     | '/api/public/recover-abandoned'
+    | '/lovable/email/events'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -508,6 +518,7 @@ export interface FileRouteTypes {
     | '/plans/$sessionId'
     | '/api/public/health'
     | '/api/public/recover-abandoned'
+    | '/lovable/email/events'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   id:
@@ -554,6 +565,7 @@ export interface FileRouteTypes {
     | '/_authenticated/plans/$sessionId'
     | '/api/public/health'
     | '/api/public/recover-abandoned'
+    | '/lovable/email/events'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -595,6 +607,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicRecoverAbandonedRoute: typeof ApiPublicRecoverAbandonedRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -860,6 +873,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/recover-abandoned': {
       id: '/api/public/recover-abandoned'
       path: '/api/public/recover-abandoned'
@@ -990,6 +1010,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicRecoverAbandonedRoute: ApiPublicRecoverAbandonedRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }

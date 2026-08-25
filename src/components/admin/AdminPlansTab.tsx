@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { adminListDietAttempts, adminListSessions, type AdminDietAttempt, type AdminSessionRow } from "@/lib/admin.functions";
+import { attemptOutcomeIsFailure, attemptOutcomeLabel } from "@/lib/attempt-outcomes";
+import { PlanContent } from "@/components/plans/PlanContent";
 
 export function AdminPlansTab({ userId, title }: { userId?: string; title?: string }) {
   const listSessions = useServerFn(adminListSessions);
@@ -111,8 +113,9 @@ export function AdminPlansTab({ userId, title }: { userId?: string; title?: stri
                         <span className="text-xs text-muted-foreground">{new Date(version.created_at).toLocaleString()}</span>
                       </div>
                       {version.refinement_note && <p className="mt-2 text-sm"><span className="font-semibold">Refinement:</span> {version.refinement_note}</p>}
-                      {version.rationale && <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{version.rationale}</p>}
-                      <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-background p-3 text-xs">{JSON.stringify(version.plan, null, 2)}</pre>
+                      <div className="mt-4">
+                        <PlanContent plan={version.plan} durationWeeks={s.duration_weeks} showDownloads />
+                      </div>
                     </section>
                   ))}
                 </div>
@@ -125,7 +128,9 @@ export function AdminPlansTab({ userId, title }: { userId?: string; title?: stri
             {!attempts.length ? <p className="py-10 text-center text-sm text-muted-foreground">No checkout or generation attempts recorded.</p> : attempts.map((attempt) => (
               <button key={attempt.id} type="button" onClick={() => setSelectedAttempt(attempt)} className="flex w-full items-center justify-between gap-4 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent/50">
                 <span className="min-w-0"><span className="block truncate font-semibold">{attempt.email || attempt.user_id}</span><span className="mt-1 block text-xs text-muted-foreground">{new Date(attempt.checkout_opened_at).toLocaleString()} · {attempt.reached_stage}</span></span>
-                <Badge variant={attempt.status === "paid" || attempt.status === "checkout_opened" ? "secondary" : "destructive"}>{attempt.status === "checkout_opened" ? "Pending" : attempt.status === "paid" ? "Paid — generation pending" : "Failed"}</Badge>
+                <Badge variant={attemptOutcomeIsFailure(attempt.status) ? "destructive" : "secondary"}>
+                  {attemptOutcomeLabel(attempt.status, attempt.failure_kind)}
+                </Badge>
               </button>
             ))}
           </TabsContent>
@@ -135,8 +140,8 @@ export function AdminPlansTab({ userId, title }: { userId?: string; title?: stri
         <DialogContent>
           <DialogHeader><DialogTitle>Diet plan attempt</DialogTitle><DialogDescription>{selectedAttempt?.email || selectedAttempt?.user_id}</DialogDescription></DialogHeader>
           {selectedAttempt && <div className="space-y-4 text-sm">
-            <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-3"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" /><div><p className="font-semibold">{selectedAttempt.failure_stage || selectedAttempt.reached_stage}</p><p className="mt-1 text-muted-foreground">{selectedAttempt.failure_reason || "Checkout was opened, but no completed payment was recorded."}</p></div></div>
-            <dl className="grid gap-3 sm:grid-cols-2"><div><dt className="text-xs text-muted-foreground">Status</dt><dd className="font-medium">{selectedAttempt.status.replaceAll("_", " ")}</dd></div><div><dt className="text-xs text-muted-foreground">Last stage</dt><dd className="font-medium">{selectedAttempt.reached_stage}</dd></div><div><dt className="text-xs text-muted-foreground">Checkout opened</dt><dd className="font-medium">{new Date(selectedAttempt.checkout_opened_at).toLocaleString()}</dd></div><div><dt className="text-xs text-muted-foreground">Payment code</dt><dd className="font-medium">{selectedAttempt.payment_failure_code || "Not provided"}</dd></div></dl>
+            <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-3"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" /><div><p className="font-semibold">{attemptOutcomeLabel(selectedAttempt.status, selectedAttempt.failure_kind)}</p><p className="mt-1 text-muted-foreground">{selectedAttempt.failure_reason || "Checkout was opened, but no completed payment was recorded."}</p></div></div>
+            <dl className="grid gap-3 sm:grid-cols-2"><div><dt className="text-xs text-muted-foreground">Outcome</dt><dd className="font-medium">{attemptOutcomeLabel(selectedAttempt.status, selectedAttempt.failure_kind)}</dd></div><div><dt className="text-xs text-muted-foreground">Last stage</dt><dd className="font-medium">{selectedAttempt.reached_stage}</dd></div><div><dt className="text-xs text-muted-foreground">Checkout opened</dt><dd className="font-medium">{new Date(selectedAttempt.checkout_opened_at).toLocaleString()}</dd></div><div><dt className="text-xs text-muted-foreground">Payment code</dt><dd className="font-medium">{selectedAttempt.payment_failure_code || "Not provided"}</dd></div><div><dt className="text-xs text-muted-foreground">Alert email</dt><dd className="font-medium">{selectedAttempt.email_status ? `${selectedAttempt.email_status}${selectedAttempt.email_dispatched_at ? ` · ${new Date(selectedAttempt.email_dispatched_at).toLocaleString()}` : ""}` : "Not sent"}</dd></div>{selectedAttempt.email_message_id && <div><dt className="text-xs text-muted-foreground">Message reference</dt><dd className="break-all font-medium">{selectedAttempt.email_message_id}</dd></div>}</dl>
           </div>}
         </DialogContent>
       </Dialog>
