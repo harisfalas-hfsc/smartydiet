@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { waitForPlanGeneration } from "@/lib/generation-client";
 
 type Search = { qid?: string; weeks?: number };
+const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
 
 export const Route = createFileRoute("/checkout")({
   ssr: false,
@@ -53,7 +54,6 @@ function CheckoutPage() {
     "Building your plan… this can take up to 2 minutes.",
   );
   const [freeError, setFreeError] = useState(false);
-  const [attempt, setAttempt] = useState(0);
   const [weeks, setWeeks] = useState<1 | 2 | 4 | null>(null);
   const [ready, setReady] = useState(false);
   const navigate = useNavigate();
@@ -107,35 +107,23 @@ function CheckoutPage() {
         if (cancelled) return;
         if (planRes.error) {
           setFreeError(true);
-          setFreeMessage(planRes.error);
-          toast.error(planRes.error);
+          setFreeMessage(GENERATION_ERROR_MESSAGE);
+          toast.error(GENERATION_ERROR_MESSAGE);
           return;
         }
         analytics.planReady(true);
         navigate({ to: "/plans/$sessionId", params: { sessionId: res.sessionId }, replace: true });
-      } catch (error) {
+      } catch {
         if (cancelled) return;
-        const message = error instanceof Error ? error.message : "Plan generation failed.";
         setFreeError(true);
-        setFreeMessage(message);
-        toast.error(message);
+        setFreeMessage(GENERATION_ERROR_MESSAGE);
+        toast.error(GENERATION_ERROR_MESSAGE);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [
-    freeLoading,
-    freeAccessMode,
-    ready,
-    qid,
-    weeks,
-    freeError,
-    startFree,
-    generate,
-    navigate,
-    attempt,
-  ]);
+  }, [freeLoading, freeAccessMode, ready, qid, weeks, freeError, startFree, generate, navigate]);
 
   const options = useMemo(
     () => ({
@@ -177,22 +165,12 @@ function CheckoutPage() {
           <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
         )}
         <h1 className="mt-4 text-xl font-bold">
-          {freeError ? "Plan generation paused" : "Building your plan"}
+          {freeError ? "We couldn't create your plan" : "Building your plan"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">{freeMessage}</p>
         {freeError && (
           <div className="mt-6 flex justify-center gap-3">
-            <Button variant="outline" onClick={() => navigate({ to: "/plans" })}>
-              My plans
-            </Button>
-            <Button
-              onClick={() => {
-                setFreeError(false);
-                setAttempt((value) => value + 1);
-              }}
-            >
-              Try again
-            </Button>
+            <Button onClick={() => navigate({ to: "/plans" })}>Back to my plans</Button>
           </div>
         )}
       </div>
