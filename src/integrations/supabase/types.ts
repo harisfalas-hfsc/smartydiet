@@ -32,6 +32,90 @@ export type Database = {
         }
         Relationships: []
       }
+      diet_plan_attempts: {
+        Row: {
+          amount_cents: number
+          checkout_opened_at: string
+          completed_at: string | null
+          created_at: string
+          currency: string
+          environment: string
+          failed_at: string | null
+          failure_reason: string | null
+          failure_stage: string | null
+          generation_session_id: string | null
+          id: string
+          paid_at: string | null
+          payment_failure_code: string | null
+          questionnaire_id: string | null
+          reached_stage: string
+          status: string
+          stripe_payment_intent: string | null
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          checkout_opened_at?: string
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          environment?: string
+          failed_at?: string | null
+          failure_reason?: string | null
+          failure_stage?: string | null
+          generation_session_id?: string | null
+          id?: string
+          paid_at?: string | null
+          payment_failure_code?: string | null
+          questionnaire_id?: string | null
+          reached_stage?: string
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          checkout_opened_at?: string
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          environment?: string
+          failed_at?: string | null
+          failure_reason?: string | null
+          failure_stage?: string | null
+          generation_session_id?: string | null
+          id?: string
+          paid_at?: string | null
+          payment_failure_code?: string | null
+          questionnaire_id?: string | null
+          reached_stage?: string
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diet_plan_attempts_questionnaire_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diet_plan_attempts_session_fkey"
+            columns: ["generation_session_id"]
+            isOneToOne: false
+            referencedRelation: "generation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diet_plans: {
         Row: {
           created_at: string
