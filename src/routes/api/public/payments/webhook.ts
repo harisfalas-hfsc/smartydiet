@@ -30,7 +30,7 @@ async function handleCheckoutCompleted(session: any) {
       user_id: userId,
       questionnaire_id: questionnaireId,
       duration_weeks: durationWeeks,
-      status: "paid",
+      status: "authorized",
       stripe_session_id: session.id,
       stripe_payment_intent: paymentIntent,
       amount_cents: session.amount_total ?? 999,
@@ -44,13 +44,36 @@ async function handleCheckoutCompleted(session: any) {
   await getSupabase()
     .from("diet_plan_attempts")
     .update({
-      status: "paid",
-      reached_stage: "Payment confirmed",
+      status: "authorized",
+      reached_stage: "Payment authorized",
       generation_session_id: genSessionId,
       stripe_payment_intent: paymentIntent,
-      paid_at: new Date().toISOString(),
     })
     .eq("stripe_session_id", session.id);
+}
+
+async function handlePaymentIntentSettled(intent: any, captured: boolean) {
+  if (!intent?.id) return;
+  if (captured) {
+    await getSupabase()
+      .from("generation_sessions")
+      .update({ status: "paid" })
+      .eq("stripe_payment_intent", intent.id);
+    await getSupabase()
+      .from("diet_plan_attempts")
+      .update({ status: "generated", paid_at: new Date().toISOString() })
+      .eq("stripe_payment_intent", intent.id)
+      .in("status", ["authorized", "paid"]);
+    return;
+  }
+  await getSupabase()
+    .from("generation_sessions")
+    .update({ status: "authorization_released" })
+    .eq("stripe_payment_intent", intent.id);
+  await getSupabase()
+    .from("diet_plan_attempts")
+    .update({ payment_failure_code: "authorization_released" })
+    .eq("stripe_payment_intent", intent.id);
 }
 
 async function handleCheckoutFailure(session: any, declined: boolean) {
@@ -118,6 +141,12 @@ async function handleWebhook(req: Request, env: StripeEnv) {
     case "checkout.session.completed":
     case "transaction.completed":
       await handleCheckoutCompleted(event.data.object);
+      break;
+    case "payment_intent.succeeded":
+      await handlePaymentIntentSettled(event.data.object, true);
+      break;
+    case "payment_intent.canceled":
+      await handlePaymentIntentSettled(event.data.object, false);
       break;
     case "checkout.session.async_payment_failed":
       await handleCheckoutFailure(event.data.object, true);
