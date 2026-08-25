@@ -4,6 +4,7 @@ import { template as abandonedCheckout } from './abandoned-checkout'
 import { template as contactConfirmation } from './contact-confirmation'
 import { template as contactNotification } from './contact-notification'
 import { template as leadWelcome } from './lead-welcome'
+import { template as planGenerationFailure } from './plan-generation-failure'
 import { template as supportReply } from './support-reply'
 
 export interface TemplateEntry {
@@ -24,5 +25,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'contact-confirmation': contactConfirmation,
   'contact-notification': contactNotification,
   'lead-welcome': leadWelcome,
+  'plan-generation-failure': planGenerationFailure,
   'support-reply': supportReply,
 }

@@ -7,6 +7,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { analytics } from "@/lib/analytics";
+import { waitForPlanGeneration } from "@/lib/generation-client";
+
+const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
 
 export const Route = createFileRoute("/checkout/return")({
   ssr: false,
@@ -48,10 +51,11 @@ function Return() {
         }
         analytics.purchase(session_id);
         setMessage("Payment confirmed. Building your plan… this can take up to 2 minutes.");
-        const planRes = await generate({ data: { sessionId: paidRes.generationSessionId } });
+        const planRes = await waitForPlanGeneration(
+          generate({ data: { sessionId: paidRes.generationSessionId } }),
+        );
         if (planRes.error) {
-          setStatus("error");
-          setMessage(planRes.error);
+          navigate({ to: "/", replace: true });
           return;
         }
         analytics.planReady(false);
@@ -64,7 +68,7 @@ function Return() {
         });
       } catch (err: any) {
         setStatus("error");
-        setMessage(err?.message ?? "Something went wrong");
+        setMessage(GENERATION_ERROR_MESSAGE);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,8 +82,8 @@ function Return() {
       <h1 className="mt-4 text-xl font-bold">{status === "error" ? "There was a problem" : "Almost there"}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{message}</p>
       {status === "error" && (
-        <Button className="mt-6" onClick={() => navigate({ to: "/plans" })}>
-          Go to My plans
+        <Button className="mt-6" onClick={() => navigate({ to: "/" })}>
+          Back to homepage
         </Button>
       )}
     </div>
