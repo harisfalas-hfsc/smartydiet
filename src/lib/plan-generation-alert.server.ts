@@ -9,9 +9,11 @@ type AlertContext = {
 };
 
 type FailureDetails = {
-  sessionId: string;
+  sessionId?: string;
+  questionnaireId?: string;
   operationId?: string;
   refinement?: string;
+  stage?: string;
   reason: string;
 };
 
@@ -37,15 +39,17 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
       claimString(userMetadata, "full_name") ??
       claimString(userMetadata, "name");
     const attemptId = details.operationId ?? crypto.randomUUID();
+    const referenceId = details.sessionId ?? details.questionnaireId ?? "unknown";
 
     await sendTemplateEmail("plan-generation-failure", ADMIN_EMAIL, {
-      idempotencyKey: `plan-generation-failure-${details.sessionId}-${attemptId}`,
+      idempotencyKey: `plan-generation-failure-${referenceId}-${attemptId}`,
       templateData: {
         userName,
         userEmail,
         userId: context.userId,
         sessionId: details.sessionId,
-        stage: details.refinement ? "Plan refinement" : "Initial plan generation",
+        questionnaireId: details.questionnaireId,
+        stage: details.stage ?? (details.refinement ? "Plan refinement" : "Initial plan generation"),
         reason: details.reason.slice(0, 4000),
         occurredAt: new Date().toISOString(),
       },
