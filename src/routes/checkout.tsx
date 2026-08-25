@@ -170,7 +170,9 @@ function CheckoutPage() {
         <p className="mt-2 text-sm text-muted-foreground">{freeMessage}</p>
         {freeError && (
           <div className="mt-6 flex justify-center gap-3">
-            <Button onClick={() => navigate({ to: "/plans" })}>Back to my plans</Button>
+            <Button onClick={() => navigate({ to: "/questionnaire" })}>
+              Try again
+            </Button>
           </div>
         )}
       </div>
