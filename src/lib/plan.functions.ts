@@ -447,7 +447,9 @@ export const generatePlan = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .single();
     if (sErr || !session) return fail(`Session lookup failed: ${sErr?.message ?? "Session not found"}`);
-    if (session.status !== "paid") return fail(`Session has invalid status: ${session.status}`);
+    if (session.status !== "paid" && session.status !== "completed") {
+      return fail(`Session has invalid status: ${session.status}`);
+    }
 
     if (!data.refinement) {
       const { data: existingPlan } = await supabase
@@ -532,7 +534,7 @@ export const generatePlan = createServerFn({ method: "POST" })
 
       await supabase
         .from("generation_sessions")
-        .update({ credits_used: newCreditsUsed })
+        .update({ credits_used: newCreditsUsed, status: "completed" })
         .eq("id", session.id);
 
       return { plan: planToSave, rationale: plan?.rationale, warnings };

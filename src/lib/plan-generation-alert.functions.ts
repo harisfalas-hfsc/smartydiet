@@ -12,7 +12,7 @@ export const reportPlanGenerationFailure = createServerFn({ method: "POST" })
     reason: string;
   }) => input)
   .handler(async ({ data, context }) => {
-    await sendPlanGenerationFailureAlert(
+    const result = await sendPlanGenerationFailureAlert(
       {
         supabase: context.supabase,
         userId: context.userId,
@@ -20,5 +20,5 @@ export const reportPlanGenerationFailure = createServerFn({ method: "POST" })
       },
       data,
     );
-    return { reported: true };
+    return { reported: true, ...result };
   });

@@ -13,6 +13,7 @@ import {
   Users,
   Lock,
   Sparkles,
+  TriangleAlert,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import { AdminRevenueTab } from "@/components/admin/AdminRevenueTab";
 import { AdminPlansTab } from "@/components/admin/AdminPlansTab";
 import { AdminPaymentsTab } from "@/components/admin/AdminPaymentsTab";
 import { AdminGrowthTab } from "@/components/admin/AdminGrowthTab";
+import { AdminGenerationFailuresTab } from "@/components/admin/AdminGenerationFailuresTab";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
@@ -46,7 +48,8 @@ type SectionKey =
   | "members"
   | "customers"
   | "payments"
-  | "growth";
+  | "growth"
+  | "failures";
 
 const SECTIONS: Array<{
   key: SectionKey;
@@ -61,6 +64,7 @@ const SECTIONS: Array<{
   { key: "customers", label: "Customers", description: "Paying members", Icon: Crown },
   { key: "payments", label: "Payments", description: "Free access mode", Icon: Lock },
   { key: "growth", label: "Growth", description: "Testimonials & emails", Icon: Sparkles },
+  { key: "failures", label: "Generation failures", description: "Errors & email alerts", Icon: TriangleAlert },
 ];
 
 function AdminPage() {
@@ -144,11 +148,10 @@ function AdminPage() {
             </button>
           )}
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Stat label="Members" value={stats?.members ?? "—"} />
             <Stat label="New (30d)" value={stats?.newMembers30d ?? "—"} />
-            <Stat label="Plans" value={stats?.plansTotal ?? "—"} />
-            <Stat label="Credits left" value={stats?.creditsOutstanding ?? "—"} />
+            <Stat label="Generated diets" value={stats?.plansTotal ?? "—"} onClick={() => setSection("plans")} />
           </div>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
@@ -167,6 +170,11 @@ function AdminPage() {
                 {key === "messages" && unread > 0 && (
                   <span className="absolute right-3 top-3 grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                     {unread > 9 ? "9+" : unread}
+                  </span>
+                )}
+                {key === "failures" && (stats?.generationFailuresUnread ?? 0) > 0 && (
+                  <span className="absolute right-3 top-3 grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                    {(stats?.generationFailuresUnread ?? 0) > 9 ? "9+" : stats?.generationFailuresUnread}
                   </span>
                 )}
               </button>
@@ -196,17 +204,24 @@ function AdminPage() {
           {section === "customers" && <AdminUsersTab onlyCustomers />}
           {section === "payments" && <AdminPaymentsTab />}
           {section === "growth" && <AdminGrowthTab />}
+          {section === "failures" && <AdminGenerationFailuresTab />}
         </div>
       )}
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="rounded-2xl border border-blue-400 bg-card p-4">
+function Stat({ label, value, onClick }: { label: string; value: number | string; onClick?: () => void }) {
+  const content = (
+    <>
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-extrabold">{value}</p>
+    </>
+  );
+  if (onClick) return <button type="button" onClick={onClick} className="rounded-lg border border-border bg-card p-4 text-left transition hover:border-primary">{content}</button>;
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      {content}
     </div>
   );
 }

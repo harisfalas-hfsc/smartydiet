@@ -160,10 +160,17 @@ export async function runBackgroundSync(force = false): Promise<void> {
         .catch(() => undefined),
     ]);
 
-    const { data: sessionRows } = await supabase
+    const { data: planRows } = await supabase
+      .from("diet_plans")
+      .select("session_id");
+    const generatedSessionIds = [...new Set((planRows ?? []).map((plan) => plan.session_id))];
+    const sessionRequest = supabase
       .from("generation_sessions")
       .select("*")
       .order("created_at", { ascending: false });
+    const { data: sessionRows } = generatedSessionIds.length
+      ? await sessionRequest.in("id", generatedSessionIds)
+      : { data: [] };
     const rows = sessionRows ?? [];
     await saveLocal(OFFLINE_KEYS.sessions, userId, rows);
 

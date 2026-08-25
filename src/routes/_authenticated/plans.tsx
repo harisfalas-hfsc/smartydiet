@@ -53,15 +53,23 @@ function PlansList() {
       const data = await offlineFirst<Row[]>(
         OFFLINE_KEYS.sessions,
         async () => {
-          const { data: fresh } = await supabase
+          const { data: plans, error: plansError } = await supabase
+            .from("diet_plans")
+            .select("session_id");
+          if (plansError) throw plansError;
+          const sessionIds = [...new Set((plans ?? []).map((plan) => plan.session_id))];
+          if (!sessionIds.length) return [];
+          const { data: fresh, error: sessionsError } = await supabase
             .from("generation_sessions")
-            .select("*")
+            .select("id,duration_weeks,status,credits_used,credits_total,created_at")
+            .in("id", sessionIds)
             .order("created_at", { ascending: false });
+          if (sessionsError) throw sessionsError;
           return (fresh as Row[]) ?? [];
         },
         userId,
       ).catch(() => [] as Row[]);
-      if (active) setRows(data.filter((r) => r.status === "paid"));
+      if (active) setRows(data);
     })();
     return () => {
       active = false;
