@@ -54,7 +54,6 @@ function CheckoutPage() {
     "Building your plan… this can take up to 2 minutes.",
   );
   const [freeError, setFreeError] = useState(false);
-  const [attempt, setAttempt] = useState(0);
   const [weeks, setWeeks] = useState<1 | 2 | 4 | null>(null);
   const [ready, setReady] = useState(false);
   const navigate = useNavigate();
@@ -114,7 +113,7 @@ function CheckoutPage() {
         }
         analytics.planReady(true);
         navigate({ to: "/plans/$sessionId", params: { sessionId: res.sessionId }, replace: true });
-      } catch (error) {
+      } catch {
         if (cancelled) return;
         setFreeError(true);
         setFreeMessage(GENERATION_ERROR_MESSAGE);
@@ -134,7 +133,6 @@ function CheckoutPage() {
     startFree,
     generate,
     navigate,
-    attempt,
   ]);
 
   const options = useMemo(
