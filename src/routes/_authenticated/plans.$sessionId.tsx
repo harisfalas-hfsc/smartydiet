@@ -68,6 +68,7 @@ function PlanView() {
 
   const load = useCallback(async () => {
     if (!userId) return;
+    setSessionLoading(true);
     setSessionLoadError(null);
     try {
       const s = await offlineFirst<Session | null>(
