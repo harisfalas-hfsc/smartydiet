@@ -13,16 +13,17 @@ export const Route = createFileRoute("/lovable/email/events")({
         const handler = createEmailWebhookHandler({
           apiKey,
           on: {
-            // Placeholder handlers — replace each log with the feature's reaction.
-            // Throw on failure so the delivery is retried.
             'email.bounced': async (event) => {
-              console.log('Email bounced', { event_id: event.event_id })
+              await recordDeliveryOutcome(event.data.message_id, 'bounced')
             },
             'email.complaint': async (event) => {
-              console.log('Email complaint', { event_id: event.event_id })
+              await recordDeliveryOutcome(event.data.message_id, 'complaint')
             },
             'email.unsubscribed': async (event) => {
-              console.log('Email unsubscribed', { event_id: event.event_id })
+              await recordDeliveryOutcome(event.data.message_id, 'unsubscribed')
+            },
+            'email.resubscribed': async (event) => {
+              await recordDeliveryOutcome(event.data.message_id, 'accepted')
             },
           },
         })
@@ -31,3 +32,20 @@ export const Route = createFileRoute("/lovable/email/events")({
     },
   },
 })
+
+async function recordDeliveryOutcome(messageId: string, status: string) {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const detail = status === 'accepted' ? null : `Managed email event: ${status}`
+  const [failures, attempts] = await Promise.all([
+    supabaseAdmin
+      .from('plan_generation_failures')
+      .update({ email_status: status, email_error: detail })
+      .eq('email_message_id', messageId),
+    supabaseAdmin
+      .from('diet_plan_attempts')
+      .update({ email_status: status, email_error: detail })
+      .eq('email_message_id', messageId),
+  ])
+  if (failures.error) throw failures.error
+  if (attempts.error) throw attempts.error
+}

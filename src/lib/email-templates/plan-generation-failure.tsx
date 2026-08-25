@@ -46,7 +46,6 @@ export const template = {
   subject: (data: Record<string, unknown>) =>
     `[SmartyDiet alert] ${typeof data.outcomeLabel === "string" ? data.outcomeLabel : "Generation failed — technical issue"}${typeof data.userEmail === "string" ? ` — ${data.userEmail}` : ""}`,
   displayName: "Plan generation failure alert",
-  to: "smartydiet@outlook.com",
   previewData: {
     userName: "Jane Doe",
     userEmail: "jane@example.com",
