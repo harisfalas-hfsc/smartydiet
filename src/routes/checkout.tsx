@@ -5,8 +5,7 @@ import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createDietCheckout } from "@/lib/payments.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import { startFreeSession } from "@/lib/free-access.functions";
@@ -85,7 +84,7 @@ function CheckoutPage() {
       }
       const planRes = await generate({ data: { sessionId: res.sessionId } });
       if (cancelled) return;
-      if (planRes.error && planRes.error !== "No credits remaining") {
+      if (planRes.error) {
         setFreeError(true);
         setFreeMessage(planRes.error);
         toast.error(planRes.error);

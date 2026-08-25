@@ -108,6 +108,27 @@ function PlanView() {
     }
   }, [autoGenerating, versions.length]);
 
+  async function runGeneration() {
+    setAutoGenerating(true);
+    setGenerationError(null);
+    try {
+      const res = await generate({ data: { sessionId } });
+      if (res.error) {
+        setGenerationError(res.error);
+        toast.error(res.error);
+        return;
+      }
+      toast.success("Your plan is ready");
+      await load();
+    } catch (e: any) {
+      const message = e?.message ?? "Generation failed";
+      setGenerationError(message);
+      toast.error(message);
+    } finally {
+      setAutoGenerating(false);
+    }
+  }
+
   // Recovery: paid, no plan → auto-generate.
   useEffect(() => {
     if (!online) return;
@@ -116,23 +137,8 @@ function PlanView() {
     if ((session.credits_used ?? 0) > 0) return;
     setAutoGenerating(true);
     setGenerationError(null);
-    (async () => {
-      try {
-        const res = await generate({ data: { sessionId } });
-        if (res.error) {
-          setGenerationError(res.error);
-          toast.error(res.error);
-        } else toast.success("Your plan is ready");
-        await load();
-      } catch (e: any) {
-        const message = e?.message ?? "Generation failed";
-        setGenerationError(message);
-        toast.error(message);
-      } finally {
-        setAutoGenerating(false);
-      }
-    })();
-  }, [session, versions.length, autoGenerating, generate, sessionId, load, online]);
+    void runGeneration();
+  }, [session, versions.length, autoGenerating, online]);
 
   async function refine() {
     if (!refineText.trim()) return toast.error("Describe the change you want");
@@ -259,26 +265,7 @@ function PlanView() {
               <>
                 <p className="mb-4 text-destructive">{generationError}</p>
                 <Button
-                  onClick={async () => {
-                    setAutoGenerating(true);
-                    setGenerationError(null);
-                    try {
-                      const res = await generate({ data: { sessionId } });
-                      if (res.error) {
-                        setGenerationError(res.error);
-                        toast.error(res.error);
-                      } else {
-                        toast.success("Your plan is ready");
-                      }
-                      await load();
-                    } catch (e: any) {
-                      const message = e?.message ?? "Generation failed";
-                      setGenerationError(message);
-                      toast.error(message);
-                    } finally {
-                      setAutoGenerating(false);
-                    }
-                  }}
+                  onClick={runGeneration}
                 >
                   Try again
                 </Button>
@@ -287,26 +274,7 @@ function PlanView() {
               <>
                 <p className="mb-4">Your payment is confirmed. Tap below to build your plan.</p>
                 <Button
-                  onClick={async () => {
-                    setAutoGenerating(true);
-                    setGenerationError(null);
-                    try {
-                      const res = await generate({ data: { sessionId } });
-                      if (res.error) {
-                        setGenerationError(res.error);
-                        toast.error(res.error);
-                      } else {
-                        toast.success("Your plan is ready");
-                      }
-                      await load();
-                    } catch (e: any) {
-                      const message = e?.message ?? "Generation failed";
-                      setGenerationError(message);
-                      toast.error(message);
-                    } finally {
-                      setAutoGenerating(false);
-                    }
-                  }}
+                  onClick={runGeneration}
                 >
                   Generate my plan
                 </Button>
