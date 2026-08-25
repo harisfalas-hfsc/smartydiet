@@ -189,6 +189,69 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_generation_failures: {
+        Row: {
+          email_error: string | null
+          email_message_id: string | null
+          email_status: string
+          id: string
+          occurred_at: string
+          questionnaire_id: string | null
+          read_at: string | null
+          reason: string
+          refinement: string | null
+          session_id: string | null
+          stage: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          email_error?: string | null
+          email_message_id?: string | null
+          email_status?: string
+          id: string
+          occurred_at?: string
+          questionnaire_id?: string | null
+          read_at?: string | null
+          reason: string
+          refinement?: string | null
+          session_id?: string | null
+          stage: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          email_error?: string | null
+          email_message_id?: string | null
+          email_status?: string
+          id?: string
+          occurred_at?: string
+          questionnaire_id?: string | null
+          read_at?: string | null
+          reason?: string
+          refinement?: string | null
+          session_id?: string | null
+          stage?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_generation_failures_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_generation_failures_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "generation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
