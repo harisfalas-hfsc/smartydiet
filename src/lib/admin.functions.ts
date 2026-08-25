@@ -343,6 +343,8 @@ export type AdminDietAttempt = {
   reached_stage: string; failure_stage: string | null; failure_reason: string | null;
   payment_failure_code: string | null; amount_cents: number; currency: string;
   checkout_opened_at: string; failed_at: string | null; generation_session_id: string | null;
+  failure_kind: string | null; email_status: string | null; email_error: string | null;
+  email_message_id: string | null; email_recipient: string | null; email_dispatched_at: string | null;
 };
 
 export const adminListDietAttempts = createServerFn({ method: "POST" })
@@ -353,7 +355,7 @@ export const adminListDietAttempts = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: attempts, error } = await supabaseAdmin
         .from("diet_plan_attempts")
-        .select("id,user_id,status,reached_stage,failure_stage,failure_reason,payment_failure_code,amount_cents,currency,checkout_opened_at,failed_at,generation_session_id")
+        .select("id,user_id,status,reached_stage,failure_stage,failure_reason,failure_kind,payment_failure_code,amount_cents,currency,checkout_opened_at,failed_at,generation_session_id,email_status,email_error,email_message_id,email_recipient,email_dispatched_at")
         .neq("status", "generated").order("checkout_opened_at", { ascending: false }).limit(500);
       if (error) return { error: error.message };
       const emails = new Map<string, string | null>();
@@ -447,6 +449,10 @@ export type AdminGenerationFailure = {
   reason: string;
   email_status: string;
   email_error: string | null;
+  email_message_id: string | null;
+  email_recipient: string | null;
+  email_dispatched_at: string | null;
+  failure_kind: string;
   occurred_at: string;
   read_at: string | null;
 };
@@ -459,7 +465,7 @@ export const adminListGenerationFailures = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: failures, error } = await supabaseAdmin
         .from("plan_generation_failures")
-        .select("id,user_id,session_id,questionnaire_id,stage,reason,email_status,email_error,occurred_at,read_at")
+        .select("id,user_id,session_id,questionnaire_id,stage,reason,failure_kind,email_status,email_error,email_message_id,email_recipient,email_dispatched_at,occurred_at,read_at")
         .order("occurred_at", { ascending: false })
         .limit(200);
       if (error) return { error: error.message };

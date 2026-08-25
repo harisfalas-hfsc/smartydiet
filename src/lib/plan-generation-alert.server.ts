@@ -1,4 +1,5 @@
 import { sendTemplateEmail } from "@/lib/email-templates/send-email";
+import { classifyGenerationFailure, generationFailureLabel } from "@/lib/attempt-outcomes";
 
 const ADMIN_EMAIL = "smartydiet@outlook.com";
 
@@ -25,6 +26,8 @@ function claimString(claims: Record<string, unknown> | undefined, key: string) {
 export async function sendPlanGenerationFailureAlert(context: AlertContext, details: FailureDetails) {
   const failureId = details.operationId ?? crypto.randomUUID();
   const occurredAt = new Date().toISOString();
+  const failureKind = classifyGenerationFailure(details.reason);
+  const outcomeLabel = generationFailureLabel(failureKind);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { error: recordError } = await supabaseAdmin.from("plan_generation_failures").upsert({
     id: failureId,
@@ -33,6 +36,7 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
     questionnaire_id: details.questionnaireId ?? null,
     stage: details.stage ?? (details.refinement ? "Plan refinement" : "Initial plan generation"),
     reason: details.reason.slice(0, 4000),
+    failure_kind: failureKind,
     refinement: details.refinement ?? null,
     email_status: "pending",
     occurred_at: occurredAt,
@@ -44,6 +48,7 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
     reached_stage: details.stage ?? "Plan generation",
     failure_stage: details.stage ?? "Plan generation",
     failure_reason: details.reason.slice(0, 4000),
+    failure_kind: failureKind,
     failed_at: occurredAt,
   };
   if (details.sessionId) {
@@ -52,15 +57,7 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
       .update(attemptUpdate)
       .eq("generation_session_id", details.sessionId)
       .select("id");
-    if (!updatedAttempts?.length) {
-      await supabaseAdmin.from("diet_plan_attempts").insert({
-        id: failureId,
-        user_id: context.userId,
-        questionnaire_id: details.questionnaireId ?? null,
-        generation_session_id: details.sessionId,
-        ...attemptUpdate,
-      });
-    }
+    void updatedAttempts;
   }
 
   try {
@@ -89,6 +86,8 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
         sessionId: details.sessionId,
         questionnaireId: details.questionnaireId,
         stage: details.stage ?? (details.refinement ? "Plan refinement" : "Initial plan generation"),
+        outcomeLabel,
+        paymentState: "Payment completed",
         reason: details.reason.slice(0, 4000),
         occurredAt,
       },
@@ -96,7 +95,19 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
     await supabaseAdmin.from("plan_generation_failures").update({
       email_status: delivery.sent ? "accepted" : "suppressed",
       email_error: delivery.sent ? null : delivery.reason,
+      email_message_id: delivery.sent ? delivery.messageId : null,
+      email_recipient: ADMIN_EMAIL,
+      email_dispatched_at: delivery.sent ? new Date().toISOString() : null,
     }).eq("id", failureId);
+    if (details.sessionId) {
+      await supabaseAdmin.from("diet_plan_attempts").update({
+        email_status: delivery.sent ? "accepted" : "suppressed",
+        email_error: delivery.sent ? null : delivery.reason,
+        email_message_id: delivery.sent ? delivery.messageId : null,
+        email_recipient: ADMIN_EMAIL,
+        email_dispatched_at: delivery.sent ? new Date().toISOString() : null,
+      }).eq("generation_session_id", details.sessionId);
+    }
     return { failureId, emailStatus: delivery.sent ? "accepted" : "suppressed" };
   } catch (error) {
     console.error("[plan-generation-alert] notification failed", error);
@@ -105,6 +116,13 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
       email_status: "failed",
       email_error: message.slice(0, 1000),
     }).eq("id", failureId);
+    if (details.sessionId) {
+      await supabaseAdmin.from("diet_plan_attempts").update({
+        email_status: "failed",
+        email_error: message.slice(0, 1000),
+        email_recipient: ADMIN_EMAIL,
+      }).eq("generation_session_id", details.sessionId);
+    }
     return { failureId, emailStatus: "failed", error: message };
   }
 }

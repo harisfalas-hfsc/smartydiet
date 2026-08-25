@@ -54,18 +54,62 @@ async function handleCheckoutCompleted(session: any) {
 }
 
 async function handleCheckoutFailure(session: any, declined: boolean) {
+  const paymentCode = session?.last_payment_error?.decline_code ?? session?.last_payment_error?.code ?? null;
+  const failureReason = declined
+    ? `Payment was declined${paymentCode ? ` (${paymentCode})` : ""}.`
+    : "Checkout expired before payment was completed.";
+  const failedAt = new Date().toISOString();
   await getSupabase()
     .from("diet_plan_attempts")
     .update({
       status: declined ? "payment_declined" : "payment_cancelled",
       reached_stage: declined ? "Payment declined" : "Checkout expired",
       failure_stage: "Payment",
-      failure_reason: declined
-        ? "The payment provider reported that payment failed or was declined."
-        : "Checkout expired before payment was completed.",
-      failed_at: new Date().toISOString(),
+      failure_reason: failureReason,
+      failure_kind: declined ? "payment_declined" : "checkout_abandoned",
+      payment_failure_code: paymentCode,
+      failed_at: failedAt,
     })
     .eq("stripe_session_id", session.id);
+
+  if (declined) {
+    const { data: attempt } = await getSupabase()
+      .from("diet_plan_attempts")
+      .select("id,user_id,questionnaire_id,generation_session_id")
+      .eq("stripe_session_id", session.id)
+      .maybeSingle();
+    if (attempt) {
+      try {
+        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+        const delivery = await sendTemplateEmail("plan-generation-failure", "smartydiet@outlook.com", {
+          idempotencyKey: `payment-declined-${attempt.id}`,
+          templateData: {
+            userId: attempt.user_id,
+            questionnaireId: attempt.questionnaire_id,
+            sessionId: attempt.generation_session_id,
+            stage: "Payment",
+            outcomeLabel: "Payment failed — card declined",
+            paymentState: "Card declined",
+            reason: failureReason,
+            occurredAt: failedAt,
+          },
+        });
+        await getSupabase().from("diet_plan_attempts").update({
+          email_status: delivery.sent ? "accepted" : "suppressed",
+          email_error: delivery.sent ? null : delivery.reason,
+          email_message_id: delivery.sent ? delivery.messageId : null,
+          email_recipient: "smartydiet@outlook.com",
+          email_dispatched_at: delivery.sent ? new Date().toISOString() : null,
+        }).eq("id", attempt.id);
+      } catch (error) {
+        await getSupabase().from("diet_plan_attempts").update({
+          email_status: "failed",
+          email_error: error instanceof Error ? error.message.slice(0, 1000) : "Email dispatch failed",
+          email_recipient: "smartydiet@outlook.com",
+        }).eq("id", attempt.id);
+      }
+    }
+  }
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {

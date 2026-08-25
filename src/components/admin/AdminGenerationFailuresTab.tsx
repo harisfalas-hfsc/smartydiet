@@ -9,6 +9,7 @@ import {
   adminSendGenerationFailureTest,
   type AdminGenerationFailure,
 } from "@/lib/admin.functions";
+import { generationFailureLabel } from "@/lib/attempt-outcomes";
 
 export function AdminGenerationFailuresTab() {
   const listFailures = useServerFn(adminListGenerationFailures);
@@ -73,7 +74,8 @@ export function AdminGenerationFailuresTab() {
           <div className="mt-4 flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
             <div>
-              <p className="font-semibold">{failure.stage}</p>
+              <p className="font-semibold">{generationFailureLabel(failure.failure_kind === "ai_balance" ? "ai_balance" : "technical")}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{failure.stage}</p>
               <p className="mt-1 break-words text-muted-foreground">{failure.reason}</p>
               {failure.email_error && <p className="mt-2 text-xs text-destructive">Email: {failure.email_error}</p>}
             </div>
@@ -81,6 +83,9 @@ export function AdminGenerationFailuresTab() {
           <dl className="mt-3 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
             {failure.session_id && <div><dt className="inline font-semibold">Session: </dt><dd className="inline">{failure.session_id}</dd></div>}
             {failure.questionnaire_id && <div><dt className="inline font-semibold">Questionnaire: </dt><dd className="inline">{failure.questionnaire_id}</dd></div>}
+            {failure.email_recipient && <div><dt className="inline font-semibold">Alert recipient: </dt><dd className="inline">{failure.email_recipient}</dd></div>}
+            {failure.email_dispatched_at && <div><dt className="inline font-semibold">Accepted at: </dt><dd className="inline">{new Date(failure.email_dispatched_at).toLocaleString()}</dd></div>}
+            {failure.email_message_id && <div className="sm:col-span-2"><dt className="inline font-semibold">Message reference: </dt><dd className="inline break-all">{failure.email_message_id}</dd></div>}
           </dl>
         </article>
       ))}
