@@ -48,7 +48,7 @@ type SectionKey =
   | "members"
   | "customers"
   | "payments"
-  | "growth";
+  | "growth"
   | "failures";
 
 const SECTIONS: Array<{
