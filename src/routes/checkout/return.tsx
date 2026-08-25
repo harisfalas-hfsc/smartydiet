@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { markSessionPaid } from "@/lib/payments.functions";
+import { markSessionAuthorized, captureDietPayment, releaseDietAuthorization } from "@/lib/payments.functions";
 import { generatePlan } from "@/lib/plan.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useServerFn } from "@tanstack/react-start";
@@ -28,7 +28,9 @@ export const Route = createFileRoute("/checkout/return")({
 
 function Return() {
   const { session_id } = Route.useSearch();
-  const mark = useServerFn(markSessionPaid);
+  const mark = useServerFn(markSessionAuthorized);
+  const capture = useServerFn(captureDietPayment);
+  const release = useServerFn(releaseDietAuthorization);
   const generate = useServerFn(generatePlan);
   const reportFailure = useServerFn(reportPlanGenerationFailure);
   const navigate = useNavigate();
@@ -62,14 +64,28 @@ function Return() {
         }
         analytics.purchase(session_id);
         generationSessionId = paidRes.generationSessionId;
-        setMessage("Payment confirmed. Building your plan… this can take up to 2 minutes.");
+        setMessage("Payment authorized. Building your plan… this can take up to 2 minutes.");
         const planRes = await waitForPlanGeneration(
           generate({ data: { sessionId: paidRes.generationSessionId, operationId } }),
         );
         if (planRes.error) {
+          await release({
+            data: {
+              generationSessionId: paidRes.generationSessionId,
+              environment: getStripeEnvironment(),
+              reason: planRes.error,
+            },
+          }).catch(() => undefined);
           navigate({ to: "/", replace: true });
           return;
         }
+        setMessage("Your plan is ready. Completing payment…");
+        await capture({
+          data: {
+            generationSessionId: paidRes.generationSessionId,
+            environment: getStripeEnvironment(),
+          },
+        }).catch(() => undefined);
         analytics.planReady(false);
         setStatus("done");
         setMessage("Your plan is ready. Opening it now…");
@@ -79,6 +95,15 @@ function Return() {
           replace: true,
         });
       } catch (err: any) {
+        if (generationSessionId) {
+          await release({
+            data: {
+              generationSessionId,
+              environment: getStripeEnvironment(),
+              reason: err instanceof Error ? err.message : "Plan creation request failed",
+            },
+          }).catch(() => undefined);
+        }
         await reportFailure({
           data: {
             sessionId: generationSessionId,
