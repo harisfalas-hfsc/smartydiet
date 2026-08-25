@@ -32,11 +32,19 @@ export function attemptOutcomeLabel(status: string, failureKind?: string | null)
   if (status === "generation_failed") {
     return generationFailureLabel(failureKind === "ai_balance" ? "ai_balance" : "technical");
   }
+  if (status === "capture_failed" || failureKind === "capture_failed") {
+    return "Delivered — payment not captured";
+  }
   if (status === "generated") return "Generated";
-  if (status === "paid" || status === "payment_processing") return "Payment completed — generating";
+  if (status === "authorized") return "Authorized — generating";
+  if (status === "paid" || status === "payment_processing") return "Payment authorized — generating";
   return "Checkout pending / abandoned";
 }
 
 export function attemptOutcomeIsFailure(status: string): boolean {
-  return status === "payment_declined" || status === "generation_failed";
+  return (
+    status === "payment_declined" ||
+    status === "generation_failed" ||
+    status === "capture_failed"
+  );
 }

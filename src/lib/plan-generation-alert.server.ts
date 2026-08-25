@@ -16,6 +16,7 @@ type FailureDetails = {
   refinement?: string;
   stage?: string;
   reason: string;
+  paymentState?: string;
 };
 
 function claimString(claims: Record<string, unknown> | undefined, key: string) {
@@ -87,7 +88,7 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
         questionnaireId: details.questionnaireId,
         stage: details.stage ?? (details.refinement ? "Plan refinement" : "Initial plan generation"),
         outcomeLabel,
-        paymentState: "Payment completed",
+        paymentState: details.paymentState ?? "Card authorization released — customer NOT charged",
         reason: details.reason.slice(0, 4000),
         occurredAt,
       },
@@ -124,5 +125,44 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
       }).eq("generation_session_id", details.sessionId);
     }
     return { failureId, emailStatus: "failed", error: message };
+  }
+}
+// Plan was delivered but the authorized payment could not be captured.
+export async function sendCapturePaymentAlert(
+  context: AlertContext,
+  details: { sessionId: string; reason: string },
+) {
+  const occurredAt = new Date().toISOString();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  try {
+    const delivery = await sendTemplateEmail("plan-generation-failure", ADMIN_EMAIL, {
+      idempotencyKey: `capture-failed-${details.sessionId}`,
+      templateData: {
+        userId: context.userId,
+        userEmail: claimString(context.claims, "email"),
+        sessionId: details.sessionId,
+        stage: "Payment capture",
+        outcomeLabel: "Diet delivered — payment NOT captured",
+        paymentState: "Authorized but not captured — needs manual capture in Stripe",
+        reason: details.reason.slice(0, 4000),
+        occurredAt,
+      },
+    });
+    await supabaseAdmin.from("diet_plan_attempts").update({
+      email_status: delivery.sent ? "accepted" : "suppressed",
+      email_error: delivery.sent ? null : delivery.reason,
+      email_message_id: delivery.sent ? delivery.messageId : null,
+      email_recipient: ADMIN_EMAIL,
+      email_dispatched_at: delivery.sent ? new Date().toISOString() : null,
+    }).eq("generation_session_id", details.sessionId);
+    return { emailStatus: delivery.sent ? "accepted" : "suppressed" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Email dispatch failed";
+    await supabaseAdmin.from("diet_plan_attempts").update({
+      email_status: "failed",
+      email_error: message.slice(0, 1000),
+      email_recipient: ADMIN_EMAIL,
+    }).eq("generation_session_id", details.sessionId);
+    return { emailStatus: "failed", error: message };
   }
 }
