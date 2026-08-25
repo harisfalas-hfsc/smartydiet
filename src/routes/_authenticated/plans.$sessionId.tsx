@@ -25,6 +25,8 @@ import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
 import { enqueueMutation } from "@/lib/offline/queue";
 import { waitForPlanGeneration } from "@/lib/generation-client";
 
+const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
+
 export const Route = createFileRoute("/_authenticated/plans/$sessionId")({
   head: () => ({
     meta: [{ title: "My plan — SmartyDiet" }, { name: "robots", content: "noindex" }],
@@ -129,16 +131,15 @@ function PlanView() {
     try {
       const res = await waitForPlanGeneration(generate({ data: { sessionId } }));
       if (res.error) {
-        setGenerationError(res.error);
-        toast.error(res.error);
+        setGenerationError(GENERATION_ERROR_MESSAGE);
+        toast.error(GENERATION_ERROR_MESSAGE);
         return;
       }
       toast.success("Your plan is ready");
       await load();
     } catch (e: any) {
-      const message = e?.message ?? "Generation failed";
-      setGenerationError(message);
-      toast.error(message);
+      setGenerationError(GENERATION_ERROR_MESSAGE);
+      toast.error(GENERATION_ERROR_MESSAGE);
     } finally {
       setAutoGenerating(false);
     }
@@ -291,7 +292,9 @@ function PlanView() {
             ) : generationError ? (
               <>
                 <p className="mb-4 text-destructive">{generationError}</p>
-                <Button onClick={runGeneration}>Try again</Button>
+                <Button asChild>
+                  <Link to="/plans">Back to my plans</Link>
+                </Button>
               </>
             ) : session.status === "paid" ? (
               <>
