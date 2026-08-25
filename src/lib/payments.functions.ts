@@ -115,8 +115,9 @@ export const createDietCheckout = createServerFn({ method: "POST" })
     }
   });
 
-// Mark session paid — used by return page as a fallback in case webhook is delayed
-export const markSessionPaid = createServerFn({ method: "POST" })
+// Confirm the card authorization (manual capture) and create the generation session.
+// The customer is NOT charged here — capture happens only after the plan is generated.
+export const markSessionAuthorized = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { stripeSessionId: string; environment: StripeEnv }) => input)
   .handler(async ({ data, context }) => {
@@ -126,8 +127,15 @@ export const markSessionPaid = createServerFn({ method: "POST" })
       );
       if (await readFreeAccessMode()) return { paid: false, error: FREE_ACCESS_BLOCK_MESSAGE };
       const stripe = createStripeClient(data.environment);
-      const cs = await stripe.checkout.sessions.retrieve(data.stripeSessionId);
-      if (cs.payment_status !== "paid") return { paid: false };
+      const cs = await stripe.checkout.sessions.retrieve(data.stripeSessionId, {
+        expand: ["payment_intent"],
+      });
+      const pi = typeof cs.payment_intent === "string" ? null : cs.payment_intent;
+      const authorized =
+        cs.payment_status === "paid" ||
+        pi?.status === "requires_capture" ||
+        pi?.status === "succeeded";
+      if (!authorized) return { paid: false };
       const { supabase, userId } = context;
       const genSessionId = cs.metadata?.generationSessionId;
       const questionnaireId = cs.metadata?.questionnaireId;
@@ -146,6 +154,7 @@ export const markSessionPaid = createServerFn({ method: "POST" })
       }
       const paymentIntent =
         typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id ?? null;
+      const captured = pi?.status === "succeeded" || cs.payment_status === "paid";
       const { error: sessionError } = await supabase
         .from("generation_sessions")
         .upsert({
@@ -153,7 +162,7 @@ export const markSessionPaid = createServerFn({ method: "POST" })
           user_id: userId,
           questionnaire_id: questionnaireId,
           duration_weeks: durationWeeks,
-          status: "paid",
+          status: captured ? "paid" : "authorized",
           stripe_session_id: cs.id,
           stripe_payment_intent: paymentIntent,
           amount_cents: cs.amount_total ?? 999,
@@ -163,11 +172,11 @@ export const markSessionPaid = createServerFn({ method: "POST" })
       await supabase
         .from("diet_plan_attempts")
         .update({
-          status: "paid",
-          reached_stage: "Payment confirmed",
+          status: captured ? "paid" : "authorized",
+          reached_stage: captured ? "Payment confirmed" : "Payment authorized",
           generation_session_id: genSessionId,
           stripe_payment_intent: paymentIntent,
-          paid_at: new Date().toISOString(),
+          ...(captured ? { paid_at: new Date().toISOString() } : {}),
         })
         .eq("stripe_session_id", cs.id);
       await supabase
@@ -178,5 +187,114 @@ export const markSessionPaid = createServerFn({ method: "POST" })
       return { paid: true, generationSessionId: genSessionId };
     } catch (err) {
       return { paid: false, error: getStripeErrorMessage(err) };
+    }
+  });
+
+async function loadOwnedSession(supabase: any, userId: string, generationSessionId: string) {
+  const { data } = await supabase
+    .from("generation_sessions")
+    .select("id,user_id,status,stripe_payment_intent,questionnaire_id")
+    .eq("id", generationSessionId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data;
+}
+
+// Capture the authorized payment — called only after the diet plan exists.
+export const captureDietPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { generationSessionId: string; environment: StripeEnv }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    try {
+      const session = await loadOwnedSession(supabase, userId, data.generationSessionId);
+      if (!session) return { captured: false, error: "Session not found" };
+      if (session.status === "paid") return { captured: true };
+      if (!session.stripe_payment_intent) {
+        return { captured: false, error: "No payment to capture" };
+      }
+      const { data: plan } = await supabase
+        .from("diet_plans")
+        .select("id")
+        .eq("session_id", data.generationSessionId)
+        .limit(1)
+        .maybeSingle();
+      if (!plan) return { captured: false, error: "No plan generated — refusing to charge" };
+
+      const stripe = createStripeClient(data.environment);
+      const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
+      if (intent.status === "requires_capture") {
+        await stripe.paymentIntents.capture(session.stripe_payment_intent);
+      } else if (intent.status !== "succeeded") {
+        throw new Error(`Payment is in state ${intent.status} and cannot be captured`);
+      }
+      const now = new Date().toISOString();
+      await supabase
+        .from("generation_sessions")
+        .update({ status: "paid" })
+        .eq("id", data.generationSessionId);
+      await supabase
+        .from("diet_plan_attempts")
+        .update({ status: "generated", reached_stage: "Plan delivered", paid_at: now, completed_at: now })
+        .eq("generation_session_id", data.generationSessionId);
+      return { captured: true };
+    } catch (err) {
+      const message = getStripeErrorMessage(err);
+      await supabase
+        .from("diet_plan_attempts")
+        .update({
+          status: "capture_failed",
+          reached_stage: "Plan delivered — payment not captured",
+          failure_stage: "Payment capture",
+          failure_reason: message.slice(0, 4000),
+          failure_kind: "capture_failed",
+          failed_at: new Date().toISOString(),
+        })
+        .eq("generation_session_id", data.generationSessionId);
+      try {
+        const { sendCapturePaymentAlert } = await import("@/lib/plan-generation-alert.server");
+        await sendCapturePaymentAlert(
+          { supabase, userId, claims: context.claims as Record<string, unknown> },
+          { sessionId: data.generationSessionId, reason: message },
+        );
+      } catch {
+        // alerting must never block plan delivery
+      }
+      return { captured: false, error: message };
+    }
+  });
+
+// Release the hold when generation failed — the customer is never charged.
+export const releaseDietAuthorization = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: { generationSessionId: string; environment: StripeEnv; reason?: string }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    try {
+      const session = await loadOwnedSession(supabase, userId, data.generationSessionId);
+      if (!session?.stripe_payment_intent) return { released: false };
+      const stripe = createStripeClient(data.environment);
+      const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
+      if (intent.status === "requires_capture" || intent.status === "requires_confirmation") {
+        await stripe.paymentIntents.cancel(session.stripe_payment_intent);
+      } else if (intent.status !== "canceled") {
+        return { released: false, error: `Payment is in state ${intent.status}` };
+      }
+      await supabase
+        .from("generation_sessions")
+        .update({ status: "authorization_released" })
+        .eq("id", data.generationSessionId);
+      await supabase
+        .from("diet_plan_attempts")
+        .update({
+          payment_failure_code: "authorization_released",
+          reached_stage: "Authorization released — customer not charged",
+        })
+        .eq("generation_session_id", data.generationSessionId);
+      return { released: true };
+    } catch (err) {
+      return { released: false, error: getStripeErrorMessage(err) };
     }
   });
