@@ -7,12 +7,13 @@ interface Props {
   userEmail?: string;
   userId?: string;
   sessionId?: string;
+  questionnaireId?: string;
   stage?: string;
   reason?: string;
   occurredAt?: string;
 }
 
-const Email = ({ userName, userEmail, userId, sessionId, stage, reason, occurredAt }: Props) => (
+const Email = ({ userName, userEmail, userId, sessionId, questionnaireId, stage, reason, occurredAt }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>SmartyDiet plan generation failed</Preview>
@@ -25,6 +26,7 @@ const Email = ({ userName, userEmail, userId, sessionId, stage, reason, occurred
         <Text style={detail}><strong>Email:</strong> {userEmail || "Unavailable"}</Text>
         <Text style={detail}><strong>User ID:</strong> {userId || "Unavailable"}</Text>
         <Text style={detail}><strong>Session ID:</strong> {sessionId || "Unavailable"}</Text>
+        <Text style={detail}><strong>Questionnaire ID:</strong> {questionnaireId || "Unavailable"}</Text>
         <Text style={detail}><strong>Stage:</strong> {stage || "Plan generation"}</Text>
         <Text style={detail}><strong>Time:</strong> {occurredAt || "Unavailable"}</Text>
         <Hr style={rule} />
@@ -47,6 +49,7 @@ export const template = {
     userEmail: "jane@example.com",
     userId: "user-id",
     sessionId: "session-id",
+    questionnaireId: "questionnaire-id",
     stage: "Initial plan generation",
     reason: "AI service returned an error",
     occurredAt: "2026-08-25T20:42:00.000Z",
