@@ -17,15 +17,23 @@
 - Add the same **Plan PDF** and **Grocery PDF** actions used by the customer. Admin review remains read-only: no admin refinement or restore action on another customer’s plan.
 - Remove every raw JSON block from the admin UI.
 
-### 2. Make attempt status reflect the actual terminal outcome
-- Centralize attempt status labels and details into explicit states: checkout open/abandoned, payment declined, payment cancelled/expired, paid and actively generating, generation failed, and generated.
-- Make every server-side generation failure update the matching attempt in the same durable failure path before returning an error.
-- Make client timeout/network reporting update the same attempt idempotently, without creating conflicting duplicate records.
-- Change “Paid — generation pending” so it is shown only for a genuinely active, recent generation. A paid attempt with a recorded generation failure will show **Generation failed**, with the exact stored stage and reason in its dialog.
-- Reconcile the known recent Haris Falas plan-less attempts as historical generation failures caused by the confirmed AI service credit/balance outage, while leaving unrelated historical records untouched when their exact cause cannot be proven.
+### 2. Track attempts only from checkout and classify the real outcome
+- Start an attempt only when checkout is opened. Questionnaire-only activity is never added to Attempts.
+- Use explicit, mutually exclusive admin outcomes:
+  - **Checkout pending/abandoned** — checkout opened but payment was not completed.
+  - **Payment failed — card declined** — the payment provider reports a decline, including its available decline code/reason.
+  - **Payment completed — generating** — a short-lived in-progress state only while generation is actually running.
+  - **Generation failed — no AI balance** — the AI provider reports exhausted credits, insufficient balance, quota, or billing failure.
+  - **Generation failed — technical issue** — the AI provider or application fails for another technical reason; store the actual internal reason for admin diagnosis.
+  - **Generated** — payment completed and at least one real diet was saved; this record appears under Generated diets rather than failed Attempts.
+- Make every server-side generation failure update the matching checkout attempt before returning an error. Make client timeout/network reporting update the same attempt idempotently, without conflicting duplicate records.
+- Never infer a payment failure from a paid session. After payment, failures are classified as **no AI balance** or **technical issue**, with the original provider/system error retained in the admin details.
+- Reconcile the known recent Haris Falas plan-less attempts as **Generation failed — no AI balance**, because these are the tests reported during the exhausted AI balance incident. Do not invent causes for other historical records.
 
-### 3. Make failure alerts auditable rather than merely “accepted”
+### 3. Send the same accurate classification in the admin email
 - Keep `smartydiet@outlook.com` as the required recipient.
+- Give the email an unambiguous outcome in its subject and body: **Payment failed — card declined**, **Generation failed — no AI balance**, or **Generation failed — technical issue**. Never describe an AI-balance or platform failure as a payment failure.
+- Include the customer, checkout/payment state, stage reached, public classification, exact internal reason, session/attempt references, and timestamp.
 - Persist the alert attempt, recipient, provider result/message reference when available, timestamp, and error before the user is redirected.
 - Improve the admin failure card/test action to show the exact dispatch result and time instead of silently refreshing.
 - Send one new uniquely identifiable verification email after the fix and confirm all three signals separately:
@@ -43,6 +51,8 @@
 ## Verification
 - Open a generated Haris Falas diet from both admin locations and compare it with the customer plan view.
 - Download both plan and grocery PDFs from admin.
-- Confirm Antonis Georgiou still correctly shows no diets.
-- Open a known failed Haris attempt and verify it says **Generation failed — AI service credit/balance unavailable**, not pending.
-- Trigger the alert test and verify the database record plus managed-email event; report inbox receipt separately and honestly.
+- Confirm questionnaire-only activity creates no attempt, while opening checkout does.
+- Verify a card decline shows **Payment failed — card declined** in admin and email.
+- Open a known failed Haris attempt and verify it says **Generation failed — no AI balance**, not payment failed or pending.
+- Simulate a separate non-billing generation error and verify it shows **Generation failed — technical issue**, with the exact internal reason visible only to admin and in the admin email.
+- Trigger a uniquely identified **no AI balance** alert test and verify the database record plus managed-email event; report inbox receipt separately and honestly.
