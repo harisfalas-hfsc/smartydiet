@@ -16,6 +16,7 @@ import { TrustBar } from "@/components/Testimonials";
 import { isAdminEmail } from "@/lib/admin";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { waitForPlanGeneration } from "@/lib/generation-client";
 
 type Search = { qid?: string; weeks?: number };
 
@@ -31,10 +32,7 @@ export const Route = createFileRoute("/checkout")({
     if (!search.qid) throw redirect({ to: "/questionnaire" });
   },
   head: () => ({
-    meta: [
-      { title: "Checkout — SmartyDiet" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Checkout — SmartyDiet" }, { name: "robots", content: "noindex" }],
   }),
   component: CheckoutPage,
 });
@@ -49,8 +47,11 @@ function CheckoutPage() {
   const { user, loading: authLoading } = useAuth();
   const [serverComplimentaryAccess, setServerComplimentaryAccess] = useState<boolean | null>(null);
   // Admins never pay: they take the same complimentary path as Free Access Mode.
-  const freeAccessMode = freeModeSetting || serverComplimentaryAccess === true || isAdminEmail(user?.email);
-  const [freeMessage, setFreeMessage] = useState("Building your plan… this can take up to 2 minutes.");
+  const freeAccessMode =
+    freeModeSetting || serverComplimentaryAccess === true || isAdminEmail(user?.email);
+  const [freeMessage, setFreeMessage] = useState(
+    "Building your plan… this can take up to 2 minutes.",
+  );
   const [freeError, setFreeError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [weeks, setWeeks] = useState<1 | 2 | 4 | null>(null);
@@ -73,45 +74,68 @@ function CheckoutPage() {
   useEffect(() => {
     if (authLoading || !user?.id) return;
     let cancelled = false;
-    void getAccess({}).then((res) => {
-      if (!cancelled) setServerComplimentaryAccess(res.complimentaryAccess);
-    }).catch(() => {
-      if (!cancelled) setServerComplimentaryAccess(false);
-    });
+    void getAccess({})
+      .then((res) => {
+        if (!cancelled) setServerComplimentaryAccess(res.complimentaryAccess);
+      })
+      .catch(() => {
+        if (!cancelled) setServerComplimentaryAccess(false);
+      });
     return () => {
       cancelled = true;
     };
   }, [authLoading, user?.id, getAccess]);
 
   useEffect(() => {
-    if (freeLoading || !freeAccessMode || !ready || !qid || !weeks) return;
+    if (freeLoading || !freeAccessMode || !ready || !qid || !weeks || freeError) return;
     let cancelled = false;
     setFreeError(false);
     setFreeMessage("Building your plan… this can take up to 2 minutes.");
     (async () => {
-      const res = await startFree({ data: { questionnaireId: qid, durationWeeks: weeks } });
-      if (cancelled) return;
-      if ("error" in res) {
+      try {
+        const res = await startFree({ data: { questionnaireId: qid, durationWeeks: weeks } });
+        if (cancelled) return;
+        if ("error" in res) {
+          setFreeError(true);
+          setFreeMessage(res.error);
+          toast.error(res.error);
+          return;
+        }
+        const planRes = await waitForPlanGeneration(
+          generate({ data: { sessionId: res.sessionId } }),
+        );
+        if (cancelled) return;
+        if (planRes.error) {
+          setFreeError(true);
+          setFreeMessage(planRes.error);
+          toast.error(planRes.error);
+          return;
+        }
+        analytics.planReady(true);
+        navigate({ to: "/plans/$sessionId", params: { sessionId: res.sessionId }, replace: true });
+      } catch (error) {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : "Plan generation failed.";
         setFreeError(true);
-        setFreeMessage(res.error);
-        toast.error(res.error);
-        return;
+        setFreeMessage(message);
+        toast.error(message);
       }
-      const planRes = await generate({ data: { sessionId: res.sessionId } });
-      if (cancelled) return;
-      if (planRes.error) {
-        setFreeError(true);
-        setFreeMessage(planRes.error);
-        toast.error(planRes.error);
-        return;
-      }
-      analytics.planReady(true);
-      navigate({ to: "/plans/$sessionId", params: { sessionId: res.sessionId }, replace: true });
     })();
     return () => {
       cancelled = true;
     };
-  }, [freeLoading, freeAccessMode, ready, qid, weeks, startFree, generate, navigate, attempt]);
+  }, [
+    freeLoading,
+    freeAccessMode,
+    ready,
+    qid,
+    weeks,
+    freeError,
+    startFree,
+    generate,
+    navigate,
+    attempt,
+  ]);
 
   const options = useMemo(
     () => ({
@@ -161,7 +185,14 @@ function CheckoutPage() {
             <Button variant="outline" onClick={() => navigate({ to: "/plans" })}>
               My plans
             </Button>
-            <Button onClick={() => setAttempt((value) => value + 1)}>Try again</Button>
+            <Button
+              onClick={() => {
+                setFreeError(false);
+                setAttempt((value) => value + 1);
+              }}
+            >
+              Try again
+            </Button>
           </div>
         )}
       </div>
@@ -172,9 +203,7 @@ function CheckoutPage() {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
         <h1 className="text-xl font-extrabold">Almost there</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          {NATIVE_PURCHASE_UNAVAILABLE_MESSAGE}
-        </p>
+        <p className="mt-3 text-sm text-muted-foreground">{NATIVE_PURCHASE_UNAVAILABLE_MESSAGE}</p>
       </div>
     );
   }

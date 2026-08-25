@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, Minus, Plus } from "lucide-react";
 import {
   ALLERGY_TAGS,
   CULTURAL_TAGS,
@@ -91,7 +91,6 @@ function QuestionnairePage() {
       durationWeeks,
     });
   }, [data, step, durationWeeks, user?.id]);
-
 
   const upd = <K extends keyof QuestionnaireData>(key: K, patch: Partial<QuestionnaireData[K]>) =>
     setData((d) => {
@@ -181,7 +180,7 @@ function QuestionnairePage() {
           </p>
           <h1 className="text-2xl font-bold">{STEP_LABELS[step]}</h1>
         </div>
-      {!complimentaryAccess && <p className="text-sm text-muted-foreground">€9.99 at checkout</p>}
+        {!complimentaryAccess && <p className="text-sm text-muted-foreground">€9.99 at checkout</p>}
       </div>
       <Progress value={progress} className="mb-6" />
 
@@ -553,6 +552,13 @@ function StepEating({ data, upd }: StepProps) {
   const isFasting = data.eating.dietStyle === "intermittent_fasting";
   const isOMAD = isFasting && data.eating.fasting?.window === "OMAD";
   const minMeals = 1;
+  const [mealsInput, setMealsInput] = useState(String(data.eating.mealsPerDay));
+
+  const setMeals = (value: number) => {
+    const mealsPerDay = Math.max(minMeals, Math.min(6, value));
+    setMealsInput(String(mealsPerDay));
+    upd("eating", { mealsPerDay });
+  };
 
   function toggleFood(kind: "likedFoods" | "dislikedFoods", food: string) {
     const cur = new Set(data.eating[kind]);
@@ -618,9 +624,13 @@ function StepEating({ data, upd }: StepProps) {
             <Label>Eating window</Label>
             <Select
               value={data.eating.fasting?.window ?? "16:8"}
-              onValueChange={(v) =>
-                upd("eating", { fasting: { ...(data.eating.fasting ?? {}), window: v as any } })
-              }
+              onValueChange={(v) => {
+                upd("eating", {
+                  fasting: { ...(data.eating.fasting ?? {}), window: v as any },
+                  ...(v === "OMAD" ? { mealsPerDay: 1 } : {}),
+                });
+                if (v === "OMAD") setMealsInput("1");
+              }}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -669,17 +679,48 @@ function StepEating({ data, upd }: StepProps) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>Meals per day</Label>
-          <Input
-            type="number"
-            min={minMeals}
-            max={6}
-            value={data.eating.mealsPerDay}
-            onChange={(e) =>
-              upd("eating", {
-                mealsPerDay: Math.max(minMeals, Math.min(6, Number(e.target.value) || minMeals)),
-              })
-            }
-          />
+          <div className="relative">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Decrease meals per day"
+              className="absolute left-0 top-0 z-10 h-full w-10 rounded-r-none"
+              disabled={data.eating.mealsPerDay <= minMeals || isOMAD}
+              onClick={() => setMeals(data.eating.mealsPerDay - 1)}
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <Input
+              type="text"
+              inputMode="numeric"
+              aria-label="Meals per day, from 1 to 6"
+              value={mealsInput}
+              className="px-11 text-center"
+              disabled={isOMAD}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "") {
+                  setMealsInput("");
+                  return;
+                }
+                if (!/^[1-6]$/.test(value)) return;
+                setMeals(Number(value));
+              }}
+              onBlur={() => setMealsInput(String(data.eating.mealsPerDay))}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Increase meals per day"
+              className="absolute right-0 top-0 z-10 h-full w-10 rounded-l-none"
+              disabled={data.eating.mealsPerDay >= 6 || isOMAD}
+              onClick={() => setMeals(data.eating.mealsPerDay + 1)}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
           {isOMAD && (
             <p className="mt-1 text-xs text-primary">OMAD selected — 1 meal/day allowed.</p>
           )}

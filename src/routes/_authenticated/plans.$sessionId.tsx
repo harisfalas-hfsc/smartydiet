@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
 import { enqueueMutation } from "@/lib/offline/queue";
+import { waitForPlanGeneration } from "@/lib/generation-client";
 
 export const Route = createFileRoute("/_authenticated/plans/$sessionId")({
   head: () => ({
@@ -56,6 +57,8 @@ function PlanView() {
   const listVersions = useServerFn(listPlanVersions);
   const restore = useServerFn(restorePlanVersion);
   const [session, setSession] = useState<Session | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [sessionLoadError, setSessionLoadError] = useState<string | null>(null);
   const [versions, setVersions] = useState<PlanRow[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [refineText, setRefineText] = useState("");
@@ -65,28 +68,40 @@ function PlanView() {
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const s = await offlineFirst<Session | null>(
-      OFFLINE_KEYS.session(sessionId),
-      async () => {
-        const { data } = await supabase
-          .from("generation_sessions")
-          .select("id,duration_weeks,credits_total,credits_used,status")
-          .eq("id", sessionId)
-          .maybeSingle();
-        return (data as Session | null) ?? null;
-      },
-      userId,
-    ).catch(() => null);
-    setSession(s);
-    const rows = await offlineFirst<PlanRow[]>(
-      OFFLINE_KEYS.planVersions(sessionId),
-      async () => (await listVersions({ data: { sessionId } })) as PlanRow[],
-      userId,
-    ).catch(() => [] as PlanRow[]);
-    setVersions(rows);
-    // Prefer is_final; else newest
-    const active = rows.find((r) => r.is_final) ?? rows[0];
-    setActiveId((prev) => prev ?? active?.id ?? null);
+    setSessionLoading(true);
+    setSessionLoadError(null);
+    try {
+      const s = await offlineFirst<Session | null>(
+        OFFLINE_KEYS.session(sessionId),
+        async () => {
+          const { data, error } = await supabase
+            .from("generation_sessions")
+            .select("id,duration_weeks,credits_total,credits_used,status")
+            .eq("id", sessionId)
+            .maybeSingle();
+          if (error) throw error;
+          return (data as Session | null) ?? null;
+        },
+        userId,
+      );
+      if (!s) throw new Error("This plan session could not be found.");
+      setSession(s);
+      const rows = await offlineFirst<PlanRow[]>(
+        OFFLINE_KEYS.planVersions(sessionId),
+        async () => (await listVersions({ data: { sessionId } })) as PlanRow[],
+        userId,
+      ).catch(() => [] as PlanRow[]);
+      setVersions(rows);
+      // Prefer is_final; else newest
+      const active = rows.find((r) => r.is_final) ?? rows[0];
+      setActiveId((prev) => prev ?? active?.id ?? null);
+    } catch (error) {
+      setSessionLoadError(
+        error instanceof Error ? error.message : "This plan could not be loaded.",
+      );
+    } finally {
+      setSessionLoading(false);
+    }
   }, [sessionId, listVersions, userId]);
 
   useEffect(() => {
@@ -112,7 +127,7 @@ function PlanView() {
     setAutoGenerating(true);
     setGenerationError(null);
     try {
-      const res = await generate({ data: { sessionId } });
+      const res = await waitForPlanGeneration(generate({ data: { sessionId } }));
       if (res.error) {
         setGenerationError(res.error);
         toast.error(res.error);
@@ -132,13 +147,13 @@ function PlanView() {
   // Recovery: paid, no plan → auto-generate.
   useEffect(() => {
     if (!online) return;
-    if (!session || versions.length > 0 || autoGenerating) return;
+    if (!session || versions.length > 0 || autoGenerating || generationError) return;
     if (session.status !== "paid") return;
     if ((session.credits_used ?? 0) > 0) return;
     setAutoGenerating(true);
     setGenerationError(null);
     void runGeneration();
-  }, [session, versions.length, autoGenerating, online]);
+  }, [session, versions.length, autoGenerating, generationError, online]);
 
   async function refine() {
     if (!refineText.trim()) return toast.error("Describe the change you want");
@@ -159,9 +174,9 @@ function PlanView() {
         toast.success("Saved offline. Your refinement will run when you reconnect.");
         return;
       }
-      const res = await generate({
-        data: { sessionId, refinement: refineText.trim() },
-      });
+      const res = await waitForPlanGeneration(
+        generate({ data: { sessionId, refinement: refineText.trim() } }),
+      );
       if (res.error) throw new Error(res.error);
       setRefineText("");
       setActiveId(null); // let load() pick the new active
@@ -225,8 +240,20 @@ function PlanView() {
 
   if (!session)
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        {online ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <OfflineEmptyState />}
+      <div className="flex min-h-[40vh] items-center justify-center px-4">
+        {sessionLoading && online ? (
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        ) : sessionLoadError ? (
+          <Card className="w-full max-w-md">
+            <CardContent className="p-6 text-center">
+              <AlertTriangle className="mx-auto mb-3 h-6 w-6 text-destructive" />
+              <p className="mb-4 text-sm text-destructive">{sessionLoadError}</p>
+              <Button onClick={() => void load()}>Try again</Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <OfflineEmptyState />
+        )}
       </div>
     );
 
@@ -264,20 +291,12 @@ function PlanView() {
             ) : generationError ? (
               <>
                 <p className="mb-4 text-destructive">{generationError}</p>
-                <Button
-                  onClick={runGeneration}
-                >
-                  Try again
-                </Button>
+                <Button onClick={runGeneration}>Try again</Button>
               </>
             ) : session.status === "paid" ? (
               <>
                 <p className="mb-4">Your payment is confirmed. Tap below to build your plan.</p>
-                <Button
-                  onClick={runGeneration}
-                >
-                  Generate my plan
-                </Button>
+                <Button onClick={runGeneration}>Generate my plan</Button>
               </>
             ) : (
               "No plan yet."
