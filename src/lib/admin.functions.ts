@@ -267,6 +267,15 @@ export type AdminSessionRow = {
   amount_cents: number;
   currency: string;
   created_at: string;
+  versions: Array<{
+    id: string;
+    version: number;
+    plan: any;
+    rationale: string | null;
+    refinement_note: string | null;
+    is_final: boolean;
+    created_at: string;
+  }>;
 };
 
 export const adminListSessions = createServerFn({ method: "POST" })
@@ -276,13 +285,21 @@ export const adminListSessions = createServerFn({ method: "POST" })
     try {
       await assertAdmin(context as any);
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      let q = supabaseAdmin
+      let planQuery = supabaseAdmin
+        .from("diet_plans")
+        .select("id, session_id, user_id, version, plan, rationale, refinement_note, is_final, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      if (data.userId) planQuery = planQuery.eq("user_id", data.userId);
+      const { data: plans, error: planError } = await planQuery;
+      if (planError) return { error: planError.message };
+      const sessionIds = [...new Set((plans ?? []).map((p: any) => p.session_id))];
+      if (!sessionIds.length) return { sessions: [] };
+      const { data: sessions, error } = await supabaseAdmin
         .from("generation_sessions")
         .select("id, user_id, status, duration_weeks, credits_total, credits_used, amount_cents, currency, created_at")
-        .order("created_at", { ascending: false })
-        .limit(300);
-      if (data.userId) q = q.eq("user_id", data.userId);
-      const { data: sessions, error } = await q;
+        .in("id", sessionIds)
+        .order("created_at", { ascending: false });
       if (error) return { error: error.message };
 
       const emails = new Map<string, string | null>();
@@ -306,6 +323,9 @@ export const adminListSessions = createServerFn({ method: "POST" })
         amount_cents: s.amount_cents,
         currency: s.currency,
         created_at: s.created_at,
+        versions: (plans ?? [])
+          .filter((p: any) => p.session_id === s.id)
+          .sort((a: any, b: any) => b.version - a.version),
       }));
 
       if (data.search) {
@@ -324,9 +344,9 @@ export type AdminStats = {
   plansTotal: number;
   plansCompleted: number;
   paidSessions: number;
-  creditsOutstanding: number;
   admins: number;
   threads: number;
+  generationFailuresUnread: number;
 };
 
 export const adminGetStats = createServerFn({ method: "POST" })
@@ -335,15 +355,17 @@ export const adminGetStats = createServerFn({ method: "POST" })
     try {
       await assertAdmin(context as any);
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const [{ data: profiles }, { data: sessions }, { data: roles }, { count: threads }] =
+      const [{ data: profiles }, { data: sessions }, { data: plans }, { data: roles }, { count: threads }, { count: failures }] =
         await Promise.all([
           supabaseAdmin.from("profiles").select("id, created_at, bonus_credits").limit(5000),
           supabaseAdmin
             .from("generation_sessions")
             .select("status, credits_total, credits_used")
             .limit(5000),
+          supabaseAdmin.from("diet_plans").select("session_id").limit(5000),
           supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
           supabaseAdmin.from("support_threads").select("id", { count: "exact", head: true }),
+          supabaseAdmin.from("plan_generation_failures").select("id", { count: "exact", head: true }).is("read_at", null),
         ]);
 
       const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
@@ -353,17 +375,77 @@ export const adminGetStats = createServerFn({ method: "POST" })
         newMembers30d: (profiles ?? []).filter(
           (p: any) => new Date(p.created_at).getTime() >= cutoff,
         ).length,
-        plansTotal: all.length,
-        plansCompleted: all.filter((s) => s.status === "completed").length,
+        plansTotal: new Set((plans ?? []).map((p: any) => p.session_id)).size,
+        plansCompleted: new Set((plans ?? []).map((p: any) => p.session_id)).size,
         paidSessions: all.filter((s) => s.status === "paid" || s.status === "completed").length,
-        creditsOutstanding: all.reduce(
-          (sum, s) => sum + Math.max(0, (s.credits_total ?? 0) - (s.credits_used ?? 0)),
-          0,
-        ),
         admins: (roles ?? []).length,
         threads: threads ?? 0,
+        generationFailuresUnread: failures ?? 0,
       };
     } catch (e) {
       return { error: e instanceof Error ? e.message : "Failed to load stats" };
+    }
+  });
+
+export type AdminGenerationFailure = {
+  id: string;
+  user_id: string;
+  email: string | null;
+  session_id: string | null;
+  questionnaire_id: string | null;
+  stage: string;
+  reason: string;
+  email_status: string;
+  email_error: string | null;
+  occurred_at: string;
+  read_at: string | null;
+};
+
+export const adminListGenerationFailures = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ failures: AdminGenerationFailure[] } | { error: string }> => {
+    try {
+      await assertAdmin(context as any);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: failures, error } = await supabaseAdmin
+        .from("plan_generation_failures")
+        .select("id,user_id,session_id,questionnaire_id,stage,reason,email_status,email_error,occurred_at,read_at")
+        .order("occurred_at", { ascending: false })
+        .limit(200);
+      if (error) return { error: error.message };
+      const emails = new Map<string, string | null>();
+      let page = 1;
+      for (let i = 0; i < 5; i++) {
+        const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+        const users = list?.users ?? [];
+        for (const user of users) emails.set(user.id, user.email ?? null);
+        if (users.length < 200) break;
+        page++;
+      }
+      return {
+        failures: (failures ?? []).map((failure: any) => ({
+          ...failure,
+          email: emails.get(failure.user_id) ?? null,
+        })),
+      };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : "Failed to list generation failures" };
+    }
+  });
+
+export const adminMarkGenerationFailureRead = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ context, data }): Promise<{ ok: true } | { error: string }> => {
+    try {
+      await assertAdmin(context as any);
+      const { error } = await context.supabase
+        .from("plan_generation_failures")
+        .update({ read_at: new Date().toISOString() })
+        .eq("id", data.id);
+      if (error) return { error: error.message };
+      return { ok: true };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : "Failed to update failure" };
     }
   });
