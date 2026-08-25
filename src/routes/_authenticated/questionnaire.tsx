@@ -561,10 +561,6 @@ function StepEating({ data, upd }: StepProps) {
     upd("eating", { mealsPerDay });
   };
 
-  useEffect(() => {
-    if (isOMAD && data.eating.mealsPerDay !== 1) setMeals(1);
-  }, [isOMAD, data.eating.mealsPerDay]);
-
   function toggleFood(kind: "likedFoods" | "dislikedFoods", food: string) {
     const cur = new Set(data.eating[kind]);
     if (cur.has(food)) cur.delete(food);
@@ -629,9 +625,13 @@ function StepEating({ data, upd }: StepProps) {
             <Label>Eating window</Label>
             <Select
               value={data.eating.fasting?.window ?? "16:8"}
-              onValueChange={(v) =>
-                upd("eating", { fasting: { ...(data.eating.fasting ?? {}), window: v as any } })
-              }
+              onValueChange={(v) => {
+                upd("eating", {
+                  fasting: { ...(data.eating.fasting ?? {}), window: v as any },
+                  ...(v === "OMAD" ? { mealsPerDay: 1 } : {}),
+                });
+                if (v === "OMAD") setMealsInput("1");
+              }}
             >
               <SelectTrigger>
                 <SelectValue />
