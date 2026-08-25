@@ -537,6 +537,18 @@ export const generatePlan = createServerFn({ method: "POST" })
         .update({ credits_used: newCreditsUsed, status: "completed" })
         .eq("id", session.id);
 
+      await supabase
+        .from("diet_plan_attempts")
+        .update({
+          status: "generated",
+          reached_stage: "Diet generated",
+          completed_at: new Date().toISOString(),
+          failure_stage: null,
+          failure_reason: null,
+          failed_at: null,
+        })
+        .eq("generation_session_id", session.id);
+
       return { plan: planToSave, rationale: plan?.rationale, warnings };
     } catch (err: any) {
       const message = err?.message ?? "AI generation failed";

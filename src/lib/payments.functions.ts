@@ -94,6 +94,21 @@ export const createDietCheckout = createServerFn({ method: "POST" })
         },
       });
 
+      const { error: attemptError } = await supabase.from("diet_plan_attempts").insert({
+        user_id: userId,
+        questionnaire_id: data.questionnaireId,
+        generation_session_id: generationSessionId,
+        stripe_session_id: checkout.id,
+        environment: data.environment,
+        status: "checkout_opened",
+        reached_stage: "Checkout opened",
+        amount_cents: price.unit_amount ?? 999,
+        currency: price.currency ?? "eur",
+      });
+      if (attemptError) {
+        await stripe.checkout.sessions.expire(checkout.id).catch(() => undefined);
+        return { error: `Checkout attempt could not be recorded: ${attemptError.message}` };
+      }
       return { clientSecret: checkout.client_secret ?? "" };
     } catch (err) {
       return { error: getStripeErrorMessage(err) };
@@ -145,6 +160,16 @@ export const markSessionPaid = createServerFn({ method: "POST" })
           currency: cs.currency ?? "eur",
         }, { onConflict: "id" });
       if (sessionError) return { paid: false, error: sessionError.message };
+      await supabase
+        .from("diet_plan_attempts")
+        .update({
+          status: "paid",
+          reached_stage: "Payment confirmed",
+          generation_session_id: genSessionId,
+          stripe_payment_intent: paymentIntent,
+          paid_at: new Date().toISOString(),
+        })
+        .eq("stripe_session_id", cs.id);
       await supabase
         .from("questionnaires")
         .update({ status: "paid" })
