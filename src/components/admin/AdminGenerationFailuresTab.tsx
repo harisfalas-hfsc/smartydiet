@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import {
   adminListGenerationFailures,
   adminMarkGenerationFailureRead,
+  adminSendGenerationFailureTest,
   type AdminGenerationFailure,
 } from "@/lib/admin.functions";
 
 export function AdminGenerationFailuresTab() {
   const listFailures = useServerFn(adminListGenerationFailures);
   const markRead = useServerFn(adminMarkGenerationFailureRead);
+  const sendTest = useServerFn(adminSendGenerationFailureTest);
   const [rows, setRows] = useState<AdminGenerationFailure[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,10 +32,16 @@ export function AdminGenerationFailuresTab() {
 
   if (loading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (error) return <p className="text-sm text-destructive">{error}</p>;
-  if (!rows.length) return <p className="py-10 text-center text-sm text-muted-foreground">No generation failures recorded.</p>;
-
   return (
     <div className="space-y-3">
+      <div className="flex justify-end">
+        <Button variant="outline" onClick={async () => {
+          const result = await sendTest({} as never);
+          if ("error" in result) setError(result.error);
+          else await load();
+        }}>Send test failure email</Button>
+      </div>
+      {!rows.length && <p className="py-10 text-center text-sm text-muted-foreground">No generation failures recorded.</p>}
       {rows.map((failure) => (
         <article key={failure.id} className="rounded-lg border border-border bg-card p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">

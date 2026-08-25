@@ -338,6 +338,56 @@ export const adminListSessions = createServerFn({ method: "POST" })
     }
   });
 
+export type AdminDietAttempt = {
+  id: string; user_id: string; email: string | null; status: string;
+  reached_stage: string; failure_stage: string | null; failure_reason: string | null;
+  payment_failure_code: string | null; amount_cents: number; currency: string;
+  checkout_opened_at: string; failed_at: string | null; generation_session_id: string | null;
+};
+
+export const adminListDietAttempts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ attempts: AdminDietAttempt[] } | { error: string }> => {
+    try {
+      await assertAdmin(context as any);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: attempts, error } = await supabaseAdmin
+        .from("diet_plan_attempts")
+        .select("id,user_id,status,reached_stage,failure_stage,failure_reason,payment_failure_code,amount_cents,currency,checkout_opened_at,failed_at,generation_session_id")
+        .neq("status", "generated").order("checkout_opened_at", { ascending: false }).limit(500);
+      if (error) return { error: error.message };
+      const emails = new Map<string, string | null>();
+      let page = 1;
+      for (let i = 0; i < 5; i++) {
+        const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+        const users = list?.users ?? [];
+        for (const user of users) emails.set(user.id, user.email ?? null);
+        if (users.length < 200) break;
+        page++;
+      }
+      return { attempts: (attempts ?? []).map((attempt: any) => ({ ...attempt, email: emails.get(attempt.user_id) ?? null })) };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : "Failed to list diet attempts" };
+    }
+  });
+
+export const adminSendGenerationFailureTest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ ok: true; status: string } | { error: string }> => {
+    try {
+      await assertAdmin(context as any);
+      const { sendPlanGenerationFailureAlert } = await import("@/lib/plan-generation-alert.server");
+      const result = await sendPlanGenerationFailureAlert(
+        { supabase: context.supabase, userId: context.userId, claims: context.claims as Record<string, unknown> },
+        { operationId: crypto.randomUUID(), stage: "Manual alert verification", reason: "Test replay of the earlier no-AI-credit generation failure. This verifies that operational alerts reach smartydiet@outlook.com." },
+      );
+      if (result.emailStatus !== "accepted") return { error: result.error ?? `Email ${result.emailStatus}` };
+      return { ok: true, status: result.emailStatus };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : "Could not send test alert" };
+    }
+  });
+
 export type AdminStats = {
   members: number;
   newMembers30d: number;

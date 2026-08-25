@@ -39,6 +39,30 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
   }, { onConflict: "id", ignoreDuplicates: true });
   if (recordError) throw new Error(`Could not record generation failure: ${recordError.message}`);
 
+  const attemptUpdate = {
+    status: "generation_failed",
+    reached_stage: details.stage ?? "Plan generation",
+    failure_stage: details.stage ?? "Plan generation",
+    failure_reason: details.reason.slice(0, 4000),
+    failed_at: occurredAt,
+  };
+  if (details.sessionId) {
+    const { data: updatedAttempts } = await supabaseAdmin
+      .from("diet_plan_attempts")
+      .update(attemptUpdate)
+      .eq("generation_session_id", details.sessionId)
+      .select("id");
+    if (!updatedAttempts?.length) {
+      await supabaseAdmin.from("diet_plan_attempts").insert({
+        id: failureId,
+        user_id: context.userId,
+        questionnaire_id: details.questionnaireId ?? null,
+        generation_session_id: details.sessionId,
+        ...attemptUpdate,
+      });
+    }
+  }
+
   try {
     const { data: profile } = await context.supabase
       .from("profiles")

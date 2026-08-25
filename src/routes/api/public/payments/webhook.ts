@@ -41,6 +41,31 @@ async function handleCheckoutCompleted(session: any) {
     .update({ status: "paid" })
     .eq("id", questionnaireId)
     .eq("user_id", userId);
+  await getSupabase()
+    .from("diet_plan_attempts")
+    .update({
+      status: "paid",
+      reached_stage: "Payment confirmed",
+      generation_session_id: genSessionId,
+      stripe_payment_intent: paymentIntent,
+      paid_at: new Date().toISOString(),
+    })
+    .eq("stripe_session_id", session.id);
+}
+
+async function handleCheckoutFailure(session: any, declined: boolean) {
+  await getSupabase()
+    .from("diet_plan_attempts")
+    .update({
+      status: declined ? "payment_declined" : "payment_cancelled",
+      reached_stage: declined ? "Payment declined" : "Checkout expired",
+      failure_stage: "Payment",
+      failure_reason: declined
+        ? "The payment provider reported that payment failed or was declined."
+        : "Checkout expired before payment was completed.",
+      failed_at: new Date().toISOString(),
+    })
+    .eq("stripe_session_id", session.id);
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
@@ -49,6 +74,12 @@ async function handleWebhook(req: Request, env: StripeEnv) {
     case "checkout.session.completed":
     case "transaction.completed":
       await handleCheckoutCompleted(event.data.object);
+      break;
+    case "checkout.session.async_payment_failed":
+      await handleCheckoutFailure(event.data.object, true);
+      break;
+    case "checkout.session.expired":
+      await handleCheckoutFailure(event.data.object, false);
       break;
     default:
       console.log("Unhandled event:", event.type);
