@@ -57,6 +57,8 @@ function PlanView() {
   const listVersions = useServerFn(listPlanVersions);
   const restore = useServerFn(restorePlanVersion);
   const [session, setSession] = useState<Session | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [sessionLoadError, setSessionLoadError] = useState<string | null>(null);
   const [versions, setVersions] = useState<PlanRow[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [refineText, setRefineText] = useState("");
@@ -66,28 +68,39 @@ function PlanView() {
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const s = await offlineFirst<Session | null>(
-      OFFLINE_KEYS.session(sessionId),
-      async () => {
-        const { data } = await supabase
-          .from("generation_sessions")
-          .select("id,duration_weeks,credits_total,credits_used,status")
-          .eq("id", sessionId)
-          .maybeSingle();
-        return (data as Session | null) ?? null;
-      },
-      userId,
-    ).catch(() => null);
-    setSession(s);
-    const rows = await offlineFirst<PlanRow[]>(
-      OFFLINE_KEYS.planVersions(sessionId),
-      async () => (await listVersions({ data: { sessionId } })) as PlanRow[],
-      userId,
-    ).catch(() => [] as PlanRow[]);
-    setVersions(rows);
-    // Prefer is_final; else newest
-    const active = rows.find((r) => r.is_final) ?? rows[0];
-    setActiveId((prev) => prev ?? active?.id ?? null);
+    setSessionLoadError(null);
+    try {
+      const s = await offlineFirst<Session | null>(
+        OFFLINE_KEYS.session(sessionId),
+        async () => {
+          const { data, error } = await supabase
+            .from("generation_sessions")
+            .select("id,duration_weeks,credits_total,credits_used,status")
+            .eq("id", sessionId)
+            .maybeSingle();
+          if (error) throw error;
+          return (data as Session | null) ?? null;
+        },
+        userId,
+      );
+      if (!s) throw new Error("This plan session could not be found.");
+      setSession(s);
+      const rows = await offlineFirst<PlanRow[]>(
+        OFFLINE_KEYS.planVersions(sessionId),
+        async () => (await listVersions({ data: { sessionId } })) as PlanRow[],
+        userId,
+      ).catch(() => [] as PlanRow[]);
+      setVersions(rows);
+      // Prefer is_final; else newest
+      const active = rows.find((r) => r.is_final) ?? rows[0];
+      setActiveId((prev) => prev ?? active?.id ?? null);
+    } catch (error) {
+      setSessionLoadError(
+        error instanceof Error ? error.message : "This plan could not be loaded.",
+      );
+    } finally {
+      setSessionLoading(false);
+    }
   }, [sessionId, listVersions, userId]);
 
   useEffect(() => {
@@ -226,8 +239,20 @@ function PlanView() {
 
   if (!session)
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        {online ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <OfflineEmptyState />}
+      <div className="flex min-h-[40vh] items-center justify-center px-4">
+        {sessionLoading && online ? (
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        ) : sessionLoadError ? (
+          <Card className="w-full max-w-md">
+            <CardContent className="p-6 text-center">
+              <AlertTriangle className="mx-auto mb-3 h-6 w-6 text-destructive" />
+              <p className="mb-4 text-sm text-destructive">{sessionLoadError}</p>
+              <Button onClick={() => void load()}>Try again</Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <OfflineEmptyState />
+        )}
       </div>
     );
 
