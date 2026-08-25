@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isAdminEmail } from "@/lib/admin";
 
 /** Public read — used for SSR surfaces that cannot use the browser client. */
 export const getFreeAccessMode = createServerFn({ method: "GET" }).handler(async () => {
@@ -13,17 +12,12 @@ export const adminSetFreeAccessMode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { enabled: boolean }) => input)
   .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
+    const { data: isAdmin, error: adminError } = await context.supabase.rpc("is_app_admin", {
+      _user_id: context.userId,
+    });
+    if (adminError || !isAdmin) return { error: "Forbidden: admin access required" };
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const email = (context.claims as { email?: string } | null)?.email;
-    if (!isAdminEmail(email)) {
-      const { data: role } = await supabaseAdmin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", context.userId)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (!role) return { error: "Forbidden: admin access required" };
-    }
     const { error } = await supabaseAdmin
       .from("system_settings")
       .upsert(
@@ -47,19 +41,10 @@ export const startFreeSession = createServerFn({ method: "POST" })
     const { readFreeAccessMode } = await import("@/lib/free-access.server");
     if (!(await readFreeAccessMode())) {
       // Admins always get complimentary access, even in normal paid mode.
-      const email = (context.claims as { email?: string } | null)?.email;
-      let allowed = isAdminEmail(email);
-      if (!allowed) {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: role } = await supabaseAdmin
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", context.userId)
-          .eq("role", "admin")
-          .maybeSingle();
-        allowed = !!role;
-      }
-      if (!allowed) return { error: "Free access mode is not enabled" };
+      const { data: isAdmin, error: adminError } = await context.supabase.rpc("is_app_admin", {
+        _user_id: context.userId,
+      });
+      if (adminError || !isAdmin) return { error: "Free access mode is not enabled" };
     }
 
     const { supabase, userId } = context;

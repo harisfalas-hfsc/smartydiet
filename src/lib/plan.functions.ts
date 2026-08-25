@@ -523,7 +523,14 @@ export const generatePlan = createServerFn({ method: "POST" })
 
       return { plan: planToSave, rationale: plan?.rationale, warnings };
     } catch (err: any) {
-      return { error: err?.message ?? "AI generation failed" };
+      const message = err?.message ?? "AI generation failed";
+      if (/payment required|insufficient.*credit|credit.*exhaust/i.test(message)) {
+        return {
+          error:
+            "Plan generation is temporarily unavailable because the app's AI credits are exhausted. The app owner must restore credits before generation can continue.",
+        };
+      }
+      return { error: message };
     }
   });
 
