@@ -15,15 +15,32 @@ function getSupabase(): any {
 
 async function handleCheckoutCompleted(session: any) {
   const genSessionId = session?.metadata?.generationSessionId;
-  if (!genSessionId) return;
+  const userId = session?.metadata?.userId;
+  const questionnaireId = session?.metadata?.questionnaireId;
+  const durationWeeks = Number(session?.metadata?.durationWeeks);
+  if (!genSessionId || !userId || !questionnaireId || ![1, 2, 4].includes(durationWeeks)) return;
   const paymentIntent =
     typeof session.payment_intent === "string"
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
   await getSupabase()
     .from("generation_sessions")
-    .update({ status: "paid", stripe_payment_intent: paymentIntent })
-    .eq("id", genSessionId);
+    .upsert({
+      id: genSessionId,
+      user_id: userId,
+      questionnaire_id: questionnaireId,
+      duration_weeks: durationWeeks,
+      status: "paid",
+      stripe_session_id: session.id,
+      stripe_payment_intent: paymentIntent,
+      amount_cents: session.amount_total ?? 999,
+      currency: session.currency ?? "eur",
+    }, { onConflict: "id" });
+  await getSupabase()
+    .from("questionnaires")
+    .update({ status: "paid" })
+    .eq("id", questionnaireId)
+    .eq("user_id", userId);
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {

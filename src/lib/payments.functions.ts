@@ -66,18 +66,8 @@ export const createDietCheckout = createServerFn({ method: "POST" })
         .single();
       if (qErr || !q) return { error: "Questionnaire not found" };
 
-      // Create generation session (pending)
-      const { data: session, error: sErr } = await supabase
-        .from("generation_sessions")
-        .insert({
-          user_id: userId,
-          questionnaire_id: data.questionnaireId,
-          duration_weeks: data.durationWeeks,
-          status: "pending",
-        })
-        .select("id")
-        .single();
-      if (sErr || !session) return { error: sErr?.message ?? "Failed to create session" };
+      // Reserve an id for Stripe metadata without creating an unpaid database record.
+      const generationSessionId = crypto.randomUUID();
 
       const stripe = createStripeClient(data.environment);
       const prices = await stripe.prices.list({ lookup_keys: ["smartydiet_plan_onetime"] });
@@ -96,14 +86,13 @@ export const createDietCheckout = createServerFn({ method: "POST" })
         return_url: data.returnUrl,
         customer: customerId,
         payment_intent_data: { description: product.name },
-        metadata: { userId, generationSessionId: session.id, questionnaireId: data.questionnaireId },
+        metadata: {
+          userId,
+          generationSessionId,
+          questionnaireId: data.questionnaireId,
+          durationWeeks: String(data.durationWeeks),
+        },
       });
-
-      // Store stripe session id
-      await supabase
-        .from("generation_sessions")
-        .update({ stripe_session_id: checkout.id })
-        .eq("id", session.id);
 
       return { clientSecret: checkout.client_secret ?? "" };
     } catch (err) {
@@ -126,24 +115,41 @@ export const markSessionPaid = createServerFn({ method: "POST" })
       if (cs.payment_status !== "paid") return { paid: false };
       const { supabase, userId } = context;
       const genSessionId = cs.metadata?.generationSessionId;
-      if (!genSessionId) return { paid: false };
-      await supabase
-        .from("generation_sessions")
-        .update({
-          status: "paid",
-          stripe_payment_intent:
-            typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id ?? null,
-        })
-        .eq("id", genSessionId)
-        .eq("user_id", userId);
       const questionnaireId = cs.metadata?.questionnaireId;
-      if (questionnaireId) {
-        await supabase
-          .from("questionnaires")
-          .update({ status: "paid" })
-          .eq("id", questionnaireId)
-          .eq("user_id", userId);
+      const durationWeeks = Number(cs.metadata?.durationWeeks);
+      if (!genSessionId || !questionnaireId || ![1, 2, 4].includes(durationWeeks)) {
+        return { paid: false, error: "Checkout metadata is incomplete" };
       }
+      const { data: questionnaire } = await supabase
+        .from("questionnaires")
+        .select("id")
+        .eq("id", questionnaireId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!questionnaire || cs.metadata?.userId !== userId) {
+        return { paid: false, error: "Checkout does not belong to this account" };
+      }
+      const paymentIntent =
+        typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id ?? null;
+      const { error: sessionError } = await supabase
+        .from("generation_sessions")
+        .upsert({
+          id: genSessionId,
+          user_id: userId,
+          questionnaire_id: questionnaireId,
+          duration_weeks: durationWeeks,
+          status: "paid",
+          stripe_session_id: cs.id,
+          stripe_payment_intent: paymentIntent,
+          amount_cents: cs.amount_total ?? 999,
+          currency: cs.currency ?? "eur",
+        }, { onConflict: "id" });
+      if (sessionError) return { paid: false, error: sessionError.message };
+      await supabase
+        .from("questionnaires")
+        .update({ status: "paid" })
+        .eq("id", questionnaireId)
+        .eq("user_id", userId);
       return { paid: true, generationSessionId: genSessionId };
     } catch (err) {
       return { paid: false, error: getStripeErrorMessage(err) };

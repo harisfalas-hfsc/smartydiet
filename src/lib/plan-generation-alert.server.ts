@@ -23,6 +23,22 @@ function claimString(claims: Record<string, unknown> | undefined, key: string) {
 }
 
 export async function sendPlanGenerationFailureAlert(context: AlertContext, details: FailureDetails) {
+  const failureId = details.operationId ?? crypto.randomUUID();
+  const occurredAt = new Date().toISOString();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error: recordError } = await supabaseAdmin.from("plan_generation_failures").upsert({
+    id: failureId,
+    user_id: context.userId,
+    session_id: details.sessionId ?? null,
+    questionnaire_id: details.questionnaireId ?? null,
+    stage: details.stage ?? (details.refinement ? "Plan refinement" : "Initial plan generation"),
+    reason: details.reason.slice(0, 4000),
+    refinement: details.refinement ?? null,
+    email_status: "pending",
+    occurred_at: occurredAt,
+  }, { onConflict: "id", ignoreDuplicates: true });
+  if (recordError) throw new Error(`Could not record generation failure: ${recordError.message}`);
+
   try {
     const { data: profile } = await context.supabase
       .from("profiles")
@@ -38,11 +54,10 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
       (typeof profile?.display_name === "string" ? profile.display_name : undefined) ??
       claimString(userMetadata, "full_name") ??
       claimString(userMetadata, "name");
-    const attemptId = details.operationId ?? crypto.randomUUID();
     const referenceId = details.sessionId ?? details.questionnaireId ?? "unknown";
 
-    await sendTemplateEmail("plan-generation-failure", ADMIN_EMAIL, {
-      idempotencyKey: `plan-generation-failure-${referenceId}-${attemptId}`,
+    const delivery = await sendTemplateEmail("plan-generation-failure", ADMIN_EMAIL, {
+      idempotencyKey: `plan-generation-failure-${referenceId}-${failureId}`,
       templateData: {
         userName,
         userEmail,
@@ -51,10 +66,21 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
         questionnaireId: details.questionnaireId,
         stage: details.stage ?? (details.refinement ? "Plan refinement" : "Initial plan generation"),
         reason: details.reason.slice(0, 4000),
-        occurredAt: new Date().toISOString(),
+        occurredAt,
       },
     });
+    await supabaseAdmin.from("plan_generation_failures").update({
+      email_status: delivery.sent ? "accepted" : "suppressed",
+      email_error: delivery.sent ? null : delivery.reason,
+    }).eq("id", failureId);
+    return { failureId, emailStatus: delivery.sent ? "accepted" : "suppressed" };
   } catch (error) {
     console.error("[plan-generation-alert] notification failed", error);
+    const message = error instanceof Error ? error.message : "Email dispatch failed";
+    await supabaseAdmin.from("plan_generation_failures").update({
+      email_status: "failed",
+      email_error: message.slice(0, 1000),
+    }).eq("id", failureId);
+    return { failureId, emailStatus: "failed", error: message };
   }
 }
