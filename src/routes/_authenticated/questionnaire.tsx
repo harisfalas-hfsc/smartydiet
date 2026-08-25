@@ -561,6 +561,10 @@ function StepEating({ data, upd }: StepProps) {
     upd("eating", { mealsPerDay });
   };
 
+  useEffect(() => {
+    if (isOMAD && data.eating.mealsPerDay !== 1) setMeals(1);
+  }, [isOMAD, data.eating.mealsPerDay]);
+
   function toggleFood(kind: "likedFoods" | "dislikedFoods", food: string) {
     const cur = new Set(data.eating[kind]);
     if (cur.has(food)) cur.delete(food);

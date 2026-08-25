@@ -85,7 +85,7 @@ function CheckoutPage() {
   }, [authLoading, user?.id, getAccess]);
 
   useEffect(() => {
-    if (freeLoading || !freeAccessMode || !ready || !qid || !weeks) return;
+    if (freeLoading || !freeAccessMode || !ready || !qid || !weeks || freeError) return;
     let cancelled = false;
     setFreeError(false);
     setFreeMessage("Building your plan… this can take up to 2 minutes.");
@@ -122,7 +122,18 @@ function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [freeLoading, freeAccessMode, ready, qid, weeks, startFree, generate, navigate, attempt]);
+  }, [
+    freeLoading,
+    freeAccessMode,
+    ready,
+    qid,
+    weeks,
+    freeError,
+    startFree,
+    generate,
+    navigate,
+    attempt,
+  ]);
 
   const options = useMemo(
     () => ({
@@ -172,7 +183,14 @@ function CheckoutPage() {
             <Button variant="outline" onClick={() => navigate({ to: "/plans" })}>
               My plans
             </Button>
-            <Button onClick={() => setAttempt((value) => value + 1)}>Try again</Button>
+            <Button
+              onClick={() => {
+                setFreeError(false);
+                setAttempt((value) => value + 1);
+              }}
+            >
+              Try again
+            </Button>
           </div>
         )}
       </div>
