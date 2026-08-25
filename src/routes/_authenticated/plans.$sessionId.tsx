@@ -295,7 +295,7 @@ function PlanView() {
               <>
                 <p className="mb-4 text-destructive">{generationError}</p>
                 <Button asChild>
-                  <Link to="/plans">Back to my plans</Link>
+                  <Link to="/">Back to homepage</Link>
                 </Button>
               </>
             ) : session.status === "paid" ? (
