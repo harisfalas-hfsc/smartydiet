@@ -49,7 +49,7 @@ function Return() {
         analytics.purchase(session_id);
         setMessage("Payment confirmed. Building your plan… this can take up to 2 minutes.");
         const planRes = await generate({ data: { sessionId: paidRes.generationSessionId } });
-        if (planRes.error && planRes.error !== "No credits remaining") {
+        if (planRes.error) {
           setStatus("error");
           setMessage(planRes.error);
           return;
