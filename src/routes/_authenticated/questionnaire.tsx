@@ -92,7 +92,6 @@ function QuestionnairePage() {
     });
   }, [data, step, durationWeeks, user?.id]);
 
-
   const upd = <K extends keyof QuestionnaireData>(key: K, patch: Partial<QuestionnaireData[K]>) =>
     setData((d) => {
       const cur = d[key] as Record<string, unknown>;
@@ -181,7 +180,7 @@ function QuestionnairePage() {
           </p>
           <h1 className="text-2xl font-bold">{STEP_LABELS[step]}</h1>
         </div>
-      {!complimentaryAccess && <p className="text-sm text-muted-foreground">€9.99 at checkout</p>}
+        {!complimentaryAccess && <p className="text-sm text-muted-foreground">€9.99 at checkout</p>}
       </div>
       <Progress value={progress} className="mb-6" />
 

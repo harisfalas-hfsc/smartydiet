@@ -32,10 +32,7 @@ export const Route = createFileRoute("/checkout")({
     if (!search.qid) throw redirect({ to: "/questionnaire" });
   },
   head: () => ({
-    meta: [
-      { title: "Checkout — SmartyDiet" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Checkout — SmartyDiet" }, { name: "robots", content: "noindex" }],
   }),
   component: CheckoutPage,
 });
@@ -50,8 +47,11 @@ function CheckoutPage() {
   const { user, loading: authLoading } = useAuth();
   const [serverComplimentaryAccess, setServerComplimentaryAccess] = useState<boolean | null>(null);
   // Admins never pay: they take the same complimentary path as Free Access Mode.
-  const freeAccessMode = freeModeSetting || serverComplimentaryAccess === true || isAdminEmail(user?.email);
-  const [freeMessage, setFreeMessage] = useState("Building your plan… this can take up to 2 minutes.");
+  const freeAccessMode =
+    freeModeSetting || serverComplimentaryAccess === true || isAdminEmail(user?.email);
+  const [freeMessage, setFreeMessage] = useState(
+    "Building your plan… this can take up to 2 minutes.",
+  );
   const [freeError, setFreeError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [weeks, setWeeks] = useState<1 | 2 | 4 | null>(null);
@@ -74,11 +74,13 @@ function CheckoutPage() {
   useEffect(() => {
     if (authLoading || !user?.id) return;
     let cancelled = false;
-    void getAccess({}).then((res) => {
-      if (!cancelled) setServerComplimentaryAccess(res.complimentaryAccess);
-    }).catch(() => {
-      if (!cancelled) setServerComplimentaryAccess(false);
-    });
+    void getAccess({})
+      .then((res) => {
+        if (!cancelled) setServerComplimentaryAccess(res.complimentaryAccess);
+      })
+      .catch(() => {
+        if (!cancelled) setServerComplimentaryAccess(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -201,9 +203,7 @@ function CheckoutPage() {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
         <h1 className="text-xl font-extrabold">Almost there</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          {NATIVE_PURCHASE_UNAVAILABLE_MESSAGE}
-        </p>
+        <p className="mt-3 text-sm text-muted-foreground">{NATIVE_PURCHASE_UNAVAILABLE_MESSAGE}</p>
       </div>
     );
   }

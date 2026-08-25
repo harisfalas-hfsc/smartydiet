@@ -265,20 +265,12 @@ function PlanView() {
             ) : generationError ? (
               <>
                 <p className="mb-4 text-destructive">{generationError}</p>
-                <Button
-                  onClick={runGeneration}
-                >
-                  Try again
-                </Button>
+                <Button onClick={runGeneration}>Try again</Button>
               </>
             ) : session.status === "paid" ? (
               <>
                 <p className="mb-4">Your payment is confirmed. Tap below to build your plan.</p>
-                <Button
-                  onClick={runGeneration}
-                >
-                  Generate my plan
-                </Button>
+                <Button onClick={runGeneration}>Generate my plan</Button>
               </>
             ) : (
               "No plan yet."
