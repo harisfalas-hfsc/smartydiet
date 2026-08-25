@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { OFFLINE_KEYS, offlineFirst } from "@/lib/offline/store";
@@ -53,6 +53,7 @@ interface PlanRow {
 
 function PlanView() {
   const { sessionId } = Route.useParams();
+  const navigate = useNavigate();
   const userId = useOfflineUserId();
   const online = useOnlineStatus();
   const generate = useServerFn(generatePlan);
@@ -131,15 +132,15 @@ function PlanView() {
     try {
       const res = await waitForPlanGeneration(generate({ data: { sessionId } }));
       if (res.error) {
-        setGenerationError(GENERATION_ERROR_MESSAGE);
         toast.error(GENERATION_ERROR_MESSAGE);
+        navigate({ to: "/", replace: true });
         return;
       }
       toast.success("Your plan is ready");
       await load();
     } catch (e: any) {
-      setGenerationError(GENERATION_ERROR_MESSAGE);
       toast.error(GENERATION_ERROR_MESSAGE);
+      navigate({ to: "/", replace: true });
     } finally {
       setAutoGenerating(false);
     }
@@ -188,7 +189,8 @@ function PlanView() {
         toast.success("Plan refined");
       }
     } catch (e: any) {
-      toast.error(e.message ?? "Refinement failed");
+      toast.error(GENERATION_ERROR_MESSAGE);
+      navigate({ to: "/", replace: true });
     } finally {
       setBusy(false);
     }

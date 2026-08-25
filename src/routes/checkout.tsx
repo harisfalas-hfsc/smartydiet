@@ -96,9 +96,8 @@ function CheckoutPage() {
         const res = await startFree({ data: { questionnaireId: qid, durationWeeks: weeks } });
         if (cancelled) return;
         if ("error" in res) {
-          setFreeError(true);
-          setFreeMessage(res.error);
-          toast.error(res.error);
+          toast.error(GENERATION_ERROR_MESSAGE);
+          navigate({ to: "/", replace: true });
           return;
         }
         const planRes = await waitForPlanGeneration(
@@ -106,18 +105,16 @@ function CheckoutPage() {
         );
         if (cancelled) return;
         if (planRes.error) {
-          setFreeError(true);
-          setFreeMessage(GENERATION_ERROR_MESSAGE);
           toast.error(GENERATION_ERROR_MESSAGE);
+          navigate({ to: "/", replace: true });
           return;
         }
         analytics.planReady(true);
         navigate({ to: "/plans/$sessionId", params: { sessionId: res.sessionId }, replace: true });
       } catch {
         if (cancelled) return;
-        setFreeError(true);
-        setFreeMessage(GENERATION_ERROR_MESSAGE);
         toast.error(GENERATION_ERROR_MESSAGE);
+        navigate({ to: "/", replace: true });
       }
     })();
     return () => {
@@ -170,8 +167,8 @@ function CheckoutPage() {
         <p className="mt-2 text-sm text-muted-foreground">{freeMessage}</p>
         {freeError && (
           <div className="mt-6 flex justify-center gap-3">
-            <Button onClick={() => navigate({ to: "/questionnaire" })}>
-              Try again
+            <Button onClick={() => navigate({ to: "/" })}>
+              Back to homepage
             </Button>
           </div>
         )}

@@ -410,7 +410,20 @@ export const generatePlan = createServerFn({ method: "POST" })
     (input: { sessionId: string; refinement?: string; operationId?: string }) => input,
   )
   .handler(async ({ data, context }): Promise<PlanResult> => {
-    const { supabase, userId } = context;
+    const { supabase, userId, claims } = context;
+    const fail = async (reason: string): Promise<PlanResult> => {
+      const { sendPlanGenerationFailureAlert } = await import("@/lib/plan-generation-alert.server");
+      await sendPlanGenerationFailureAlert(
+        { supabase, userId, claims: claims as Record<string, unknown> },
+        {
+          sessionId: data.sessionId,
+          operationId: data.operationId,
+          refinement: data.refinement,
+          reason,
+        },
+      );
+      return { error: "We encountered an error this time. Please try again later." };
+    };
     if (data.operationId) {
       const { data: completed } = await supabase
         .from("diet_plans")
@@ -433,8 +446,8 @@ export const generatePlan = createServerFn({ method: "POST" })
       .eq("id", data.sessionId)
       .eq("user_id", userId)
       .single();
-    if (sErr || !session) return { error: "Session not found" };
-    if (session.status !== "paid") return { error: "Session not paid yet" };
+    if (sErr || !session) return fail(`Session lookup failed: ${sErr?.message ?? "Session not found"}`);
+    if (session.status !== "paid") return fail(`Session has invalid status: ${session.status}`);
 
     if (!data.refinement) {
       const { data: existingPlan } = await supabase
@@ -456,7 +469,7 @@ export const generatePlan = createServerFn({ method: "POST" })
     }
 
     if ((session.credits_used ?? 0) >= (session.credits_total ?? 3))
-      return { error: "No credits remaining" };
+      return fail("No plan-generation credits remain for this session");
 
     const { data: q, error: qErr } = await supabase
       .from("questionnaires")
@@ -464,7 +477,8 @@ export const generatePlan = createServerFn({ method: "POST" })
       .eq("id", session.questionnaire_id)
       .eq("user_id", userId)
       .single();
-    if (qErr || !q) return { error: "Questionnaire not found" };
+    if (qErr || !q)
+      return fail(`Questionnaire lookup failed: ${qErr?.message ?? "Questionnaire not found"}`);
 
     let rules = buildBaseRules(q.data, session.duration_weeks);
 
@@ -514,7 +528,7 @@ export const generatePlan = createServerFn({ method: "POST" })
         refinement_note: data.refinement ?? null,
         is_final: isFinal,
       });
-      if (insErr) return { error: insErr.message };
+      if (insErr) return fail(`Saving the generated plan failed: ${insErr.message}`);
 
       await supabase
         .from("generation_sessions")
@@ -525,16 +539,8 @@ export const generatePlan = createServerFn({ method: "POST" })
     } catch (err: any) {
       const message = err?.message ?? "AI generation failed";
       const status = Number(err?.statusCode ?? err?.status ?? err?.response?.status);
-      if (
-        status === 402 ||
-        status === 403 ||
-        /payment required|insufficient.*credit|credit.*exhaust|usage limit/i.test(message)
-      ) {
-        return {
-          error: "We encountered an error this time. Please try again later.",
-        };
-      }
-      return { error: message };
+      const statusDetail = Number.isFinite(status) ? ` (status ${status})` : "";
+      return fail(`${message}${statusDetail}`);
     }
   });
 
