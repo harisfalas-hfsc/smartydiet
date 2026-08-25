@@ -17,6 +17,7 @@ import { isAdminEmail } from "@/lib/admin";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { waitForPlanGeneration } from "@/lib/generation-client";
+import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
 
 type Search = { qid?: string; weeks?: number };
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
@@ -44,6 +45,7 @@ function CheckoutPage() {
   const startFree = useServerFn(startFreeSession);
   const getAccess = useServerFn(getComplimentaryAccess);
   const generate = useServerFn(generatePlan);
+  const reportFailure = useServerFn(reportPlanGenerationFailure);
   const { freeAccessMode: freeModeSetting, loading: freeLoading } = useFreeAccessMode();
   const { user, loading: authLoading } = useAuth();
   const [serverComplimentaryAccess, setServerComplimentaryAccess] = useState<boolean | null>(null);
@@ -92,16 +94,27 @@ function CheckoutPage() {
     setFreeError(false);
     setFreeMessage("Building your plan… this can take up to 2 minutes.");
     (async () => {
+      const operationId = crypto.randomUUID();
+      let generationSessionId: string | undefined;
       try {
         const res = await startFree({ data: { questionnaireId: qid, durationWeeks: weeks } });
         if (cancelled) return;
         if ("error" in res) {
+          await reportFailure({
+            data: {
+              questionnaireId: qid,
+              operationId,
+              stage: "Starting complimentary generation session",
+              reason: res.error,
+            },
+          }).catch(() => undefined);
           toast.error(GENERATION_ERROR_MESSAGE);
           navigate({ to: "/", replace: true });
           return;
         }
+        generationSessionId = res.sessionId;
         const planRes = await waitForPlanGeneration(
-          generate({ data: { sessionId: res.sessionId } }),
+          generate({ data: { sessionId: res.sessionId, operationId } }),
         );
         if (cancelled) return;
         if (planRes.error) {
@@ -111,8 +124,19 @@ function CheckoutPage() {
         }
         analytics.planReady(true);
         navigate({ to: "/plans/$sessionId", params: { sessionId: res.sessionId }, replace: true });
-      } catch {
+      } catch (error) {
         if (cancelled) return;
+        await reportFailure({
+          data: {
+            sessionId: generationSessionId,
+            questionnaireId: qid,
+            operationId,
+            stage: generationSessionId
+              ? "Initial plan generation — client request"
+              : "Starting complimentary generation session",
+            reason: error instanceof Error ? error.message : "Plan creation request failed",
+          },
+        }).catch(() => undefined);
         toast.error(GENERATION_ERROR_MESSAGE);
         navigate({ to: "/", replace: true });
       }
@@ -120,7 +144,7 @@ function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [freeLoading, freeAccessMode, ready, qid, weeks, freeError, startFree, generate, navigate]);
+  }, [freeLoading, freeAccessMode, ready, qid, weeks, freeError, startFree, generate, reportFailure, navigate]);
 
   const options = useMemo(
     () => ({

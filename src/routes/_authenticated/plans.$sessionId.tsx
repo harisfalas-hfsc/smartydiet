@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { exportPlanPdf, exportGroceryPdf } from "@/lib/pdf-export";
 import { enqueueMutation } from "@/lib/offline/queue";
 import { waitForPlanGeneration } from "@/lib/generation-client";
+import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
 
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
 
@@ -59,6 +60,7 @@ function PlanView() {
   const generate = useServerFn(generatePlan);
   const listVersions = useServerFn(listPlanVersions);
   const restore = useServerFn(restorePlanVersion);
+  const reportFailure = useServerFn(reportPlanGenerationFailure);
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [sessionLoadError, setSessionLoadError] = useState<string | null>(null);
@@ -127,10 +129,11 @@ function PlanView() {
   }, [autoGenerating, versions.length]);
 
   async function runGeneration() {
+    const operationId = crypto.randomUUID();
     setAutoGenerating(true);
     setGenerationError(null);
     try {
-      const res = await waitForPlanGeneration(generate({ data: { sessionId } }));
+      const res = await waitForPlanGeneration(generate({ data: { sessionId, operationId } }));
       if (res.error) {
         toast.error(GENERATION_ERROR_MESSAGE);
         navigate({ to: "/", replace: true });
@@ -139,6 +142,14 @@ function PlanView() {
       toast.success("Your plan is ready");
       await load();
     } catch (e: any) {
+      await reportFailure({
+        data: {
+          sessionId,
+          operationId,
+          stage: "Initial plan generation — client request",
+          reason: e instanceof Error ? e.message : "Generation request failed",
+        },
+      }).catch(() => undefined);
       toast.error(GENERATION_ERROR_MESSAGE);
       navigate({ to: "/", replace: true });
     } finally {
@@ -161,9 +172,9 @@ function PlanView() {
     if (!refineText.trim()) return toast.error("Describe the change you want");
     if (!userId) return toast.error("Sign in to refine this plan");
     setBusy(true);
+    const operationId = crypto.randomUUID();
     try {
       if (!online) {
-        const operationId = crypto.randomUUID();
         await enqueueMutation(userId, {
           kind: "plan.refine",
           sessionId,
@@ -177,7 +188,7 @@ function PlanView() {
         return;
       }
       const res = await waitForPlanGeneration(
-        generate({ data: { sessionId, refinement: refineText.trim() } }),
+        generate({ data: { sessionId, refinement: refineText.trim(), operationId } }),
       );
       if (res.error) throw new Error(res.error);
       setRefineText("");
@@ -189,6 +200,14 @@ function PlanView() {
         toast.success("Plan refined");
       }
     } catch (e: any) {
+      await reportFailure({
+        data: {
+          sessionId,
+          operationId,
+          stage: "Plan refinement — client request",
+          reason: e instanceof Error ? e.message : "Refinement request failed",
+        },
+      }).catch(() => undefined);
       toast.error(GENERATION_ERROR_MESSAGE);
       navigate({ to: "/", replace: true });
     } finally {
