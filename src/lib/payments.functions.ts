@@ -290,7 +290,7 @@ export const releaseDietAuthorization = createServerFn({ method: "POST" })
         .from("diet_plan_attempts")
         .update({
           payment_failure_code: "authorization_released",
-          reached_stage: "Authorization released — customer not charged",
+          
         })
         .eq("generation_session_id", data.generationSessionId);
       return { released: true };
