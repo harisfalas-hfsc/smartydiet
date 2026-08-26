@@ -1,6 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { markSessionAuthorized, captureDietPayment, releaseDietAuthorization } from "@/lib/payments.functions";
+import {
+  markSessionAuthorized,
+  captureDietPayment,
+  releaseDietAuthorization,
+} from "@/lib/payments.functions";
 import { generatePlan } from "@/lib/plan.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useServerFn } from "@tanstack/react-start";
@@ -19,10 +23,7 @@ export const Route = createFileRoute("/checkout/return")({
     session_id: typeof s.session_id === "string" ? s.session_id : undefined,
   }),
   head: () => ({
-    meta: [
-      { title: "Building your plan — SmartyDiet" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Building your plan — SmartyDiet" }, { name: "robots", content: "noindex" }],
   }),
   component: Return,
 });
@@ -92,7 +93,9 @@ function Return() {
           },
         });
         if (!captureResult.captured) {
-          toast.error("Your diet is ready, but payment could not be completed. Support has been notified.");
+          toast.error(
+            "Your diet is ready, but payment could not be completed. Support has been notified.",
+          );
         }
         analytics.planReady(false);
         setStatus("done");
@@ -133,7 +136,9 @@ function Return() {
       {status === "working" && <Loader2 className="h-10 w-10 animate-spin text-primary" />}
       {status === "done" && <CheckCircle2 className="h-10 w-10 text-primary" />}
       {status === "error" && <AlertTriangle className="h-10 w-10 text-destructive" />}
-      <h1 className="mt-4 text-xl font-bold">{status === "error" ? "There was a problem" : "Almost there"}</h1>
+      <h1 className="mt-4 text-xl font-bold">
+        {status === "error" ? "There was a problem" : "Almost there"}
+      </h1>
       <p className="mt-2 text-sm text-muted-foreground">{message}</p>
       {status === "error" && (
         <Button className="mt-6" onClick={() => navigate({ to: "/" })}>
