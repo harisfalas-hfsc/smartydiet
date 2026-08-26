@@ -337,7 +337,7 @@ const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('smartydie
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" style={{ colorScheme: "dark" }}>
+    <html lang="en" className="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
 
       <head>
         <HeadContent />
