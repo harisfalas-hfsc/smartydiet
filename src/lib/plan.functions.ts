@@ -447,7 +447,11 @@ export const generatePlan = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .single();
     if (sErr || !session) return fail(`Session lookup failed: ${sErr?.message ?? "Session not found"}`);
-    if (session.status !== "paid" && session.status !== "completed") {
+    if (
+      session.status !== "authorized" &&
+      session.status !== "paid" &&
+      session.status !== "completed"
+    ) {
       return fail(`Session has invalid status: ${session.status}`);
     }
 

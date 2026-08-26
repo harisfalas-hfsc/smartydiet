@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { analytics } from "@/lib/analytics";
 import { waitForPlanGeneration } from "@/lib/generation-client";
 import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
+import { toast } from "sonner";
 
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
 
@@ -80,12 +81,15 @@ function Return() {
           return;
         }
         setMessage("Your plan is ready. Completing payment…");
-        await capture({
+        const captureResult = await capture({
           data: {
             generationSessionId: paidRes.generationSessionId,
             environment: getStripeEnvironment(),
           },
-        }).catch(() => undefined);
+        });
+        if (!captureResult.captured) {
+          toast.error("Your diet is ready, but payment could not be completed. Support has been notified.");
+        }
         analytics.planReady(false);
         setStatus("done");
         setMessage("Your plan is ready. Opening it now…");
