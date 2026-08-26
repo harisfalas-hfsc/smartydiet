@@ -1,6 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { markSessionAuthorized, captureDietPayment, releaseDietAuthorization } from "@/lib/payments.functions";
+import { useEffect, useRef, useState } from "react";
+import {
+  markSessionAuthorized,
+  captureDietPayment,
+  releaseDietAuthorization,
+} from "@/lib/payments.functions";
 import { generatePlan } from "@/lib/plan.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useServerFn } from "@tanstack/react-start";
@@ -9,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { analytics } from "@/lib/analytics";
 import { waitForPlanGeneration } from "@/lib/generation-client";
 import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
+import { toast } from "sonner";
 
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
 
@@ -18,10 +23,7 @@ export const Route = createFileRoute("/checkout/return")({
     session_id: typeof s.session_id === "string" ? s.session_id : undefined,
   }),
   head: () => ({
-    meta: [
-      { title: "Building your plan — SmartyDiet" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Building your plan — SmartyDiet" }, { name: "robots", content: "noindex" }],
   }),
   component: Return,
 });
@@ -34,10 +36,13 @@ function Return() {
   const generate = useServerFn(generatePlan);
   const reportFailure = useServerFn(reportPlanGenerationFailure);
   const navigate = useNavigate();
+  const processingStarted = useRef(false);
   const [status, setStatus] = useState<"working" | "done" | "error">("working");
   const [message, setMessage] = useState("Confirming payment…");
 
   useEffect(() => {
+    if (processingStarted.current) return;
+    processingStarted.current = true;
     (async () => {
       const operationId = crypto.randomUUID();
       let generationSessionId: string | undefined;
@@ -76,16 +81,22 @@ function Return() {
               reason: planRes.error,
             },
           }).catch(() => undefined);
+          toast.error(GENERATION_ERROR_MESSAGE);
           navigate({ to: "/", replace: true });
           return;
         }
         setMessage("Your plan is ready. Completing payment…");
-        await capture({
+        const captureResult = await capture({
           data: {
             generationSessionId: paidRes.generationSessionId,
             environment: getStripeEnvironment(),
           },
-        }).catch(() => undefined);
+        });
+        if (!captureResult.captured) {
+          toast.error(
+            "Your diet is ready, but payment could not be completed. Support has been notified.",
+          );
+        }
         analytics.planReady(false);
         setStatus("done");
         setMessage("Your plan is ready. Opening it now…");
@@ -125,7 +136,9 @@ function Return() {
       {status === "working" && <Loader2 className="h-10 w-10 animate-spin text-primary" />}
       {status === "done" && <CheckCircle2 className="h-10 w-10 text-primary" />}
       {status === "error" && <AlertTriangle className="h-10 w-10 text-destructive" />}
-      <h1 className="mt-4 text-xl font-bold">{status === "error" ? "There was a problem" : "Almost there"}</h1>
+      <h1 className="mt-4 text-xl font-bold">
+        {status === "error" ? "There was a problem" : "Almost there"}
+      </h1>
       <p className="mt-2 text-sm text-muted-foreground">{message}</p>
       {status === "error" && (
         <Button className="mt-6" onClick={() => navigate({ to: "/" })}>

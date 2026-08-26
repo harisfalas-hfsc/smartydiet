@@ -1,10 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  type StripeEnv,
-  createStripeClient,
-  getStripeErrorMessage,
-} from "@/lib/stripe.server";
+import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
 
 type CheckoutResult = { clientSecret: string } | { error: string };
 
@@ -49,9 +45,8 @@ export const createDietCheckout = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<CheckoutResult> => {
     try {
-      const { readFreeAccessMode, FREE_ACCESS_BLOCK_MESSAGE } = await import(
-        "@/lib/free-access.server"
-      );
+      const { readFreeAccessMode, FREE_ACCESS_BLOCK_MESSAGE } =
+        await import("@/lib/free-access.server");
       if (await readFreeAccessMode()) return { error: FREE_ACCESS_BLOCK_MESSAGE };
       const { supabase, userId } = context;
       const { data: userData } = await supabase.auth.getUser();
@@ -97,7 +92,6 @@ export const createDietCheckout = createServerFn({ method: "POST" })
       const { error: attemptError } = await supabase.from("diet_plan_attempts").insert({
         user_id: userId,
         questionnaire_id: data.questionnaireId,
-        generation_session_id: generationSessionId,
         stripe_session_id: checkout.id,
         environment: data.environment,
         status: "checkout_opened",
@@ -122,9 +116,8 @@ export const markSessionAuthorized = createServerFn({ method: "POST" })
   .inputValidator((input: { stripeSessionId: string; environment: StripeEnv }) => input)
   .handler(async ({ data, context }) => {
     try {
-      const { readFreeAccessMode, FREE_ACCESS_BLOCK_MESSAGE } = await import(
-        "@/lib/free-access.server"
-      );
+      const { readFreeAccessMode, FREE_ACCESS_BLOCK_MESSAGE } =
+        await import("@/lib/free-access.server");
       if (await readFreeAccessMode()) return { paid: false, error: FREE_ACCESS_BLOCK_MESSAGE };
       const stripe = createStripeClient(data.environment);
       const cs = await stripe.checkout.sessions.retrieve(data.stripeSessionId, {
@@ -153,11 +146,10 @@ export const markSessionAuthorized = createServerFn({ method: "POST" })
         return { paid: false, error: "Checkout does not belong to this account" };
       }
       const paymentIntent =
-        typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id ?? null;
+        typeof cs.payment_intent === "string" ? cs.payment_intent : (cs.payment_intent?.id ?? null);
       const captured = pi?.status === "succeeded" || cs.payment_status === "paid";
-      const { error: sessionError } = await supabase
-        .from("generation_sessions")
-        .upsert({
+      const { error: sessionError } = await supabase.from("generation_sessions").upsert(
+        {
           id: genSessionId,
           user_id: userId,
           questionnaire_id: questionnaireId,
@@ -167,7 +159,9 @@ export const markSessionAuthorized = createServerFn({ method: "POST" })
           stripe_payment_intent: paymentIntent,
           amount_cents: cs.amount_total ?? 999,
           currency: cs.currency ?? "eur",
-        }, { onConflict: "id" });
+        },
+        { onConflict: "id" },
+      );
       if (sessionError) return { paid: false, error: sessionError.message };
       await supabase
         .from("diet_plan_attempts")
@@ -235,7 +229,12 @@ export const captureDietPayment = createServerFn({ method: "POST" })
         .eq("id", data.generationSessionId);
       await supabase
         .from("diet_plan_attempts")
-        .update({ status: "generated", reached_stage: "Plan delivered", paid_at: now, completed_at: now })
+        .update({
+          status: "generated",
+          reached_stage: "Plan delivered",
+          paid_at: now,
+          completed_at: now,
+        })
         .eq("generation_session_id", data.generationSessionId);
       return { captured: true };
     } catch (err) {
@@ -274,7 +273,8 @@ export const releaseDietAuthorization = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     try {
       const session = await loadOwnedSession(supabase, userId, data.generationSessionId);
-      if (!session?.stripe_payment_intent) return { released: false };
+      if (!session?.stripe_payment_intent)
+        return { released: false, error: "No authorization to release" };
       const stripe = createStripeClient(data.environment);
       const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
       if (intent.status === "requires_capture" || intent.status === "requires_confirmation") {
@@ -290,7 +290,6 @@ export const releaseDietAuthorization = createServerFn({ method: "POST" })
         .from("diet_plan_attempts")
         .update({
           payment_failure_code: "authorization_released",
-          
         })
         .eq("generation_session_id", data.generationSessionId);
       return { released: true };
