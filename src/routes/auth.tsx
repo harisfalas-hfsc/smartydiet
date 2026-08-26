@@ -111,6 +111,13 @@ function Auth() {
         },
       });
       if (error) throw error;
+      if (data.user && data.user.identities?.length === 0) {
+        setPassword("");
+        setAuthError(
+          "This email is already linked to an account. Sign in, or reset your password if you can't remember it.",
+        );
+        return;
+      }
       analytics.signUp();
       if (data.session) {
         await ensureProfile(data.user, cleanName);
@@ -224,10 +231,10 @@ function Auth() {
     <div className="mx-auto flex min-h-[70vh] w-full max-w-[420px] flex-col px-5 pb-6 pt-5">
       {mode === "signup" ? (
         <form onSubmit={submitSignup} className="mt-2 flex flex-col gap-3">
-          <h1 style={{ fontWeight: 800, fontSize: 24, color: "#14213A", letterSpacing: "-0.01em" }}>
+          <h1 className="text-2xl font-extrabold text-foreground">
             Create your account
           </h1>
-          <p className="-mt-1 text-sm" style={{ color: "#6B7A90" }}>
+          <p className="-mt-1 text-sm text-muted-foreground">
             Saved securely to your account.
           </p>
           <div className="space-y-1.5">
@@ -293,20 +300,34 @@ function Auth() {
             {submitting ? "Saving..." : "Continue"}
           </Button>
           {!online && (
-            <p className="text-center text-sm" style={{ color: "#6B7A90" }}>
+            <p className="text-center text-sm text-muted-foreground">
               You&apos;re offline — creating a new account needs an internet connection. You can
               still sign in with an account already used on this device.
             </p>
           )}
           {authNotice && (
-            <p className="text-center text-sm font-semibold" style={{ color: "#0E7C86" }}>
+            <p className="text-center text-sm font-semibold text-primary">
               {authNotice}
             </p>
           )}
           {authError && (
             <p className="text-center text-sm font-semibold text-destructive">{authError}</p>
           )}
-          <p className="mt-1 text-center text-sm" style={{ color: "#6B7A90" }}>
+          {authError.startsWith("This email is already") && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setAuthError("");
+                setResetSent(false);
+                setMode("forgot");
+              }}
+              className="h-11 w-full rounded-xl"
+            >
+              Reset password
+            </Button>
+          )}
+          <p className="mt-1 text-center text-sm text-muted-foreground">
             Have an account?{" "}
             <button
               type="button"
@@ -315,14 +336,7 @@ function Auth() {
                 setAuthNotice("");
                 setMode("signin");
               }}
-              style={{
-                color: "#0E7C86",
-                fontWeight: 700,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-              }}
+              className="bg-transparent p-0 font-bold text-primary"
             >
               Sign in
             </button>
@@ -330,10 +344,10 @@ function Auth() {
         </form>
       ) : mode === "signin" ? (
         <form onSubmit={submitSignin} className="mt-2 flex flex-col gap-3">
-          <h1 style={{ fontWeight: 800, fontSize: 24, color: "#14213A", letterSpacing: "-0.01em" }}>
+          <h1 className="text-2xl font-extrabold text-foreground">
             Welcome back
           </h1>
-          <p className="-mt-1 text-sm" style={{ color: "#6B7A90" }}>
+          <p className="-mt-1 text-sm text-muted-foreground">
             Sign in to continue your nutrition journey.
           </p>
           <div className="space-y-1.5">
@@ -359,15 +373,7 @@ function Auth() {
                   setResetSent(false);
                   setMode("forgot");
                 }}
-                style={{
-                  color: "#0E7C86",
-                  fontWeight: 700,
-                  fontSize: 13,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                }}
+                className="bg-transparent p-0 text-[13px] font-bold text-primary"
               >
                 Forgot password?
               </button>
@@ -396,7 +402,7 @@ function Auth() {
           {authError && (
             <p className="text-center text-sm font-semibold text-destructive">{authError}</p>
           )}
-          <p className="mt-1 text-center text-sm" style={{ color: "#6B7A90" }}>
+          <p className="mt-1 text-center text-sm text-muted-foreground">
             New here?{" "}
             <button
               type="button"
@@ -405,14 +411,7 @@ function Auth() {
                 setAuthNotice("");
                 setMode("signup");
               }}
-              style={{
-                color: "#0E7C86",
-                fontWeight: 700,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-              }}
+              className="bg-transparent p-0 font-bold text-primary"
             >
               Create an account
             </button>
@@ -420,10 +419,10 @@ function Auth() {
         </form>
       ) : (
         <form onSubmit={submitForgot} className="mt-2 flex flex-col gap-3">
-          <h1 style={{ fontWeight: 800, fontSize: 24, color: "#14213A", letterSpacing: "-0.01em" }}>
+          <h1 className="text-2xl font-extrabold text-foreground">
             Reset your password
           </h1>
-          <p className="-mt-1 text-sm" style={{ color: "#6B7A90" }}>
+          <p className="-mt-1 text-sm text-muted-foreground">
             Enter your account email. We'll send you a link to set a new password.
           </p>
           <div className="space-y-1.5">
@@ -451,14 +450,14 @@ function Auth() {
             {resetSent ? "Email sent ✓" : submitting ? "Sending..." : "Send reset link"}
           </Button>
           {resetSent && (
-            <p className="text-center text-sm" style={{ color: "#0E7C86" }}>
+            <p className="text-center text-sm text-primary">
               Check your inbox (and spam folder) for the reset link.
             </p>
           )}
           {authError && (
             <p className="text-center text-sm font-semibold text-destructive">{authError}</p>
           )}
-          <p className="mt-1 text-center text-sm" style={{ color: "#6B7A90" }}>
+          <p className="mt-1 text-center text-sm text-muted-foreground">
             Remembered it?{" "}
             <button
               type="button"
@@ -467,14 +466,7 @@ function Auth() {
                 setResetSent(false);
                 setMode("signin");
               }}
-              style={{
-                color: "#0E7C86",
-                fontWeight: 700,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-              }}
+              className="bg-transparent p-0 font-bold text-primary"
             >
               Back to sign in
             </button>
