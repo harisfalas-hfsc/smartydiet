@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { markSessionAuthorized, captureDietPayment, releaseDietAuthorization } from "@/lib/payments.functions";
 import { generatePlan } from "@/lib/plan.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
@@ -35,10 +35,13 @@ function Return() {
   const generate = useServerFn(generatePlan);
   const reportFailure = useServerFn(reportPlanGenerationFailure);
   const navigate = useNavigate();
+  const processingStarted = useRef(false);
   const [status, setStatus] = useState<"working" | "done" | "error">("working");
   const [message, setMessage] = useState("Confirming payment…");
 
   useEffect(() => {
+    if (processingStarted.current) return;
+    processingStarted.current = true;
     (async () => {
       const operationId = crypto.randomUUID();
       let generationSessionId: string | undefined;
@@ -77,6 +80,7 @@ function Return() {
               reason: planRes.error,
             },
           }).catch(() => undefined);
+          toast.error(GENERATION_ERROR_MESSAGE);
           navigate({ to: "/", replace: true });
           return;
         }
