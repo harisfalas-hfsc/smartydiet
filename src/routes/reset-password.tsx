@@ -37,7 +37,12 @@ function ResetPassword() {
     });
 
     void supabase.auth.getSession().then(({ data }) => {
-      if (active && (data.session || isRecoveryLink)) setReady(true);
+      if (!active) return;
+      if (data.session || isRecoveryLink) {
+        setReady(true);
+      } else {
+        setError("This reset link is invalid or has expired. Request a new link from the sign-in page.");
+      }
     });
 
     return () => {
@@ -58,7 +63,7 @@ function ResetPassword() {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
       setDone(true);
-      setTimeout(() => navigate({ to: "/questionnaire", replace: true }), 1500);
+      setTimeout(() => navigate({ to: "/", replace: true }), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't update password.");
     } finally {
@@ -68,10 +73,10 @@ function ResetPassword() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-[420px] flex-col px-5 pb-6 pt-5">
-      <h1 style={{ fontWeight: 800, fontSize: 24, color: "#14213A", letterSpacing: "-0.01em" }}>
+      <h1 className="text-2xl font-extrabold text-foreground">
         Set a new password
       </h1>
-      <p className="-mt-1 mb-4 text-sm" style={{ color: "#6B7A90" }}>
+      <p className="-mt-1 mb-4 text-sm text-muted-foreground">
         {ready ? "Choose a new password for your account." : "Verifying your reset link..."}
       </p>
       <form onSubmit={submit} className="flex flex-col gap-3">
