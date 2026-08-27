@@ -281,6 +281,23 @@ export const captureDietPayment = createServerFn({ method: "POST" })
         if (session?.stripe_payment_intent) {
           const stripe = createStripeClient(data.environment);
           const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
+          if (intent.status === "succeeded") {
+            const now = new Date().toISOString();
+            await supabase
+              .from("generation_sessions")
+              .update({ status: "paid" })
+              .eq("id", data.generationSessionId);
+            await supabase
+              .from("diet_plan_attempts")
+              .update({
+                status: "generated",
+                reached_stage: "Plan delivered",
+                paid_at: now,
+                completed_at: now,
+              })
+              .eq("generation_session_id", data.generationSessionId);
+            return { captured: true };
+          }
           if (intent.status === "requires_capture" || intent.status === "requires_confirmation") {
             await stripe.paymentIntents.cancel(
               session.stripe_payment_intent,

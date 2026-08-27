@@ -709,6 +709,23 @@ export const generatePlan = createServerFn({ method: "POST" })
             const currentIntent = await stripe.paymentIntents.retrieve(
               session.stripe_payment_intent,
             );
+            if (currentIntent.status === "succeeded") {
+              const paidAt = new Date().toISOString();
+              await supabase
+                .from("generation_sessions")
+                .update({ status: "paid" })
+                .eq("id", session.id);
+              await supabase
+                .from("diet_plan_attempts")
+                .update({
+                  status: "generated",
+                  reached_stage: "Plan delivered",
+                  paid_at: paidAt,
+                  completed_at: paidAt,
+                })
+                .eq("generation_session_id", session.id);
+              return { plan: planToSave, rationale: plan?.rationale, warnings };
+            }
             if (
               currentIntent.status === "requires_capture" ||
               currentIntent.status === "requires_confirmation"
@@ -768,6 +785,16 @@ export const listPlanVersions = createServerFn({ method: "POST" })
   .inputValidator((input: { sessionId: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { data: session } = await supabase
+      .from("generation_sessions")
+      .select("status,stripe_payment_intent")
+      .eq("id", data.sessionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!session) return [];
+    // Paid plans and genuinely complimentary plans are deliverable. A plan
+    // persisted while capture is still being confirmed must remain hidden.
+    if (session.stripe_payment_intent && session.status !== "paid") return [];
     const { data: rows, error } = await supabase
       .from("diet_plans")
       .select("id,version,plan,rationale,refinement_note,is_final,created_at")
