@@ -1,10 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import {
-  markSessionAuthorized,
-  captureDietPayment,
-  releaseDietAuthorization,
-} from "@/lib/payments.functions";
+import { markSessionAuthorized } from "@/lib/payments.functions";
 import { generatePlan } from "@/lib/plan.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useServerFn } from "@tanstack/react-start";
@@ -38,8 +34,6 @@ export const Route = createFileRoute("/checkout/return")({
 function Return() {
   const { session_id } = Route.useSearch();
   const mark = useServerFn(markSessionAuthorized);
-  const capture = useServerFn(captureDietPayment);
-  const release = useServerFn(releaseDietAuthorization);
   const generate = useServerFn(generatePlan);
   const reportFailure = useServerFn(reportPlanGenerationFailure);
   const { session, loading: authLoading } = useAuth();
@@ -122,48 +116,10 @@ function Return() {
           generate({ data: { sessionId: paidRes.generationSessionId, operationId } }),
         );
         if (planRes.error) {
-          await release({
-            data: {
-              generationSessionId: paidRes.generationSessionId,
-              environment: getStripeEnvironment(),
-              reason: planRes.error,
-            },
-          }).catch(() => undefined);
           toast.error(GENERATION_ERROR_MESSAGE);
           if (active) {
             setStatus("error");
-            setMessage(
-              "Generation failed and your card authorization was released. You were not charged.",
-            );
-          }
-          return;
-        }
-        if (active) setMessage("Your plan is ready. Completing payment…");
-        let captureResult = await capture({
-          data: {
-            generationSessionId: paidRes.generationSessionId,
-            environment: getStripeEnvironment(),
-          },
-        });
-        for (let attempt = 0; attempt < 2 && !captureResult.captured; attempt++) {
-          if (active) setMessage("Your plan is ready. Securing payment and delivery…");
-          await new Promise((resolve) => setTimeout(resolve, 1_500));
-          captureResult = await capture({
-            data: {
-              generationSessionId: paidRes.generationSessionId,
-              environment: getStripeEnvironment(),
-            },
-          });
-        }
-        if (!captureResult.captured) {
-          toast.error(
-            "Your diet is ready, but payment could not be completed. Support has been notified.",
-          );
-          if (active) {
-            setStatus("error");
-            setMessage(
-              "Your plan is safely saved, but payment could not be completed. Please try again; a new plan will not be generated.",
-            );
+            setMessage(planRes.error);
           }
           return;
         }

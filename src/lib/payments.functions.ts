@@ -233,6 +233,13 @@ export const captureDietPayment = createServerFn({ method: "POST" })
       const session = await loadOwnedPaymentSession(supabase, userId, data.generationSessionId);
       if (!session) return { captured: false, error: "Session not found" };
       if (session.status === "paid") return { captured: true };
+      if (session.status === "authorization_released") {
+        return {
+          captured: false,
+          released: true,
+          error: "The card authorization was released. You were not charged.",
+        };
+      }
       if (!session.stripe_payment_intent) {
         return { captured: false, error: "No payment to capture" };
       }
@@ -255,6 +262,16 @@ export const captureDietPayment = createServerFn({ method: "POST" })
           {},
           { idempotencyKey: `capture-diet-${data.generationSessionId}` },
         );
+      } else if (intent.status === "canceled") {
+        await supabase
+          .from("generation_sessions")
+          .update({ status: "authorization_released" })
+          .eq("id", data.generationSessionId);
+        return {
+          captured: false,
+          released: true,
+          error: "The card authorization was released. You were not charged.",
+        };
       } else if (intent.status !== "succeeded") {
         throw new Error(`Payment is in state ${intent.status} and cannot be captured`);
       }

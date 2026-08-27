@@ -767,6 +767,11 @@ export const generatePlan = createServerFn({ method: "POST" })
           } catch {
             // Alerting must not discard a successfully persisted plan.
           }
+          return {
+            error: authorizationReleased
+              ? "Payment could not be completed, so your card authorization was released. You were not charged."
+              : "Your plan was saved, but payment could not be completed. Support has been notified.",
+          };
         }
       }
 
