@@ -488,7 +488,9 @@ export const generatePlan = createServerFn({ method: "POST" })
     }
     const { data: session, error: sErr } = await supabase
       .from("generation_sessions")
-      .select("id,questionnaire_id,duration_weeks,status,credits_total,credits_used")
+      .select(
+        "id,questionnaire_id,duration_weeks,status,credits_total,credits_used,stripe_payment_intent",
+      )
       .eq("id", data.sessionId)
       .eq("user_id", userId)
       .single();
@@ -497,10 +499,38 @@ export const generatePlan = createServerFn({ method: "POST" })
     if (
       session.status !== "authorized" &&
       session.status !== "paid" &&
-      session.status !== "completed" &&
-      session.status !== "failed"
+      session.status !== "completed"
     ) {
       return fail(`Session has invalid status: ${session.status}`);
+    }
+
+    // Never spend AI credits unless Stripe confirms that funds are reserved.
+    // Complimentary sessions are already marked paid and have no payment intent.
+    if (session.status === "authorized") {
+      if (!session.stripe_payment_intent) {
+        return fail("Payment authorization is missing");
+      }
+      try {
+        const { data: attempt } = await supabase
+          .from("diet_plan_attempts")
+          .select("environment")
+          .eq("generation_session_id", session.id)
+          .maybeSingle();
+        const { createStripeClient } = await import("@/lib/stripe.server");
+        const environment = attempt?.environment === "sandbox" ? "sandbox" : "live";
+        const stripe = createStripeClient(environment);
+        const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
+        if (intent.metadata?.userId && intent.metadata.userId !== userId) {
+          return fail("Payment authorization does not belong to this account");
+        }
+        if (intent.status !== "requires_capture" && intent.status !== "succeeded") {
+          return fail(`Payment authorization is not active (${intent.status})`);
+        }
+      } catch (error) {
+        return fail(
+          `Payment authorization could not be verified: ${error instanceof Error ? error.message : "unknown error"}`,
+        );
+      }
     }
 
     if (!data.refinement) {
@@ -625,6 +655,126 @@ export const generatePlan = createServerFn({ method: "POST" })
         })
         .eq("generation_session_id", session.id);
 
+      // Capture in the same server request that persisted the plan. The
+      // browser may close or lose connectivity without leaving a card hold.
+      if (!data.refinement && session.stripe_payment_intent && session.status !== "paid") {
+        try {
+          const { data: attempt } = await supabase
+            .from("diet_plan_attempts")
+            .select("environment")
+            .eq("generation_session_id", session.id)
+            .maybeSingle();
+          const { createStripeClient } = await import("@/lib/stripe.server");
+          const environment = attempt?.environment === "sandbox" ? "sandbox" : "live";
+          const stripe = createStripeClient(environment);
+          const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
+          if (intent.metadata?.userId && intent.metadata.userId !== userId) {
+            throw new Error("Payment does not belong to this account");
+          }
+          if (intent.status === "requires_capture") {
+            await stripe.paymentIntents.capture(
+              session.stripe_payment_intent,
+              {},
+              { idempotencyKey: `capture-diet-${session.id}` },
+            );
+          } else if (intent.status !== "succeeded") {
+            throw new Error(`Payment is in state ${intent.status} and cannot be captured`);
+          }
+          const paidAt = new Date().toISOString();
+          await supabase
+            .from("generation_sessions")
+            .update({ status: "paid" })
+            .eq("id", session.id);
+          await supabase
+            .from("diet_plan_attempts")
+            .update({
+              status: "generated",
+              reached_stage: "Plan delivered",
+              paid_at: paidAt,
+              completed_at: paidAt,
+            })
+            .eq("generation_session_id", session.id);
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : "Payment capture failed";
+          let authorizationReleased = false;
+          try {
+            const { createStripeClient } = await import("@/lib/stripe.server");
+            const { data: attempt } = await supabase
+              .from("diet_plan_attempts")
+              .select("environment")
+              .eq("generation_session_id", session.id)
+              .maybeSingle();
+            const environment = attempt?.environment === "sandbox" ? "sandbox" : "live";
+            const stripe = createStripeClient(environment);
+            const currentIntent = await stripe.paymentIntents.retrieve(
+              session.stripe_payment_intent,
+            );
+            if (currentIntent.status === "succeeded") {
+              const paidAt = new Date().toISOString();
+              await supabase
+                .from("generation_sessions")
+                .update({ status: "paid" })
+                .eq("id", session.id);
+              await supabase
+                .from("diet_plan_attempts")
+                .update({
+                  status: "generated",
+                  reached_stage: "Plan delivered",
+                  paid_at: paidAt,
+                  completed_at: paidAt,
+                })
+                .eq("generation_session_id", session.id);
+              return { plan: planToSave, rationale: plan?.rationale, warnings };
+            }
+            if (
+              currentIntent.status === "requires_capture" ||
+              currentIntent.status === "requires_confirmation"
+            ) {
+              await stripe.paymentIntents.cancel(
+                session.stripe_payment_intent,
+                {},
+                { idempotencyKey: `capture-failed-release-${session.id}` },
+              );
+              authorizationReleased = true;
+              await supabase
+                .from("generation_sessions")
+                .update({ status: "authorization_released" })
+                .eq("id", session.id);
+            }
+          } catch {
+            // The admin alert below records the unresolved capture failure.
+          }
+          await supabase
+            .from("diet_plan_attempts")
+            .update({
+              status: authorizationReleased ? "authorization_released" : "capture_failed",
+              reached_stage: authorizationReleased
+                ? "Plan saved — authorization released"
+                : "Plan saved — payment capture pending",
+              failure_stage: "Payment capture",
+              failure_reason: reason.slice(0, 4000),
+              failure_kind: "capture_failed",
+              payment_failure_code: authorizationReleased ? "authorization_released" : null,
+              failed_at: new Date().toISOString(),
+            })
+            .eq("generation_session_id", session.id);
+          try {
+            const { sendCapturePaymentAlert } = await import("@/lib/plan-generation-alert.server");
+            await sendCapturePaymentAlert(
+              { supabase, userId, claims: claims as Record<string, unknown> },
+              { sessionId: session.id, reason },
+            );
+          } catch {
+            // Alerting must not discard a successfully persisted plan.
+          }
+          return {
+            error: authorizationReleased
+              ? "Payment could not be completed, so your card authorization was released. You were not charged."
+              : "Your plan was saved, but payment could not be completed. Support has been notified.",
+          };
+        }
+      }
+
       return { plan: planToSave, rationale: plan?.rationale, warnings };
     } catch (err: any) {
       const message = err?.message ?? "AI generation failed";
@@ -640,6 +790,16 @@ export const listPlanVersions = createServerFn({ method: "POST" })
   .inputValidator((input: { sessionId: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { data: session } = await supabase
+      .from("generation_sessions")
+      .select("status,stripe_payment_intent")
+      .eq("id", data.sessionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!session) return [];
+    // Paid plans and genuinely complimentary plans are deliverable. A plan
+    // persisted while capture is still being confirmed must remain hidden.
+    if (session.stripe_payment_intent && session.status !== "paid") return [];
     const { data: rows, error } = await supabase
       .from("diet_plans")
       .select("id,version,plan,rationale,refinement_note,is_final,created_at")

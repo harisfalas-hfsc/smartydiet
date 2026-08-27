@@ -1,10 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import {
-  markSessionAuthorized,
-  captureDietPayment,
-  releaseDietAuthorization,
-} from "@/lib/payments.functions";
+import { markSessionAuthorized } from "@/lib/payments.functions";
 import { generatePlan } from "@/lib/plan.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useServerFn } from "@tanstack/react-start";
@@ -17,6 +13,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
+const CREATION_TIPS = [
+  "We are checking every answer from your questionnaire.",
+  "We are matching meals to your diet style, allergies, and food preferences.",
+  "We are balancing daily calories, portions, and meal timing.",
+  "We are validating every day before your plan is delivered.",
+];
 
 export const Route = createFileRoute("/checkout/return")({
   ssr: false,
@@ -32,8 +34,6 @@ export const Route = createFileRoute("/checkout/return")({
 function Return() {
   const { session_id } = Route.useSearch();
   const mark = useServerFn(markSessionAuthorized);
-  const capture = useServerFn(captureDietPayment);
-  const release = useServerFn(releaseDietAuthorization);
   const generate = useServerFn(generatePlan);
   const reportFailure = useServerFn(reportPlanGenerationFailure);
   const { session, loading: authLoading } = useAuth();
@@ -42,8 +42,18 @@ function Return() {
   const [retryKey, setRetryKey] = useState(0);
   const [status, setStatus] = useState<"working" | "done" | "error">("working");
   const [message, setMessage] = useState(
-    "Hold on. We are creating the best diet we can for your questionnaire needs.",
+    "Hold on. We are creating your diet plan according to your needs.",
   );
+  const [tipIndex, setTipIndex] = useState(0);
+
+  useEffect(() => {
+    if (status !== "working") return;
+    const interval = window.setInterval(
+      () => setTipIndex((current) => (current + 1) % CREATION_TIPS.length),
+      7_000,
+    );
+    return () => window.clearInterval(interval);
+  }, [status]);
 
   useEffect(() => {
     if (authLoading || !session?.access_token) return;
@@ -68,7 +78,7 @@ function Return() {
         // page stationary and retry here rather than sending the customer away.
         for (
           let attempt = 0;
-          attempt < 15 && (!paidRes.paid || !paidRes.generationSessionId);
+          attempt < 15 && !paidRes.error && (!paidRes.paid || !paidRes.generationSessionId);
           attempt++
         ) {
           if (active) setMessage("Confirming your card authorization…");
@@ -106,33 +116,12 @@ function Return() {
           generate({ data: { sessionId: paidRes.generationSessionId, operationId } }),
         );
         if (planRes.error) {
-          await release({
-            data: {
-              generationSessionId: paidRes.generationSessionId,
-              environment: getStripeEnvironment(),
-              reason: planRes.error,
-            },
-          }).catch(() => undefined);
           toast.error(GENERATION_ERROR_MESSAGE);
           if (active) {
             setStatus("error");
-            setMessage(
-              "Generation failed and your card authorization was released. You were not charged.",
-            );
+            setMessage(planRes.error);
           }
           return;
-        }
-        if (active) setMessage("Your plan is ready. Completing payment…");
-        const captureResult = await capture({
-          data: {
-            generationSessionId: paidRes.generationSessionId,
-            environment: getStripeEnvironment(),
-          },
-        });
-        if (!captureResult.captured) {
-          toast.error(
-            "Your diet is ready, but payment could not be completed. Support has been notified.",
-          );
         }
         analytics.planReady(false);
         if (!active) return;
@@ -160,7 +149,7 @@ function Return() {
         if (active) {
           setStatus("error");
           setMessage(
-            "The connection was interrupted. Your card has not been charged. Please try again to continue the same plan.",
+            "The connection was interrupted. Your saved process may still be completing securely. Please try again to check the same plan; do not start another questionnaire or payment.",
           );
         }
       }
@@ -188,6 +177,18 @@ function Return() {
         {status === "error" ? "We could not finish this time" : "Creating your diet"}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+      {status === "working" && (
+        <div className="mt-6 w-full border-t border-border pt-5" aria-live="polite">
+          <p className="text-xs font-semibold uppercase text-primary">What we are doing now</p>
+          <p className="mt-2 min-h-10 text-sm text-foreground">{CREATION_TIPS[tipIndex]}</p>
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Keep this screen open. Your answers are already saved.
+          </p>
+        </div>
+      )}
       {status === "error" && (
         <Button className="mt-6" onClick={retry}>
           Try again
