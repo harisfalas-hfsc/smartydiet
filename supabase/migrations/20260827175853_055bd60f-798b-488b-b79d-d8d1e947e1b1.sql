@@ -1,0 +1,1 @@
+ALTER TABLE public.generation_sessions ALTER COLUMN credits_total SET DEFAULT 2;
