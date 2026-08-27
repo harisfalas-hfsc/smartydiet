@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { AlertTriangle, Brain, CalendarDays, CheckCircle2, Download, Heart, ShoppingBasket, Zap } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import {
   sortPlanStructure,
   verifyPlanStructure,
 } from "@/lib/plan-validation";
+import { MacroBar, CalorieTooltip, MacroInfoIcon } from "./MacroBar";
 
 type Props = {
   plan: any;
