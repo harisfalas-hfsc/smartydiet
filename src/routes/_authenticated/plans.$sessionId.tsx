@@ -216,6 +216,15 @@ function PlanView() {
 
   const active = versions.find((v) => v.id === activeId) ?? versions[0] ?? null;
 
+  // Whenever the shown version changes, start the reader at the top of the plan
+  // (Week 1 · Day 1) instead of wherever the page happened to be scrolled.
+  useEffect(() => {
+    if (!active?.id) return;
+    requestAnimationFrame(() => {
+      document.getElementById("plan-top")?.scrollIntoView({ behavior: "auto", block: "start" });
+    });
+  }, [active?.id]);
+
   async function exportPdf() {
     if (!active) return;
     try {
