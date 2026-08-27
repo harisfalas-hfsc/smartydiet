@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { AlertTriangle, Brain, CalendarDays, CheckCircle2, Download, ShoppingBasket } from "lucide-react";
+import { AlertTriangle, Brain, CalendarDays, CheckCircle2, Download, Heart, ShoppingBasket, Zap } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -322,10 +324,7 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
       {plan?.rationale && (
         <Dialog>
           <DialogTrigger asChild>
-            <button
-              type="button"
-              className="w-full text-left"
-            >
+            <button type="button" className="w-full text-left">
               <Card className="border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 transition hover:opacity-90 dark:border-violet-500/40 dark:from-violet-500/15 dark:to-purple-500/10">
                 <CardContent className="flex items-center gap-3 p-4">
                   <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-violet-200 bg-white dark:border-violet-500/40 dark:bg-violet-950/40">
@@ -336,20 +335,56 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
               </Card>
             </button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl rounded-2xl border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-0 dark:border-violet-500/40 dark:from-violet-500/15 dark:to-purple-500/10">
-            <DialogHeader className="border-b border-violet-200 p-4 dark:border-violet-500/40">
-              <DialogTitle className="flex items-center gap-3 text-lg font-bold text-violet-700 dark:text-violet-200">
-                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-violet-200 bg-white dark:border-violet-500/40 dark:bg-violet-950/40">
-                  <Brain className="h-4 w-4 text-violet-600 dark:text-violet-300" />
-                </div>
+          <DialogContent className="w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-[32px] border-0 bg-background p-0 shadow-2xl sm:w-full">
+            <DialogHeader className="p-6 pb-4 text-left">
+              <DialogTitle className="pr-8 text-2xl font-bold leading-tight tracking-tight text-foreground">
                 Why this plan fits you
               </DialogTitle>
             </DialogHeader>
-            <div className="max-h-[60vh] overflow-y-auto p-4">
-              <p className="text-sm leading-relaxed text-violet-900/80 dark:text-violet-100/80">
-                {plan.rationale}
-              </p>
+
+            <div className="max-h-[55vh] space-y-4 overflow-y-auto px-6 py-2">
+              <p className="text-sm leading-relaxed text-muted-foreground">{plan.rationale}</p>
+
+              {summary && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-500">
+                      <Zap className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{summary.calorieTarget} kcal / day</p>
+                      <p className="text-xs text-muted-foreground">Energy target matched to your profile</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50 p-4 dark:border-rose-500/30 dark:bg-rose-500/10">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-500">
+                      <Heart className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{summary.dietStyle}</p>
+                      <p className="text-xs text-muted-foreground">Diet style aligned with your goal</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 rounded-2xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-500/30 dark:bg-blue-500/10">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-500">
+                      <Brain className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{summary.goal}</p>
+                      <p className="text-xs text-muted-foreground">Personalized to your wellness objective</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+
+            <DialogFooter className="p-6 pt-2">
+              <DialogClose asChild>
+                <Button className="w-full rounded-2xl py-5 font-bold shadow-lg">Great, let's start!</Button>
+              </DialogClose>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
