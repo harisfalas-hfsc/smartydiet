@@ -322,19 +322,38 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
       })}
 
       {plan?.rationale && (
-        <Card className="border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 dark:border-violet-500/40 dark:from-violet-500/15 dark:to-purple-500/10">
-          <CardContent className="p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-violet-200 bg-white dark:border-violet-500/40 dark:bg-violet-950/40">
-                <Brain className="h-4 w-4 text-violet-600 dark:text-violet-300" />
-              </div>
-              <p className="font-bold text-violet-700 dark:text-violet-200">Why this plan fits you</p>
+        <Dialog>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="w-full text-left"
+            >
+              <Card className="border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 transition hover:opacity-90 dark:border-violet-500/40 dark:from-violet-500/15 dark:to-purple-500/10">
+                <CardContent className="flex items-center gap-3 p-4">
+                  <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-violet-200 bg-white dark:border-violet-500/40 dark:bg-violet-950/40">
+                    <Brain className="h-4 w-4 text-violet-600 dark:text-violet-300" />
+                  </div>
+                  <p className="font-bold text-violet-700 dark:text-violet-200">Why this plan fits you</p>
+                </CardContent>
+              </Card>
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl rounded-2xl border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-0 dark:border-violet-500/40 dark:from-violet-500/15 dark:to-purple-500/10">
+            <DialogHeader className="border-b border-violet-200 p-4 dark:border-violet-500/40">
+              <DialogTitle className="flex items-center gap-3 text-lg font-bold text-violet-700 dark:text-violet-200">
+                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-violet-200 bg-white dark:border-violet-500/40 dark:bg-violet-950/40">
+                  <Brain className="h-4 w-4 text-violet-600 dark:text-violet-300" />
+                </div>
+                Why this plan fits you
+              </DialogTitle>
+            </DialogHeader>
+            <div className="max-h-[60vh] overflow-y-auto p-4">
+              <p className="text-sm leading-relaxed text-violet-900/80 dark:text-violet-100/80">
+                {plan.rationale}
+              </p>
             </div>
-            <p className="text-sm leading-relaxed text-violet-900/80 dark:text-violet-100/80">
-              {plan.rationale}
-            </p>
-          </CardContent>
-        </Card>
+          </DialogContent>
+        </Dialog>
       )}
       {plan?.disclaimer && <p className="text-xs text-muted-foreground">{plan.disclaimer}</p>}
     </div>
