@@ -266,16 +266,26 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
                       <CalendarDays className="h-3.5 w-3.5" />
                       Week {week.weekNumber} · Day {day.day}
                     </span>
-                    <span
-                      className={cn(
-                        "rounded-full border px-2.5 py-0.5 text-xs font-bold",
-                        tone.softBorder,
-                        tone.text,
-                      )}
-                    >
-                      🔥 {day.totals?.calories ?? "-"} kcal
-                    </span>
+                    <CalorieTooltip calories={day.totals?.calories ?? 0}>
+                      <span
+                        className={cn(
+                          "inline-flex cursor-help items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-bold",
+                          tone.softBorder,
+                          tone.text,
+                        )}
+                      >
+                        🔥 {day.totals?.calories ?? "-"} kcal
+                      </span>
+                    </CalorieTooltip>
                   </div>
+                  <MacroBar
+                    macros={{
+                      protein_g: day.totals?.protein_g ?? 0,
+                      carbs_g: day.totals?.carbs_g ?? 0,
+                      fat_g: day.totals?.fat_g ?? 0,
+                    }}
+                    size="sm"
+                  />
                   <div className="space-y-3">
                     {(day.meals ?? []).map((meal: any, index: number) => (
                       <div
