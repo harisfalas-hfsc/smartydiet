@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { AlertTriangle, Brain, CalendarDays, CheckCircle2, Download, Heart, ShoppingBasket, Zap } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import {
   sortPlanStructure,
   verifyPlanStructure,
 } from "@/lib/plan-validation";
+import { MacroBar, CalorieTooltip, MacroInfoIcon } from "./MacroBar";
 
 type Props = {
   plan: any;
@@ -159,12 +159,22 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
 
       {summary && (
         <Card>
-          <CardContent className="p-4 text-sm">
-            <p className="font-semibold">{summary.calorieTarget} kcal / day</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Protein {summary.macros?.protein_g}g · Carbs {summary.macros?.carbs_g}g · Fat {summary.macros?.fat_g}g
-            </p>
-            <p className="mt-1 text-xs uppercase text-muted-foreground">
+          <CardContent className="space-y-3 p-4 text-sm">
+            <CalorieTooltip calories={summary.calorieTarget}>
+              <p className="inline-flex cursor-help items-center gap-1.5 font-semibold">
+                {summary.calorieTarget} kcal / day
+                <MacroInfoIcon />
+              </p>
+            </CalorieTooltip>
+            <MacroBar
+              macros={{
+                protein_g: summary.macros?.protein_g ?? 0,
+                carbs_g: summary.macros?.carbs_g ?? 0,
+                fat_g: summary.macros?.fat_g ?? 0,
+              }}
+              size="md"
+            />
+            <p className="text-xs uppercase text-muted-foreground">
               {summary.dietStyle} · {summary.goal}
             </p>
           </CardContent>
@@ -256,16 +266,26 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
                       <CalendarDays className="h-3.5 w-3.5" />
                       Week {week.weekNumber} · Day {day.day}
                     </span>
-                    <span
-                      className={cn(
-                        "rounded-full border px-2.5 py-0.5 text-xs font-bold",
-                        tone.softBorder,
-                        tone.text,
-                      )}
-                    >
-                      🔥 {day.totals?.calories ?? "-"} kcal
-                    </span>
+                    <CalorieTooltip calories={day.totals?.calories ?? 0}>
+                      <span
+                        className={cn(
+                          "inline-flex cursor-help items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-bold",
+                          tone.softBorder,
+                          tone.text,
+                        )}
+                      >
+                        🔥 {day.totals?.calories ?? "-"} kcal
+                      </span>
+                    </CalorieTooltip>
                   </div>
+                  <MacroBar
+                    macros={{
+                      protein_g: day.totals?.protein_g ?? 0,
+                      carbs_g: day.totals?.carbs_g ?? 0,
+                      fat_g: day.totals?.fat_g ?? 0,
+                    }}
+                    size="sm"
+                  />
                   <div className="space-y-3">
                     {(day.meals ?? []).map((meal: any, index: number) => (
                       <div
@@ -283,10 +303,22 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
                             <span className="text-muted-foreground"> — </span>
                             {meal.title}
                           </p>
-                          <p className="text-xs font-medium text-muted-foreground">
-                            {meal.calories} kcal · Protein {meal.protein_g}g · Carbs {meal.carbs_g}g · Fat {meal.fat_g}g
-                          </p>
+                          <CalorieTooltip calories={meal.calories ?? 0}>
+                            <p className="inline-flex cursor-help items-center gap-1 text-xs font-medium text-muted-foreground">
+                              {meal.calories} kcal
+                              <MacroInfoIcon className="h-3 w-3" />
+                            </p>
+                          </CalorieTooltip>
                         </div>
+                        <MacroBar
+                          macros={{
+                            protein_g: meal.protein_g ?? 0,
+                            carbs_g: meal.carbs_g ?? 0,
+                            fat_g: meal.fat_g ?? 0,
+                          }}
+                          size="sm"
+                          showLabels
+                        />
                         {meal.ingredients?.length ? (
                           <p className="mt-1 text-xs text-muted-foreground">
                             {meal.ingredients.map((item: any) => `${item.qty} ${item.item}`).join(", ")}

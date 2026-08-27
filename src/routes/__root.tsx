@@ -16,6 +16,7 @@ import { Navigation } from "../components/Navigation";
 import { SiteFooter } from "../components/SiteFooter";
 import { PaymentTestModeBanner } from "../components/PaymentTestModeBanner";
 import { Toaster } from "../components/ui/sonner";
+import { TooltipProvider } from "../components/ui/tooltip";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
 
 const SITE_URL = "https://smartydiet.com";
@@ -378,16 +379,18 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex min-h-screen flex-col bg-background">
-        {!isPaymentProcessing && <PaymentTestModeBanner />}
-        {!isPaymentProcessing && <Navigation />}
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        {!isPaymentProcessing && <SiteFooter />}
-        <Toaster />
-        {!isPaymentProcessing && <SisterAppsPopup />}
-      </div>
+      <TooltipProvider delayDuration={150}>
+        <div className="flex min-h-screen flex-col bg-background">
+          {!isPaymentProcessing && <PaymentTestModeBanner />}
+          {!isPaymentProcessing && <Navigation />}
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          {!isPaymentProcessing && <SiteFooter />}
+          <Toaster />
+          {!isPaymentProcessing && <SisterAppsPopup />}
+        </div>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
