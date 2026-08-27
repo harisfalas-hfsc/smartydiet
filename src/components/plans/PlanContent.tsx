@@ -270,14 +270,6 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
                       </span>
                     </CalorieTooltip>
                   </div>
-                  <MacroBar
-                    macros={{
-                      protein_g: day.totals?.protein_g ?? 0,
-                      carbs_g: day.totals?.carbs_g ?? 0,
-                      fat_g: day.totals?.fat_g ?? 0,
-                    }}
-                    size="sm"
-                  />
                   <div className="space-y-3">
                     {(day.meals ?? []).map((meal: any, index: number) => (
                       <div
