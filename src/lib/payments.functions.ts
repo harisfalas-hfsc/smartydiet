@@ -184,6 +184,41 @@ export const markSessionAuthorized = createServerFn({ method: "POST" })
     }
   });
 
+// Return an unfinished paid flow so navigation can resume it instead of
+// starting another questionnaire and another checkout.
+export const getResumableDietSession = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: sessions, error } = await supabase
+      .from("generation_sessions")
+      .select("id,stripe_session_id,status,created_at")
+      .eq("user_id", userId)
+      .in("status", ["authorized", "completed"])
+      .not("stripe_session_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    if (error) return { stripeSessionId: null };
+
+    for (const session of sessions ?? []) {
+      if (!session.stripe_session_id) continue;
+      const { data: plan } = await supabase
+        .from("diet_plans")
+        .select("id")
+        .eq("session_id", session.id)
+        .limit(1)
+        .maybeSingle();
+      // Both cases need the return route: no plan resumes generation, while
+      // an existing plan resumes the interrupted payment capture.
+      return {
+        stripeSessionId: session.stripe_session_id,
+        generationSessionId: session.id,
+        hasPlan: Boolean(plan),
+      };
+    }
+    return { stripeSessionId: null };
+  });
+
 async function loadOwnedSession(supabase: any, userId: string, generationSessionId: string) {
   const { data } = await supabase
     .from("generation_sessions")

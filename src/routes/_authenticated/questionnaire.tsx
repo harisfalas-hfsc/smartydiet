@@ -36,6 +36,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { isAdminEmail } from "@/lib/admin";
 import { enqueueMutation } from "@/lib/offline/queue";
 import { OFFLINE_KEYS, readCached, removeLocal, saveLocal } from "@/lib/offline/store";
+import { getResumableDietSession } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/questionnaire")({
   head: () => ({
@@ -57,6 +58,7 @@ function QuestionnairePage() {
   const navigate = useNavigate();
   const { freeAccessMode } = useFreeAccessMode();
   const save = useServerFn(saveQuestionnaire);
+  const getResumable = useServerFn(getResumableDietSession);
   const online = useOnlineStatus();
   const { user } = useAuth();
   const complimentaryAccess = freeAccessMode || isAdminEmail(user?.email);
@@ -64,6 +66,31 @@ function QuestionnairePage() {
   const [data, setData] = useState<QuestionnaireData>(DEFAULT_QUESTIONNAIRE);
   const [durationWeeks, setDurationWeeks] = useState<1 | 2 | 4>(2);
   const [busy, setBusy] = useState(false);
+  const [checkingPaidSession, setCheckingPaidSession] = useState(true);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+    void getResumable({})
+      .then((result) => {
+        if (!active) return;
+        if (result.stripeSessionId) {
+          navigate({
+            to: "/checkout/return",
+            search: { session_id: result.stripeSessionId },
+            replace: true,
+          });
+          return;
+        }
+        setCheckingPaidSession(false);
+      })
+      .catch(() => {
+        if (active) setCheckingPaidSession(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [getResumable, navigate, user?.id]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -91,6 +118,14 @@ function QuestionnairePage() {
       durationWeeks,
     });
   }, [data, step, durationWeeks, user?.id]);
+
+  if (checkingPaidSession) {
+    return (
+      <div className="mx-auto flex min-h-[50vh] max-w-md items-center justify-center px-4">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const upd = <K extends keyof QuestionnaireData>(key: K, patch: Partial<QuestionnaireData[K]>) =>
     setData((d) => {
