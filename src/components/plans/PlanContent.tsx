@@ -303,10 +303,22 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
                             <span className="text-muted-foreground"> — </span>
                             {meal.title}
                           </p>
-                          <p className="text-xs font-medium text-muted-foreground">
-                            {meal.calories} kcal · Protein {meal.protein_g}g · Carbs {meal.carbs_g}g · Fat {meal.fat_g}g
-                          </p>
+                          <CalorieTooltip calories={meal.calories ?? 0}>
+                            <p className="inline-flex cursor-help items-center gap-1 text-xs font-medium text-muted-foreground">
+                              {meal.calories} kcal
+                              <MacroInfoIcon className="h-3 w-3" />
+                            </p>
+                          </CalorieTooltip>
                         </div>
+                        <MacroBar
+                          macros={{
+                            protein_g: meal.protein_g ?? 0,
+                            carbs_g: meal.carbs_g ?? 0,
+                            fat_g: meal.fat_g ?? 0,
+                          }}
+                          size="sm"
+                          showLabels
+                        />
                         {meal.ingredients?.length ? (
                           <p className="mt-1 text-xs text-muted-foreground">
                             {meal.ingredients.map((item: any) => `${item.qty} ${item.item}`).join(", ")}
