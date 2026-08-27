@@ -65,7 +65,7 @@ function Terms() {
         <li>A multi-step nutrition questionnaire covering your goals, body, activity, preferences, allergies, and constraints.</li>
         <li>An AI-generated personalized plan spanning 1, 2, or 4 weeks based on your selection.</li>
         <li>A consolidated grocery list and a short rationale explaining why the plan fits your goal.</li>
-        <li>Up to two refinement requests per plan (e.g. "swap breakfast options", "less dairy").</li>
+        <li>One refinement request per plan (e.g. "swap breakfast options", "less dairy").</li>
         <li>PDF export and printable grocery-list view.</li>
         <li>Access to your plan history from your account at any time.</li>
       </ul>
@@ -104,8 +104,8 @@ function Terms() {
           plan).
         </li>
         <li>
-          Each purchase unlocks <strong>3 AI credits</strong>: 1 initial plan generation plus 2
-          refinements. Once all 3 credits have been used, the plan is locked as final and a new
+          Each purchase unlocks <strong>2 AI credits</strong>: 1 initial plan generation plus 1
+          refinement. Once both credits have been used, the plan is locked as final and a new
           purchase is required to start a new plan.
         </li>
         <li>Payments are processed securely via Stripe. We do not store full card details on our servers.</li>
