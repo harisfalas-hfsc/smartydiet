@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { AlertTriangle, Brain, CalendarDays, CheckCircle2, Download, ShoppingBasket } from "lucide-react";
+import { AlertTriangle, Brain, CalendarDays, CheckCircle2, Download, Heart, ShoppingBasket, Zap } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
