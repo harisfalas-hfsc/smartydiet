@@ -1,31 +1,74 @@
-# One refine per payment, both versions kept, same waiting screen
+# One refine per purchase + a single Nutrition Library page
 
-Three fixes so refining is simple and predictable.
+## 1. One refine per payment (2 credits total)
 
-## 1. One refine per purchase (2 credits total)
+Each purchase currently gets 3 AI generations: the first plan plus 2 refinements. New purchases get 2: the original plan (version 1) and one refine (version 2). After refining, the card shows "Credits 2/2 used" and the refine box is replaced by a short note that this plan's refine has been used.
 
-Today each purchase gets 3 credits: the first plan uses 1, leaving 2 refinements. New sessions get 2 credits: the original plan (v1) and one refine (v2). After the refine the card shows "Credits 2/2 used" and the refine box disappears with a short note that this plan's refine has been used.
+Existing already-paid plans keep the credits they already have — nothing is taken away.
 
-Existing already-paid sessions keep whatever credits they have — nothing is taken away from them.
+## 2. Remove the confusing "Restore" / active-version idea
 
-## 2. Kill the confusing "Restore" / active-version concept
+Both versions are always kept and always openable:
 
-Right now one version is marked "active" and the other must be "restored" — this is what makes it feel like you only have one plan. Replaced with a plain version switcher:
+- A simple switcher: "Version 1 — original" and "Version 2 — refined".
+- Tapping a version shows it immediately (today "View" appears to do nothing because the page doesn't move); the page scrolls to the plan and labels which version is on screen.
+- "Restore" button and the "restoring does not cost a credit" note are removed.
+- The page opens on the newest version; PDF downloads export the version being viewed.
 
-- Both versions are always kept and always openable: "Version 1 — original" and "Version 2 — refined".
-- Tapping a version simply shows it (the current "View" behaviour, which today looks like nothing happens because the page doesn't scroll to the plan). Selecting now scrolls to the plan and clearly labels which version is on screen.
-- "Restore" button removed entirely, along with the "restoring does not cost a credit" note.
-- The page opens on the newest version by default.
-- PDF downloads export the version currently being viewed.
+## 3. Same waiting screen when refining
 
-## 3. Show the full generation screen while refining
+Refining currently only spins the button. It will show the exact same screen as the first generation: "Building your plan… this can take up to 2 minutes", the rotating "Did you know?" nutrition tips and the "stay on this page" note — with the previous version still readable underneath.
 
-Refining currently only spins the button. It will now show the exact same waiting screen as the first generation: "Building your plan… this can take up to 2 minutes", the rotating "Did you know?" nutrition tips, and the "stay on this page" note — with the previous version still readable below, so the customer never stares at a blank page.
+## 4. Fix "2 refinements / 3 credits" wording everywhere
+
+Every page that promises two refinements is corrected to one:
+
+- Pricing: "1 free refinement", and the page description/meta text.
+- Homepage: "Includes 1 initial plan + 1 refinement."
+- Checkout: "one plan, 1 initial generation + 1 refinement".
+- FAQ: both answers that mention 2 refinements / 3 AI generations.
+- Terms: "up to two refinement requests" and the "3 credits" paragraph.
+- Privacy: refinement-credit wording.
+- Nutrition Intelligence and the Weight-loss diet page: "2 refinements included".
+- How It Works and About: reviewed and updated wherever refinements/credits are implied.
+- Plans list empty-state copy adjusted to the single-refinement wording.
+
+## 5. Discovery menu rearranged
+
+New order:
+
+```text
+Home
+About
+How It Works
+Pricing
+Tools
+Frequently Asked Questions
+Nutrition Library      <- new single hub page
+Contact
+```
+
+Diet Plans, Meal Planning, Sports Nutrition, The Diet Science and Nutrition Intelligence are removed from the menu as separate entries.
+
+## 6. New "Nutrition Library" hub page
+
+One page at `/nutrition-library` that gathers all the knowledge content, with its own in-page menu (a sticky list of sections that jumps you down the page):
+
+```text
+1. Nutrition Intelligence
+2. The Diet Science
+3. Diet Plans        (overview + weight loss, muscle gain, high protein)
+4. Meal Planning Guide
+5. Sports Nutrition
+6. Glossary
+```
+
+The existing individual pages stay live at their current URLs so search rankings and existing links are not lost — the library page summarises each area and links into it, and each section is also expandable in place so a visitor can read everything without leaving the page. The Glossary moves under the library rather than sitting on its own menu row.
 
 ## Technical notes
 
-- `generation_sessions.credits_total` default changed from 3 to 2 via migration (new rows only).
-- `src/lib/plan-generation.server.ts`: stop using `is_final` as a single-active flag; the newest version is simply the highest `version`. Keep writing `is_final` on the latest row for backwards compatibility.
-- `src/routes/_authenticated/plans.$sessionId.tsx`: remove the Restore button and `restorePlanVersion` usage; rework the versions card into a labelled switcher; reuse the existing `autoGenerating` tips block for the refine flow (set it while `refine()` runs).
-- `src/lib/plan.functions.ts`: `restorePlanVersion` left in place but unused by the UI, or removed if nothing else references it.
-- `src/routes/_authenticated/plans.tsx`: card copy for credits stays `x/y used`, now reading 2/2 after a refine.
+- Migration: `generation_sessions.credits_total` default 3 → 2 (new rows only).
+- `src/routes/_authenticated/plans.$sessionId.tsx`: drop `restorePlanVersion` usage, rework the versions card into a labelled switcher, reuse the `autoGenerating` tips block during `refine()`.
+- `src/lib/plan-generation.server.ts`: newest version = highest `version`; keep writing `is_final` on the latest row for compatibility with admin views.
+- New route `src/routes/nutrition-library.tsx` with anchored sections and its own `head()` metadata; `src/components/Navigation.tsx` menu array reordered.
+- Copy edits in: `pricing.tsx`, `index.tsx`, `checkout.tsx`, `faq.tsx`, `terms.tsx`, `privacy.tsx`, `nutrition-intelligence.tsx`, `diet-plans.weight-loss.tsx`, `how-it-works.tsx`, `about.tsx`, `_authenticated/plans.tsx`.
