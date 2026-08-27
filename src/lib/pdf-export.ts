@@ -15,7 +15,12 @@ const PAGE_HEIGHT = 1018;
 const HEADER_HEIGHT = 88;
 const FOOTER_HEIGHT = 46;
 const CONTENT_PADDING_Y = 22;
-const CONTENT_HEIGHT = PAGE_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT - CONTENT_PADDING_Y * 2;
+// html2canvas can round line boxes slightly taller than the browser's layout
+// measurement. Keep a print-safe reserve so the final atomic block never
+// touches the footer after rasterization.
+const PRINT_SAFE_RESERVE = 32;
+const CONTENT_HEIGHT =
+  PAGE_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT - CONTENT_PADDING_Y * 2 - PRINT_SAFE_RESERVE;
 
 function esc(s: unknown) {
   return String(s ?? "")
