@@ -2,7 +2,7 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
-import { createDietCheckout } from "@/lib/payments.functions";
+import { createDietCheckout, getResumableDietSession } from "@/lib/payments.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, Loader2 } from "lucide-react";
@@ -42,6 +42,7 @@ export const Route = createFileRoute("/checkout")({
 function CheckoutPage() {
   const { qid } = Route.useSearch();
   const create = useServerFn(createDietCheckout);
+  const getResumable = useServerFn(getResumableDietSession);
   const startFree = useServerFn(startFreeSession);
   const getAccess = useServerFn(getComplimentaryAccess);
   const generate = useServerFn(generatePlan);
@@ -58,7 +59,32 @@ function CheckoutPage() {
   const [freeError, setFreeError] = useState(false);
   const [weeks, setWeeks] = useState<1 | 2 | 4 | null>(null);
   const [ready, setReady] = useState(false);
+  const [checkingResumable, setCheckingResumable] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (authLoading || !user?.id) return;
+    let active = true;
+    void getResumable({})
+      .then((result) => {
+        if (!active) return;
+        if (result.stripeSessionId) {
+          navigate({
+            to: "/checkout/return",
+            search: { session_id: result.stripeSessionId },
+            replace: true,
+          });
+          return;
+        }
+        setCheckingResumable(false);
+      })
+      .catch(() => {
+        if (active) setCheckingResumable(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [authLoading, getResumable, navigate, user?.id]);
 
   useEffect(() => {
     (async () => {
@@ -169,7 +195,12 @@ function CheckoutPage() {
     [qid, weeks, create],
   );
 
-  if (freeLoading || authLoading || (serverComplimentaryAccess === null && !!user?.id)) {
+  if (
+    freeLoading ||
+    authLoading ||
+    checkingResumable ||
+    (serverComplimentaryAccess === null && !!user?.id)
+  ) {
     return (
       <div className="mx-auto flex min-h-[50vh] max-w-md items-center justify-center px-4">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />

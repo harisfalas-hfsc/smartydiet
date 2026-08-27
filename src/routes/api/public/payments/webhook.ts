@@ -23,6 +23,13 @@ async function handleCheckoutCompleted(session: any) {
     typeof session.payment_intent === "string"
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
+  const { data: existing } = await getSupabase()
+    .from("generation_sessions")
+    .select("status")
+    .eq("id", genSessionId)
+    .maybeSingle();
+  const terminalStatuses = new Set(["paid", "completed", "refunded", "authorization_released"]);
+  const nextStatus = terminalStatuses.has(existing?.status) ? existing.status : "authorized";
   await getSupabase()
     .from("generation_sessions")
     .upsert({
@@ -30,7 +37,7 @@ async function handleCheckoutCompleted(session: any) {
       user_id: userId,
       questionnaire_id: questionnaireId,
       duration_weeks: durationWeeks,
-      status: "authorized",
+      status: nextStatus,
       stripe_session_id: session.id,
       stripe_payment_intent: paymentIntent,
       amount_cents: session.amount_total ?? 999,
@@ -49,7 +56,8 @@ async function handleCheckoutCompleted(session: any) {
       generation_session_id: genSessionId,
       stripe_payment_intent: paymentIntent,
     })
-    .eq("stripe_session_id", session.id);
+    .eq("stripe_session_id", session.id)
+    .in("status", ["checkout_opened", "payment_processing", "authorized"]);
 }
 
 async function handlePaymentIntentSettled(intent: any, captured: boolean) {
@@ -61,7 +69,7 @@ async function handlePaymentIntentSettled(intent: any, captured: boolean) {
       .eq("stripe_payment_intent", intent.id);
     await getSupabase()
       .from("diet_plan_attempts")
-      .update({ status: "generated", paid_at: new Date().toISOString() })
+      .update({ status: "paid", reached_stage: "Payment captured", paid_at: new Date().toISOString() })
       .eq("stripe_payment_intent", intent.id)
       .in("status", ["authorized", "paid"]);
     return;

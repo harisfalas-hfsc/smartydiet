@@ -52,9 +52,18 @@ function Return() {
         return;
       }
       try {
-        const paidRes = await mark({
+        let paidRes = await mark({
           data: { stripeSessionId: session_id, environment: getStripeEnvironment() },
         });
+        // Stripe can redirect a fraction before the final PaymentIntent state is
+        // visible through its API. Retry briefly instead of stranding a valid
+        // authorization on a false "not confirmed" screen.
+        for (let attempt = 0; attempt < 4 && (!paidRes.paid || !paidRes.generationSessionId); attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 1_500));
+          paidRes = await mark({
+            data: { stripeSessionId: session_id, environment: getStripeEnvironment() },
+          });
+        }
         if (!("paid" in paidRes) || !paidRes.paid || !paidRes.generationSessionId) {
           await reportFailure({
             data: {
