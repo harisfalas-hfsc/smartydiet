@@ -79,6 +79,7 @@ function PlanView() {
   const [busy, setBusy] = useState(false);
   const [autoGenerating, setAutoGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [tipIndex, setTipIndex] = useState(0);
 
   const load = useCallback(async () => {
     setSessionLoading(true);
