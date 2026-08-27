@@ -76,10 +76,34 @@ async function renderToPdf(bodyHtml: string, title: string, filename: string) {
     const blocks = Array.from(holder.children) as HTMLElement[];
     const pages: string[][] = [[]];
     let usedHeight = 0;
+    let weekContext = "";
+    let sectionContext = "";
+
+    const continuationHtml = () => weekContext
+      ? `<div data-pdf-block="true" style="display:flex;justify-content:space-between;align-items:baseline;margin:0 0 12px;padding:7px 10px;border-left:4px solid ${PRIMARY};background:${BG_SOFT};font-size:13px;font-weight:800;color:${PRIMARY_DARK};">
+          <span>${esc(weekContext)} &mdash; continued</span>
+          ${sectionContext ? `<span style="font-size:10px;color:${MUTED};font-weight:700;">${esc(sectionContext)}</span>` : ""}
+        </div>`
+      : "";
+
+    const measureHtml = (html: string) => {
+      if (!html) return 0;
+      const measure = document.createElement("div");
+      measure.innerHTML = html;
+      holder.appendChild(measure);
+      const height = Math.ceil(measure.getBoundingClientRect().height);
+      measure.remove();
+      return height;
+    };
 
     for (let index = 0; index < blocks.length; index += 1) {
       const block = blocks[index];
       if (!block) continue;
+      if (block.dataset.pdfWeekContext) {
+        weekContext = block.dataset.pdfWeekContext;
+        sectionContext = "";
+      }
+      if (block.dataset.pdfSectionContext) sectionContext = block.dataset.pdfSectionContext;
       const blockHeight = Math.ceil(block.getBoundingClientRect().height);
       const nextBlock = blocks[index + 1];
       const nextHeight = block.dataset.pdfKeepNext === "true" && nextBlock
@@ -96,6 +120,15 @@ async function renderToPdf(bodyHtml: string, title: string, filename: string) {
       if (currentPage.length > 0 && usedHeight + requiredHeight > CONTENT_HEIGHT) {
         pages.push([]);
         usedHeight = 0;
+        if (!block.dataset.pdfWeekContext) {
+          const continuation = continuationHtml();
+          const continuationHeight = measureHtml(continuation);
+          const newPage = pages[pages.length - 1];
+          if (newPage && continuation && continuationHeight + blockHeight <= CONTENT_HEIGHT) {
+            newPage.push(continuation);
+            usedHeight += continuationHeight;
+          }
+        }
       }
 
       const targetPage = pages[pages.length - 1];
@@ -198,12 +231,12 @@ export async function exportPlanPdf(plan: any, durationWeeks: number) {
   const weeksHtml = (plan?.weeks ?? [])
     .map(
       (w: any) => `
-        <div data-pdf-block="true" data-pdf-keep-next="true" style="font-size:18px;font-weight:800;color:${PRIMARY_DARK};margin:8px 0 12px;
+        <div data-pdf-block="true" data-pdf-keep-next="true" data-pdf-week-context="Week ${esc(w.weekNumber)}" style="font-size:18px;font-weight:800;color:${PRIMARY_DARK};margin:8px 0 12px;
           border-left:4px solid ${PRIMARY};padding:4px 0 4px 10px;">Week ${esc(w.weekNumber)}</div>
         ${(w.days ?? [])
           .map(
             (d: any) => `
-          <div data-pdf-block="true" data-pdf-keep-next="true" style="border:1px solid ${BORDER};border-bottom:0;border-radius:10px 10px 0 0;padding:11px 13px 9px;background:#fff;margin-top:8px;">
+          <div data-pdf-block="true" data-pdf-keep-next="true" data-pdf-section-context="Day ${esc(d.day)}" style="border:1px solid ${BORDER};border-bottom:0;border-radius:10px 10px 0 0;padding:11px 13px 9px;background:#fff;margin-top:8px;">
             <div style="display:flex;justify-content:space-between;align-items:baseline;">
               <div style="font-weight:700;font-size:15px;color:${INK};">Week ${esc(w.weekNumber)} &middot; Day ${esc(d.day)}</div>
               <div style="font-size:12px;color:${MUTED};font-weight:600;">${esc(d.totals?.calories ?? "-")} kcal</div>
@@ -273,14 +306,14 @@ export async function exportGroceryPdf(plan: any) {
           <span style="color:${INK};">${esc(item.item)}</span>
         </div>`).join("");
       return `
-        <div data-pdf-block="true" data-pdf-keep-next="true" style="display:flex;justify-content:space-between;align-items:center;margin:13px 0 7px;padding-bottom:5px;border-bottom:1px solid ${BORDER};">
+        <div data-pdf-block="true" data-pdf-keep-next="true" data-pdf-section-context="${esc(category.name)}" style="display:flex;justify-content:space-between;align-items:center;margin:13px 0 7px;padding-bottom:5px;border-bottom:1px solid ${BORDER};">
           <span style="font-size:13px;font-weight:800;color:${INK};">${esc(category.name)}</span>
           <span style="font-size:10px;font-weight:700;color:${MUTED};">${category.items.length} item${category.items.length === 1 ? "" : "s"}</span>
         </div>
         ${rows}`;
     }).join("");
     return `
-      <div data-pdf-block="true" data-pdf-keep-next="true" style="display:flex;justify-content:space-between;align-items:baseline;font-size:18px;font-weight:800;color:${PRIMARY_DARK};margin:8px 0 12px;border-left:4px solid ${PRIMARY};padding:4px 0 4px 10px;">
+      <div data-pdf-block="true" data-pdf-keep-next="true" data-pdf-week-context="Week ${week.weekNumber}" style="display:flex;justify-content:space-between;align-items:baseline;font-size:18px;font-weight:800;color:${PRIMARY_DARK};margin:8px 0 12px;border-left:4px solid ${PRIMARY};padding:4px 0 4px 10px;">
         <span>Week ${week.weekNumber}</span>
         <span style="font-size:11px;color:${MUTED};font-weight:700;">${week.itemCount} grocery item${week.itemCount === 1 ? "" : "s"}</span>
       </div>
