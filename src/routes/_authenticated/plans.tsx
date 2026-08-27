@@ -52,11 +52,10 @@ function PlansList() {
     if (readySessionIds.length === 0) return [];
 
     const { data: fresh, error } = await supabase
-      supabase
-        .from("generation_sessions")
-        .select("id,duration_weeks,status,credits_used,credits_total,created_at")
-        .in("id", readySessionIds)
-        .order("created_at", { ascending: false });
+      .from("generation_sessions")
+      .select("id,duration_weeks,status,credits_used,credits_total,created_at")
+      .in("id", readySessionIds)
+      .order("created_at", { ascending: false });
     if (error) throw error;
     return (fresh ?? []) as Row[];
   }
