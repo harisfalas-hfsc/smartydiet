@@ -2,6 +2,7 @@ import { generateText } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import {
   mealSlotsFor,
+  sortPlanStructure,
   type StrictRules,
   type ValidationIssue,
   validatePlan,
@@ -559,7 +560,7 @@ export async function runPlanGeneration(
       await supabase.from("diet_plans").update({ is_final: false }).eq("session_id", session.id);
 
       const warnings: string[] = [];
-      const planToSave = { ...plan, _warnings: warnings };
+      const planToSave = { ...sortPlanStructure(plan), _warnings: warnings };
 
       const { error: insErr } = await supabase.from("diet_plans").insert({
         ...(data.operationId ? { id: data.operationId } : {}),
@@ -681,7 +682,7 @@ export async function repairStoredPlan(
     };
   }
 
-  const planToSave = { ...plan, _warnings: [] };
+  const planToSave = { ...sortPlanStructure(plan), _warnings: [] };
   const { error: updateError } = await supabase
     .from("diet_plans")
     .update({ plan: planToSave, rationale: plan?.rationale ?? null })
