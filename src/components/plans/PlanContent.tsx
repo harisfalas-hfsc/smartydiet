@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { exportGroceryPdf, exportPlanPdf } from "@/lib/pdf-export";
+import { toast } from "sonner";
 import {
   mealSlotsFor,
   sortPlanStructure,
@@ -35,15 +36,24 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
     : mealSlotsFor(expectedMealsPerDay);
   const snacks = slots.filter((slot) => slot.toLowerCase().includes("snack"));
   const report = verifyPlanStructure(plan, expectedWeeks, expectedMealsPerDay);
+  const download = async (kind: "grocery" | "plan") => {
+    try {
+      if (kind === "grocery") await exportGroceryPdf(plan);
+      else await exportPlanPdf(plan, durationWeeks);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "The PDF could not be created.";
+      toast.error(message);
+    }
+  };
 
   return (
     <div className="space-y-6">
       {showDownloads && (
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => void exportGroceryPdf(plan)}>
+          <Button variant="outline" size="sm" onClick={() => void download("grocery")}>
             <ShoppingBasket className="mr-1.5 h-4 w-4" /> Grocery PDF
           </Button>
-          <Button size="sm" onClick={() => void exportPlanPdf(plan, durationWeeks)}>
+          <Button size="sm" onClick={() => void download("plan")}>
             <Download className="mr-1.5 h-4 w-4" /> Plan PDF
           </Button>
         </div>
