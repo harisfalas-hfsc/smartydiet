@@ -15,8 +15,15 @@ export function PaymentRecovery() {
     if (loading || !user?.id || pathname === "/checkout/return") return;
 
     let active = true;
-    void getResumable({})
+    void supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        // Without a live access token the server fn would 401 and blank the page.
+        if (!active || !data.session?.access_token) return null;
+        return getResumable({});
+      })
       .then((result) => {
+        if (!active || !result?.stripeSessionId) return;
         if (!active || !result.stripeSessionId) return;
         navigate({
           to: "/checkout/return",
