@@ -279,13 +279,9 @@ function NavDrawer({
         { to: "/about", label: "About", Icon: Info },
         { to: "/how-it-works", label: "How It Works", Icon: BookOpen },
         ...(freeAccessMode ? [] : [{ to: "/pricing", label: "Pricing", Icon: Crown }]),
-        { to: "/diet-plans", label: "Diet Plans", Icon: ClipboardList },
-        { to: "/meal-planning", label: "Meal Planning", Icon: BookOpen },
-        { to: "/sports-nutrition", label: "Sports Nutrition", Icon: Sparkles },
         { to: "/tools", label: "Tools", Icon: Wrench },
         { to: "/faq", label: "Frequently Asked Questions", Icon: HelpCircle },
-        { to: "/diet-science", label: "The Diet Science", Icon: BookOpen },
-        { to: "/nutrition-intelligence", label: "Nutrition Intelligence", Icon: Sparkles },
+        { to: "/nutrition-library", label: "Nutrition Library", Icon: BookOpen },
         { to: "/contact", label: "Contact", Icon: Mail },
       ],
     },
@@ -297,10 +293,7 @@ function NavDrawer({
         { to: "/disclaimer", label: "Disclaimer", Icon: AlertTriangle },
       ],
     },
-    {
-      heading: "Resources",
-      items: [{ to: "/glossary", label: "Glossary", Icon: BookOpen }],
-    },
+
   ];
 
 
