@@ -10,6 +10,9 @@ const INK = "#0f172a";
 const MUTED = "#64748b";
 const BORDER = "#e2e8f0";
 const BG_SOFT = "#f0f9ff";
+const VIOLET = "#8b5cf6";
+const VIOLET_DARK = "#7c3aed";
+const VIOLET_SOFT = "#f5f3ff";
 const PAGE_WIDTH = 720;
 const PAGE_HEIGHT = 1018;
 const HEADER_HEIGHT = 88;
@@ -294,8 +297,11 @@ export async function exportPlanPdf(plan: any, durationWeeks: number) {
     .join("");
 
   const rationale = plan?.rationale
-    ? `<div data-pdf-block="true" style="border:1px solid ${BORDER};border-radius:10px;padding:14px;margin-top:12px;background:#fff;">
-        <div style="font-weight:700;color:${PRIMARY_DARK};margin-bottom:6px;">Why this plan fits you</div>
+    ? `<div data-pdf-block="true" style="border:1px solid ${VIOLET};border-radius:10px;padding:14px;margin-top:12px;background:linear-gradient(135deg,${VIOLET_SOFT} 0%,#ffffff 100%);">
+        <div style="display:flex;align-items:center;gap:8px;font-weight:700;color:${VIOLET_DARK};margin-bottom:8px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid ${VIOLET};font-size:13px;">🧠</span>
+          Why this plan fits you
+        </div>
         <div style="font-size:12px;color:${INK};line-height:1.6;">${esc(plan.rationale)}</div>
       </div>`
     : "";
