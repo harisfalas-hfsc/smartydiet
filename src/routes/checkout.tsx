@@ -2,7 +2,7 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
-import { createDietCheckout, getResumableDietSession } from "@/lib/payments.functions";
+import { createDietCheckout } from "@/lib/payments.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, Loader2 } from "lucide-react";
@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { waitForPlanGeneration } from "@/lib/generation-client";
 import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
+import { findResumablePayment } from "@/lib/payment-recovery.client";
 
 type Search = { qid?: string; weeks?: number };
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
@@ -42,7 +43,6 @@ export const Route = createFileRoute("/checkout")({
 function CheckoutPage() {
   const { qid } = Route.useSearch();
   const create = useServerFn(createDietCheckout);
-  const getResumable = useServerFn(getResumableDietSession);
   const startFree = useServerFn(startFreeSession);
   const getAccess = useServerFn(getComplimentaryAccess);
   const generate = useServerFn(generatePlan);
@@ -65,7 +65,7 @@ function CheckoutPage() {
   useEffect(() => {
     if (authLoading || !user?.id) return;
     let active = true;
-    void getResumable({})
+    void findResumablePayment(user.id)
       .then((result) => {
         if (!active) return;
         if (result.stripeSessionId) {
@@ -84,7 +84,7 @@ function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [authLoading, getResumable, navigate, user?.id]);
+  }, [authLoading, navigate, user?.id]);
 
   useEffect(() => {
     (async () => {

@@ -52,7 +52,9 @@ export default defineConfig({
           clientsClaim: true,
           skipWaiting: true,
           navigateFallback: "/",
-          navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn/],
+          // Payment return pages must never fall back to cached home-page HTML:
+          // doing so loses the post-authorization generation handoff.
+          navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn/, /^\/checkout(?:\/|$)/],
           additionalManifestEntries: offlineRoutes.map((url) => ({
             url,
             revision: BUILD_REVISION,
@@ -68,6 +70,11 @@ export default defineConfig({
             "**/favicon*.png",
           ],
           runtimeCaching: [
+            {
+              urlPattern: ({ request, url }) =>
+                request.mode === "navigate" && url.pathname.startsWith("/checkout"),
+              handler: "NetworkOnly",
+            },
             {
               urlPattern: ({ request }) => request.mode === "navigate",
               handler: "NetworkFirst",

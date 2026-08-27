@@ -36,7 +36,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { isAdminEmail } from "@/lib/admin";
 import { enqueueMutation } from "@/lib/offline/queue";
 import { OFFLINE_KEYS, readCached, removeLocal, saveLocal } from "@/lib/offline/store";
-import { getResumableDietSession } from "@/lib/payments.functions";
+import { findResumablePayment } from "@/lib/payment-recovery.client";
 
 export const Route = createFileRoute("/_authenticated/questionnaire")({
   head: () => ({
@@ -58,7 +58,6 @@ function QuestionnairePage() {
   const navigate = useNavigate();
   const { freeAccessMode } = useFreeAccessMode();
   const save = useServerFn(saveQuestionnaire);
-  const getResumable = useServerFn(getResumableDietSession);
   const online = useOnlineStatus();
   const { user } = useAuth();
   const complimentaryAccess = freeAccessMode || isAdminEmail(user?.email);
@@ -71,7 +70,7 @@ function QuestionnairePage() {
   useEffect(() => {
     if (!user?.id) return;
     let active = true;
-    void getResumable({})
+    void findResumablePayment(user.id)
       .then((result) => {
         if (!active) return;
         if (result.stripeSessionId) {
@@ -90,7 +89,7 @@ function QuestionnairePage() {
     return () => {
       active = false;
     };
-  }, [getResumable, navigate, user?.id]);
+  }, [navigate, user?.id]);
 
   useEffect(() => {
     if (!user?.id) return;
