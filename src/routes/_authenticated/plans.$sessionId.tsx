@@ -124,6 +124,15 @@ function PlanView() {
   }, [autoGenerating, load]);
 
   useEffect(() => {
+    if (!autoGenerating) return;
+    const interval = window.setInterval(
+      () => setTipIndex((current) => (current + 1) % PLAN_TIPS.length),
+      7_000,
+    );
+    return () => window.clearInterval(interval);
+  }, [autoGenerating]);
+
+  useEffect(() => {
     if (autoGenerating && versions.length > 0) {
       setAutoGenerating(false);
       setGenerationError(null);
