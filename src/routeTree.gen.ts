@@ -15,6 +15,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as NutritionLibraryRouteImport } from './routes/nutrition-library'
 import { Route as NutritionIntelligenceRouteImport } from './routes/nutrition-intelligence'
 import { Route as MealPlanningRouteImport } from './routes/meal-planning'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -85,6 +86,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NutritionLibraryRoute = NutritionLibraryRouteImport.update({
+  id: '/nutrition-library',
+  path: '/nutrition-library',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NutritionIntelligenceRoute = NutritionIntelligenceRouteImport.update({
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
+  '/nutrition-library': typeof NutritionLibraryRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -363,6 +370,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
+  '/nutrition-library': typeof NutritionLibraryRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -413,6 +421,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
+  '/nutrition-library': typeof NutritionLibraryRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -463,6 +472,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/meal-planning'
     | '/nutrition-intelligence'
+    | '/nutrition-library'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -511,6 +521,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/meal-planning'
     | '/nutrition-intelligence'
+    | '/nutrition-library'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -560,6 +571,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/meal-planning'
     | '/nutrition-intelligence'
+    | '/nutrition-library'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -610,6 +622,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   MealPlanningRoute: typeof MealPlanningRoute
   NutritionIntelligenceRoute: typeof NutritionIntelligenceRoute
+  NutritionLibraryRoute: typeof NutritionLibraryRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -681,6 +694,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nutrition-library': {
+      id: '/nutrition-library'
+      path: '/nutrition-library'
+      fullPath: '/nutrition-library'
+      preLoaderRoute: typeof NutritionLibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/nutrition-intelligence': {
@@ -1028,6 +1048,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   MealPlanningRoute: MealPlanningRoute,
   NutritionIntelligenceRoute: NutritionIntelligenceRoute,
+  NutritionLibraryRoute: NutritionLibraryRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
