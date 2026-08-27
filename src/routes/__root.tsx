@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -352,21 +353,23 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isPaymentProcessing = pathname === "/checkout/return";
 
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex min-h-screen flex-col bg-background">
-        <PaymentTestModeBanner />
-        <Navigation />
-        <main>
+        {!isPaymentProcessing && <PaymentTestModeBanner />}
+        {!isPaymentProcessing && <Navigation />}
+        <main className="flex-1">
           <Outlet />
         </main>
-        <SiteFooter />
+        {!isPaymentProcessing && <SiteFooter />}
         <Toaster />
-        <SisterAppsPopup />
-        <PaymentRecovery />
+        {!isPaymentProcessing && <SisterAppsPopup />}
+        {!isPaymentProcessing && <PaymentRecovery />}
         <OfflineBootstrap />
-        <SyncStatusPill />
+        {!isPaymentProcessing && <SyncStatusPill />}
       </div>
     </QueryClientProvider>
   );

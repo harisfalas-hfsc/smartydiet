@@ -11,6 +11,7 @@ import { waitForPlanGeneration } from "@/lib/generation-client";
 import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
 const CREATION_TIPS = [
@@ -47,6 +48,10 @@ function Return() {
   const [tipIndex, setTipIndex] = useState(0);
 
   useEffect(() => {
+    toast.dismiss();
+  }, []);
+
+  useEffect(() => {
     if (status !== "working") return;
     const interval = window.setInterval(
       () => setTipIndex((current) => (current + 1) % CREATION_TIPS.length),
@@ -56,7 +61,20 @@ function Return() {
   }, [status]);
 
   useEffect(() => {
-    if (authLoading || !session?.access_token) return;
+    if (authLoading) return;
+    if (!session?.access_token) {
+      let active = true;
+      void supabase.auth.getSession().then(({ data }) => {
+        if (!active || data.session?.access_token) return;
+        setStatus("error");
+        setMessage(
+          "Your secure session expired before the diet could start. Sign in again with the same account; your card authorization and questionnaire are saved.",
+        );
+      });
+      return () => {
+        active = false;
+      };
+    }
     if (processingStarted.current) return;
     processingStarted.current = true;
     let active = true;
@@ -169,7 +187,7 @@ function Return() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 py-10 text-center">
+    <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 py-10 text-center">
       {status === "working" && <Loader2 className="h-10 w-10 animate-spin text-primary" />}
       {status === "done" && <CheckCircle2 className="h-10 w-10 text-primary" />}
       {status === "error" && <AlertTriangle className="h-10 w-10 text-destructive" />}
