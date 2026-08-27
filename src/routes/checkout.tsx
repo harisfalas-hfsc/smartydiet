@@ -55,7 +55,7 @@ function CheckoutPage() {
     "Building your plan… this can take up to 2 minutes.",
   );
   const [freeError, setFreeError] = useState(false);
-  const [weeks, setWeeks] = useState<1 | 2 | 4 | null>(null);
+  const [weeks, setWeeks] = useState<1 | 2 | null>(null);
   const [ready, setReady] = useState(false);
   const navigate = useNavigate();
 
@@ -72,7 +72,7 @@ function CheckoutPage() {
         .eq("id", qid)
         .maybeSingle();
       const savedWeeks = Number(data?.duration_weeks);
-      setWeeks(savedWeeks === 1 || savedWeeks === 4 ? savedWeeks : 2);
+      setWeeks(savedWeeks === 1 ? 1 : 2);
       setReady(true);
     })();
   }, [qid]);

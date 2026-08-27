@@ -8,7 +8,7 @@ export const saveQuestionnaire = createServerFn({ method: "POST" })
     (input: {
       id?: string;
       data: any;
-      durationWeeks?: 1 | 2 | 4;
+      durationWeeks?: 1 | 2;
       status?: "draft" | "submitted";
     }) => input,
   )

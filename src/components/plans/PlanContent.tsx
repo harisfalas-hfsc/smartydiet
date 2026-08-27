@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { exportGroceryPdf, exportPlanPdf } from "@/lib/pdf-export";
+import { sortPlanStructure } from "@/lib/plan-validation";
 
 type Props = {
   plan: any;
@@ -10,8 +11,14 @@ type Props = {
   showDownloads?: boolean;
 };
 
-export function PlanContent({ plan, durationWeeks, showDownloads = false }: Props) {
+function jumpTo(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = false }: Props) {
+  const plan = sortPlanStructure(rawPlan);
   const warnings: string[] = plan?._warnings ?? [];
+  const weeks: any[] = plan?.weeks ?? [];
 
   return (
     <div className="space-y-6">
@@ -54,39 +61,45 @@ export function PlanContent({ plan, durationWeeks, showDownloads = false }: Prop
         </Card>
       )}
 
-      {(plan?.weeks ?? []).length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {[...(plan?.weeks ?? [])]
-            .sort((a: any, b: any) => (a.weekNumber ?? 0) - (b.weekNumber ?? 0))
-            .map((week: any) => (
-              <Button
-                key={`jump-${week.weekNumber}`}
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  document
-                    .getElementById(`week-${week.weekNumber}`)
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                }
-              >
-                Week {week.weekNumber}
-              </Button>
+      {weeks.length > 0 && (
+        <Card>
+          <CardContent className="space-y-3 p-4">
+            {weeks.map((week: any) => (
+              <div key={`nav-${week.weekNumber}`} className="space-y-2">
+                <button
+                  type="button"
+                  className="text-sm font-semibold text-primary hover:underline"
+                  onClick={() => jumpTo(`week-${week.weekNumber}`)}
+                >
+                  Week {week.weekNumber}
+                </button>
+                <div className="flex flex-wrap gap-1.5">
+                  {(week.days ?? []).map((day: any) => (
+                    <Button
+                      key={`nav-day-${day.day}`}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => jumpTo(`week-${week.weekNumber}-day-${day.day}`)}
+                    >
+                      Day {day.day}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             ))}
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      {[...(plan?.weeks ?? [])]
-        .sort((a: any, b: any) => (a.weekNumber ?? 0) - (b.weekNumber ?? 0))
-        .map((week: any) => (
+
+      {weeks.map((week: any) => (
         <div key={week.weekNumber} id={`week-${week.weekNumber}`} className="scroll-mt-24 space-y-3">
           <h3 className="text-lg font-bold">Week {week.weekNumber}</h3>
-          {[...(week.days ?? [])]
-            .sort((a: any, b: any) => (a.day ?? 0) - (b.day ?? 0))
-            .map((day: any) => (
-            <Card key={day.day}>
+          {(week.days ?? []).map((day: any) => (
+            <Card key={day.day} id={`week-${week.weekNumber}-day-${day.day}`} className="scroll-mt-24">
               <CardContent className="p-4">
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <p className="font-semibold">Day {day.day}</p>
+                  <p className="font-semibold">Week {week.weekNumber} · Day {day.day}</p>
                   <p className="text-xs text-muted-foreground">{day.totals?.calories ?? "-"} kcal</p>
                 </div>
                 <div className="space-y-3">

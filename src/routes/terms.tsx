@@ -63,7 +63,7 @@ function Terms() {
       </p>
       <ul>
         <li>A multi-step nutrition questionnaire covering your goals, body, activity, preferences, allergies, and constraints.</li>
-        <li>An AI-generated personalized plan spanning 1, 2, or 4 weeks based on your selection.</li>
+        <li>An AI-generated personalized plan spanning 1 or 2 weeks based on your selection.</li>
         <li>A consolidated grocery list and a short rationale explaining why the plan fits your goal.</li>
         <li>One refinement request per plan (e.g. "swap breakfast options", "less dairy").</li>
         <li>PDF export and printable grocery-list view.</li>

@@ -15,7 +15,7 @@ async function handleCheckoutCompleted(session: any, environment: StripeEnv) {
   const userId = session?.metadata?.userId;
   const questionnaireId = session?.metadata?.questionnaireId;
   const durationWeeks = Number(session?.metadata?.durationWeeks);
-  if (!genSessionId || !userId || !questionnaireId || ![1, 2, 4].includes(durationWeeks)) return;
+  if (!genSessionId || !userId || !questionnaireId || ![1, 2].includes(durationWeeks)) return;
   const paymentIntent =
     typeof session.payment_intent === "string"
       ? session.payment_intent

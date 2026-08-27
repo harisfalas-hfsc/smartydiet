@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { mealSlotsFor, type StrictRules, validatePlan } from "./plan-validation";
+import { mealSlotsFor, sortPlanStructure, type StrictRules, validatePlan } from "./plan-validation";
 
 function completePlan(weeks: number, mealsPerDay: number) {
   const slots = mealSlotsFor(mealsPerDay);
@@ -29,7 +29,7 @@ function rules(weeks: number, mealsPerDay: number): StrictRules {
 }
 
 describe("paid plan structural validation", () => {
-  for (const weeks of [1, 2, 4]) {
+  for (const weeks of [1, 2]) {
     for (const meals of [1, 2, 3, 4, 5, 6]) {
       test(`${weeks} week(s), ${meals} meal(s) is complete`, () => {
         assert.deepEqual(validatePlan(completePlan(weeks, meals), rules(weeks, meals)), []);
@@ -72,5 +72,21 @@ describe("paid plan structural validation", () => {
     const kinds = validatePlan(plan, strict).map((issue) => issue.kind);
     assert.ok(kinds.includes("calorie"));
     assert.ok(kinds.includes("excluded_food"));
+  });
+
+  test("sortPlanStructure orders weeks, days and meals canonically", () => {
+    const plan = completePlan(2, 4);
+    plan.weeks.reverse();
+    plan.weeks.forEach((week) => week.days.reverse());
+    plan.weeks[0].days[0].meals.reverse();
+    const sorted = sortPlanStructure(plan) as any;
+    assert.equal(sorted.weeks[0].weekNumber, 1);
+    assert.equal(sorted.weeks[0].days[0].day, 1);
+    assert.equal(sorted.weeks[1].days[0].day, 8);
+    assert.deepEqual(
+      sorted.weeks[0].days[0].meals.map((meal: any) => meal.name),
+      mealSlotsFor(4),
+    );
+    assert.deepEqual(validatePlan(sorted, rules(2, 4)), []);
   });
 });
