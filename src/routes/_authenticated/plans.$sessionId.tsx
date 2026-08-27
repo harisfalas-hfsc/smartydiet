@@ -261,8 +261,9 @@ function PlanView() {
         <div>
           <h1 className="text-2xl font-bold">Your {session.duration_weeks}-week plan</h1>
           <p className="text-sm text-muted-foreground">
-            {remaining} refinement{remaining === 1 ? "" : "s"} remaining · viewing v
+            {remaining} refinement{remaining === 1 ? "" : "s"} remaining · viewing version{" "}
             {active?.version ?? 1}
+            {active ? (active.version === 1 ? " — original" : " — refined") : ""}
           </p>
         </div>
         <div className="flex gap-2">
@@ -274,6 +275,30 @@ function PlanView() {
           </Button>
         </div>
       </div>
+
+      {refining && (
+        <Card className="mb-6">
+          <CardContent className="p-8 text-center text-muted-foreground">
+            <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
+            <p className="font-medium text-foreground">
+              Building your refined plan… this can take up to 2 minutes.
+            </p>
+            <div
+              className="mx-auto mt-6 max-w-md rounded-md border border-border bg-muted/40 p-4 text-left"
+              aria-live="polite"
+            >
+              <p className="text-xs font-bold uppercase text-primary">Did you know?</p>
+              <p className="mt-1 min-h-12 text-sm leading-6 text-foreground">
+                {PLAN_TIPS[tipIndex]}
+              </p>
+            </div>
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              Stay on this page — your refined plan will appear here automatically when it is ready.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
 
       {!active ? (
         <Card>
