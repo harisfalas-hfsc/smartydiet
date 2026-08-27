@@ -412,6 +412,11 @@ export const generatePlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<PlanResult> => {
     const { supabase, userId, claims } = context;
     const fail = async (reason: string): Promise<PlanResult> => {
+      await supabase
+        .from("generation_sessions")
+        .update({ status: "failed" })
+        .eq("id", data.sessionId)
+        .in("status", ["authorized", "paid"]);
       const { sendPlanGenerationFailureAlert } = await import("@/lib/plan-generation-alert.server");
       await sendPlanGenerationFailureAlert(
         { supabase, userId, claims: claims as Record<string, unknown> },

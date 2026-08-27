@@ -169,7 +169,7 @@ export const getResumableDietSession = createServerFn({ method: "GET" })
       .from("generation_sessions")
       .select("id,stripe_session_id,status,created_at")
       .eq("user_id", userId)
-      .in("status", ["authorized", "completed"])
+      .in("status", ["authorized", "paid", "completed"])
       .not("stripe_session_id", "is", null)
       .order("created_at", { ascending: false })
       .limit(5);
@@ -183,6 +183,7 @@ export const getResumableDietSession = createServerFn({ method: "GET" })
         .eq("session_id", session.id)
         .limit(1)
         .maybeSingle();
+      if (session.status === "paid" && plan) continue;
       // Both cases need the return route: no plan resumes generation, while
       // an existing plan resumes the interrupted payment capture.
       return {
