@@ -1,10 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
-import {
-  loadOwnedPaymentSession,
-  resolveOrCreatePaymentCustomer,
-} from "@/lib/payments.server";
+import { loadOwnedPaymentSession, resolveOrCreatePaymentCustomer } from "@/lib/payments.server";
 
 type CheckoutResult = { clientSecret: string } | { error: string };
 
@@ -129,7 +126,12 @@ export const markSessionAuthorized = createServerFn({ method: "POST" })
         .eq("id", genSessionId)
         .eq("user_id", userId)
         .maybeSingle();
-      const preservedStatuses = new Set(["paid", "completed", "refunded", "authorization_released"]);
+      const preservedStatuses = new Set([
+        "paid",
+        "completed",
+        "refunded",
+        "authorization_released",
+      ]);
       const nextStatus = preservedStatuses.has(existingSession?.status ?? "")
         ? existingSession?.status
         : captured

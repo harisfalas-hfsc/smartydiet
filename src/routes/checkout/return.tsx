@@ -65,7 +65,11 @@ function Return() {
         // Stripe can redirect a fraction before the final PaymentIntent state is
         // visible through its API. Retry briefly instead of stranding a valid
         // authorization on a false "not confirmed" screen.
-        for (let attempt = 0; attempt < 4 && (!paidRes.paid || !paidRes.generationSessionId); attempt++) {
+        for (
+          let attempt = 0;
+          attempt < 4 && (!paidRes.paid || !paidRes.generationSessionId);
+          attempt++
+        ) {
           await new Promise((resolve) => setTimeout(resolve, 1_500));
           paidRes = await mark({
             data: { stripeSessionId: session_id, environment: getStripeEnvironment() },
@@ -105,7 +109,9 @@ function Return() {
           toast.error(GENERATION_ERROR_MESSAGE);
           if (active) {
             setStatus("error");
-            setMessage("Generation failed and your card authorization was released. You were not charged.");
+            setMessage(
+              "Generation failed and your card authorization was released. You were not charged.",
+            );
           }
           return;
         }
@@ -146,7 +152,9 @@ function Return() {
         }).catch(() => undefined);
         if (active) {
           setStatus("error");
-          setMessage("The connection was interrupted. Your card has not been charged. Please try again to continue the same plan.");
+          setMessage(
+            "The connection was interrupted. Your card has not been charged. Please try again to continue the same plan.",
+          );
         }
       }
     })();
