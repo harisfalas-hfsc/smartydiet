@@ -190,7 +190,17 @@ function PlanView() {
       if (res.error) throw new Error(res.error);
       setRefineText("");
       setActiveId(null); // let load() pick the new active
+      // Reflect the consumed refinement immediately, then reconcile with the server.
+      setSession((current) =>
+        current
+          ? {
+              ...current,
+              credits_used: Math.min(current.credits_total, current.credits_used + 1),
+            }
+          : current,
+      );
       await load();
+
       if (res.warnings?.length) {
         toast.warning(`Plan refined with ${res.warnings.length} warning(s)`);
       } else {
