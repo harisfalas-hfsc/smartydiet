@@ -18,6 +18,7 @@ import { Toaster } from "../components/ui/sonner";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
 import { OfflineBootstrap } from "../components/offline/OfflineBootstrap";
 import { SyncStatusPill } from "../components/offline/SyncStatus";
+import { PaymentRecovery } from "../components/PaymentRecovery";
 
 const SITE_URL = "https://smartydiet.com";
 const OG_IMAGE =
@@ -310,7 +311,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", href: "/favicon.v2.png" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.v2.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
-
     ],
     scripts: [
       {
@@ -338,7 +338,6 @@ const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('smartydie
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
-
       <head>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
@@ -365,6 +364,7 @@ function RootComponent() {
         <SiteFooter />
         <Toaster />
         <SisterAppsPopup />
+        <PaymentRecovery />
         <OfflineBootstrap />
         <SyncStatusPill />
       </div>

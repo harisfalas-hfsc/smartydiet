@@ -18,7 +18,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serverEnv = loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
 
-
 // Routes precached at install time so a direct offline load of these URLs works.
 const offlineRoutes = ["/", "/about", "/how-it-works", "/plans", "/questionnaire", "/inbox"];
 
@@ -54,19 +53,26 @@ export default defineConfig({
           skipWaiting: true,
           navigateFallback: "/",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn/],
-          additionalManifestEntries: offlineRoutes.map((url) => ({ url, revision: BUILD_REVISION })),
+          additionalManifestEntries: offlineRoutes.map((url) => ({
+            url,
+            revision: BUILD_REVISION,
+          })),
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,avif,woff,woff2,ttf,otf,json,txt}"],
           // App-identity files stay outside every service-worker cache. Chrome
           // must always resolve the manifest and icons directly from the host,
           // rather than alternating between an old worker copy and the network.
-          globIgnores: ["**/manifest.webmanifest", "**/icon-*.png", "**/apple-touch-icon*.png", "**/favicon*.png"],
+          globIgnores: [
+            "**/manifest.webmanifest",
+            "**/icon-*.png",
+            "**/apple-touch-icon*.png",
+            "**/favicon*.png",
+          ],
           runtimeCaching: [
             {
               urlPattern: ({ request }) => request.mode === "navigate",
               handler: "NetworkFirst",
               options: {
                 cacheName: "smartydiet-pages",
-                networkTimeoutSeconds: 3,
                 expiration: { maxEntries: 80, maxAgeSeconds: 30 * 24 * 60 * 60 },
               },
             },
@@ -81,7 +87,6 @@ export default defineConfig({
             },
           ],
         },
-
       }),
     ],
     resolve: {

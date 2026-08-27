@@ -1,5 +1,6 @@
 /** Service worker registration — fully silent and disabled in previews/dev. */
 let registrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
+const UPDATE_RELOAD_KEY = "smartydiet-update-reload";
 
 function isPreviewHost(hostname: string) {
   return (
@@ -53,10 +54,42 @@ export function registerServiceWorker(): Promise<ServiceWorkerRegistration | nul
   registrationPromise = (async () => {
     try {
       await deleteLegacyIdentityCache();
-      const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      sessionStorage.removeItem(UPDATE_RELOAD_KEY);
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (refreshing) return;
+        refreshing = true;
+
+        // The new worker is active, but an already-open tab is still running
+        // the previous hashed app bundle. Reload once so every published fix
+        // takes effect without asking customers for a hard refresh.
+        if (sessionStorage.getItem(UPDATE_RELOAD_KEY) === "1") {
+          sessionStorage.removeItem(UPDATE_RELOAD_KEY);
+          return;
+        }
+        sessionStorage.setItem(UPDATE_RELOAD_KEY, "1");
+        window.location.reload();
+      });
+
+      const registration = await navigator.serviceWorker.register("/sw.js", {
+        scope: "/",
+        updateViaCache: "none",
+      });
       await navigator.serviceWorker.ready;
+      await registration.update().catch(() => undefined);
+
+      const checkForUpdate = () => {
+        if (document.visibilityState === "visible" && navigator.onLine) {
+          void registration.update().catch(() => undefined);
+        }
+      };
+
+      window.addEventListener("online", checkForUpdate);
+      window.addEventListener("pageshow", checkForUpdate);
+      document.addEventListener("visibilitychange", checkForUpdate);
+
       // Periodic update check (hourly) so long-lived PWA sessions stay fresh.
-      window.setInterval(() => registration.update().catch(() => undefined), 60 * 60 * 1000);
+      window.setInterval(checkForUpdate, 60 * 60 * 1000);
       return registration;
     } catch {
       return null;
