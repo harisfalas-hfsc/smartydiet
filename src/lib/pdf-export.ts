@@ -271,7 +271,7 @@ export async function exportPlanPdf(plan: any, durationWeeks: number) {
                   </div>
                   <div style="font-size:11px;color:${MUTED};white-space:nowrap;">
                     Week ${esc(w.weekNumber)} · Day ${esc(d.day)} ·
-                    ${esc(m.calories)} kcal · P${esc(m.protein_g)} C${esc(m.carbs_g)} F${esc(m.fat_g)}
+                    ${esc(m.calories)} kcal · Protein ${esc(m.protein_g)}g · Carbs ${esc(m.carbs_g)}g · Fat ${esc(m.fat_g)}g
                   </div>
                 </div>
                 ${

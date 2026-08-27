@@ -158,11 +158,9 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
       {summary && (
         <Card>
           <CardContent className="p-4 text-sm">
-            <p className="font-semibold">
-              {summary.calorieTarget} kcal / day ·{" "}
-              <span className="text-muted-foreground">
-                P {summary.macros?.protein_g}g · C {summary.macros?.carbs_g}g · F {summary.macros?.fat_g}g
-              </span>
+            <p className="font-semibold">{summary.calorieTarget} kcal / day</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Protein {summary.macros?.protein_g}g · Carbs {summary.macros?.carbs_g}g · Fat {summary.macros?.fat_g}g
             </p>
             <p className="mt-1 text-xs uppercase text-muted-foreground">
               {summary.dietStyle} · {summary.goal}
@@ -284,7 +282,7 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
                             {meal.title}
                           </p>
                           <p className="text-xs font-medium text-muted-foreground">
-                            {meal.calories} kcal · P{meal.protein_g} C{meal.carbs_g} F{meal.fat_g}
+                            {meal.calories} kcal · Protein {meal.protein_g}g · Carbs {meal.carbs_g}g · Fat {meal.fat_g}g
                           </p>
                         </div>
                         {meal.ingredients?.length ? (
