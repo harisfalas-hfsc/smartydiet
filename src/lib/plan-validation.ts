@@ -77,6 +77,69 @@ export function sortPlanStructure<T = any>(plan: T): T {
   return { ...source, weeks } as T;
 }
 
+export interface PlanStructureReport {
+  ok: boolean;
+  weeks: number;
+  expectedWeeks: number;
+  totalDays: number;
+  expectedDays: number;
+  mealsPerDay: number | null;
+  expectedMealsPerDay: number;
+  problems: string[];
+}
+
+/**
+ * Customer-facing completeness check: are all weeks, 7 days per week and the
+ * requested number of meals per day actually present in the stored plan?
+ */
+export function verifyPlanStructure(
+  plan: any,
+  expectedWeeks: number,
+  expectedMealsPerDay: number,
+): PlanStructureReport {
+  const weeks: any[] = Array.isArray(plan?.weeks) ? plan.weeks : [];
+  const problems: string[] = [];
+  let totalDays = 0;
+  const mealCounts = new Set<number>();
+
+  if (weeks.length !== expectedWeeks) {
+    problems.push(`Found ${weeks.length} week(s) instead of ${expectedWeeks}.`);
+  }
+  for (const week of weeks) {
+    const days: any[] = Array.isArray(week?.days) ? week.days : [];
+    totalDays += days.length;
+    if (days.length !== 7) {
+      problems.push(`Week ${week?.weekNumber ?? "?"} has ${days.length} day(s) instead of 7.`);
+    }
+    for (const day of days) {
+      const meals: any[] = Array.isArray(day?.meals) ? day.meals : [];
+      mealCounts.add(meals.length);
+      if (meals.length !== expectedMealsPerDay) {
+        problems.push(
+          `Week ${week?.weekNumber ?? "?"} Day ${day?.day ?? "?"} has ${meals.length} meal(s) instead of ${expectedMealsPerDay}.`,
+        );
+      }
+    }
+  }
+
+  return {
+    ok: problems.length === 0,
+    weeks: weeks.length,
+    expectedWeeks,
+    totalDays,
+    expectedDays: expectedWeeks * 7,
+    mealsPerDay: mealCounts.size === 1 ? [...mealCounts][0]! : null,
+    expectedMealsPerDay,
+    problems: problems.slice(0, 8),
+  };
+}
+
+/** Snacks implied by the meals-per-day slot layout. */
+export function snackSlotsFor(mealsPerDay: number): string[] {
+  return mealSlotsFor(mealsPerDay).filter((slot) => slot.toLowerCase().includes("snack"));
+}
+
+
 
 function normalizedMealName(value: unknown): string {
   return String(value ?? "")
