@@ -63,6 +63,21 @@ async function handleCheckoutCompleted(session: any) {
 async function handlePaymentIntentSettled(intent: any, captured: boolean) {
   if (!intent?.id) return;
   if (captured) {
+    const { data: paymentSession } = await getSupabase()
+      .from("generation_sessions")
+      .select("id")
+      .eq("stripe_payment_intent", intent.id)
+      .maybeSingle();
+    if (!paymentSession?.id) return;
+    const { data: plan } = await getSupabase()
+      .from("diet_plans")
+      .select("id")
+      .eq("session_id", paymentSession.id)
+      .limit(1)
+      .maybeSingle();
+    // A provider-side capture must never be recorded as delivered unless the
+    // diet was already persisted. Recovery will keep this session resumable.
+    if (!plan) return;
     await getSupabase()
       .from("generation_sessions")
       .update({ status: "paid" })
