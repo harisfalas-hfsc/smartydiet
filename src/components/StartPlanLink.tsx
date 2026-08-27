@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode, type CSSProperties } from "react";
+import { type ReactNode, type CSSProperties } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { findResumablePayment } from "@/lib/payment-recovery.browser";
 
 /**
  * Single source of truth for "start a diet plan" navigation.
@@ -11,28 +10,6 @@ import { findResumablePayment } from "@/lib/payment-recovery.browser";
  */
 export function useStartPlanTarget() {
   const { user, loading } = useAuth();
-  const [stripeSessionId, setStripeSessionId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (loading || !user?.id) {
-      setStripeSessionId(null);
-      return;
-    }
-    let active = true;
-    void findResumablePayment(user.id).then((result) => {
-      if (active) setStripeSessionId(result.stripeSessionId);
-    }).catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, [loading, user?.id]);
-
-  if (stripeSessionId) {
-    return {
-      to: "/checkout/return" as const,
-      search: { session_id: stripeSessionId },
-    };
-  }
   if (loading || user) {
     return { to: "/questionnaire" as const, search: undefined };
   }
