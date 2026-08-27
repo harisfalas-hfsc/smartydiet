@@ -73,7 +73,6 @@ describe("paid plan structural validation", () => {
     assert.ok(kinds.includes("calorie"));
     assert.ok(kinds.includes("excluded_food"));
   });
-}
 
   test("sortPlanStructure orders weeks, days and meals canonically", () => {
     const plan = completePlan(2, 4);
