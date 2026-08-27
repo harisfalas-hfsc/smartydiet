@@ -46,6 +46,38 @@ export function mealSlotsFor(mealsPerDay: number): string[] {
   return MEAL_SLOTS[mealsPerDay] ?? MEAL_SLOTS[3];
 }
 
+/**
+ * Returns a copy of the plan with weeks, days and meals in canonical order:
+ * Week 1 Day 1 first, meals in fixed slot order.
+ */
+export function sortPlanStructure<T = any>(plan: T): T {
+  const source = plan as any;
+  if (!source || !Array.isArray(source.weeks)) return plan;
+  const weeks = [...source.weeks]
+    .sort((a: any, b: any) => (a?.weekNumber ?? 0) - (b?.weekNumber ?? 0))
+    .map((week: any) => {
+      const days = Array.isArray(week?.days) ? [...week.days] : [];
+      days.sort((a: any, b: any) => (a?.day ?? 0) - (b?.day ?? 0));
+      return {
+        ...week,
+        days: days.map((day: any) => {
+          const meals = Array.isArray(day?.meals) ? [...day.meals] : [];
+          const slots = mealSlotsFor(meals.length);
+          const rank = (meal: any) => {
+            const name = String(meal?.name ?? "").toLowerCase().trim();
+            const index = slots.findIndex((slot) => slot.toLowerCase() === name);
+            return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+          };
+          const ordered = meals.map((meal: any, index: number) => ({ meal, index }));
+          ordered.sort((a, b) => rank(a.meal) - rank(b.meal) || a.index - b.index);
+          return { ...day, meals: ordered.map((entry) => entry.meal) };
+        }),
+      };
+    });
+  return { ...source, weeks } as T;
+}
+
+
 function normalizedMealName(value: unknown): string {
   return String(value ?? "")
     .toLowerCase()
