@@ -293,7 +293,21 @@ function PlanView() {
             {autoGenerating ? (
               <>
                 <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
-                Building your plan… this can take up to 2 minutes.
+                <p className="font-medium text-foreground">
+                  Building your plan… this can take up to 2 minutes.
+                </p>
+                <div
+                  className="mx-auto mt-6 max-w-md rounded-md border border-border bg-muted/40 p-4 text-left"
+                  aria-live="polite"
+                >
+                  <p className="text-xs font-bold uppercase text-primary">Did you know?</p>
+                  <p className="mt-1 min-h-12 text-sm leading-6 text-foreground">
+                    {PLAN_TIPS[tipIndex]}
+                  </p>
+                </div>
+                <p className="mt-4 text-xs leading-5 text-muted-foreground">
+                  Stay on this page — your plan will appear here automatically when it is ready.
+                </p>
               </>
             ) : generationError ? (
               <>
