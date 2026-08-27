@@ -23,6 +23,21 @@ import { exportGroceryPdf, exportPlanPdf } from "@/lib/pdf-export";
 
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
 
+const PLAN_TIPS = [
+  "Protein at breakfast keeps you fuller for hours and cuts afternoon cravings.",
+  "Most people confuse thirst with hunger — a glass of water before a meal often settles it.",
+  "Fibre from vegetables, beans and oats feeds your gut bacteria, not just your stomach.",
+  "Eating slowly gives your brain the ~20 minutes it needs to register fullness.",
+  "Colour on the plate usually means a wider spread of vitamins and antioxidants.",
+  "Cooking tomatoes increases the lycopene your body can actually absorb.",
+  "Healthy fats — olive oil, nuts, avocado — help you absorb vitamins A, D, E and K.",
+  "Strength training plus enough protein protects muscle while you lose fat.",
+  "Sleeping under 6 hours raises hunger hormones the next day.",
+  "Meal prepping just two days ahead is one of the strongest predictors of sticking to a plan.",
+  "Salt hides mostly in bread, sauces and processed food — not the salt shaker.",
+  "A consistent eating schedule steadies blood sugar and energy across the day.",
+];
+
 export const Route = createFileRoute("/_authenticated/plans/$sessionId")({
   head: () => ({
     meta: [{ title: "My plan — SmartyDiet" }, { name: "robots", content: "noindex" }],
