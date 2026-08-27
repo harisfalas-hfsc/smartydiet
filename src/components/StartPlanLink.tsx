@@ -1,8 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode, type CSSProperties } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useServerFn } from "@tanstack/react-start";
-import { getResumableDietSession } from "@/lib/payments.functions";
+import { findResumablePayment } from "@/lib/payment-recovery.client";
 
 /**
  * Single source of truth for "start a diet plan" navigation.
@@ -12,7 +11,6 @@ import { getResumableDietSession } from "@/lib/payments.functions";
  */
 export function useStartPlanTarget() {
   const { user, loading } = useAuth();
-  const getResumable = useServerFn(getResumableDietSession);
   const [stripeSessionId, setStripeSessionId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -21,13 +19,13 @@ export function useStartPlanTarget() {
       return;
     }
     let active = true;
-    void getResumable({}).then((result) => {
+    void findResumablePayment(user.id).then((result) => {
       if (active) setStripeSessionId(result.stripeSessionId);
     }).catch(() => undefined);
     return () => {
       active = false;
     };
-  }, [getResumable, loading, user?.id]);
+  }, [loading, user?.id]);
 
   if (stripeSessionId) {
     return {

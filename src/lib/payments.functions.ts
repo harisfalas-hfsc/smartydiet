@@ -52,7 +52,11 @@ export const createDietCheckout = createServerFn({ method: "POST" })
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         customer: customerId,
-        payment_intent_data: { description: product.name, capture_method: "manual" },
+        payment_intent_data: {
+          description: product.name,
+          capture_method: "manual",
+          statement_descriptor_suffix: "SMARTYDIET",
+        },
         metadata: {
           userId,
           generationSessionId,
