@@ -379,16 +379,18 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex min-h-screen flex-col bg-background">
-        {!isPaymentProcessing && <PaymentTestModeBanner />}
-        {!isPaymentProcessing && <Navigation />}
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        {!isPaymentProcessing && <SiteFooter />}
-        <Toaster />
-        {!isPaymentProcessing && <SisterAppsPopup />}
-      </div>
+      <TooltipProvider delayDuration={150}>
+        <div className="flex min-h-screen flex-col bg-background">
+          {!isPaymentProcessing && <PaymentTestModeBanner />}
+          {!isPaymentProcessing && <Navigation />}
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          {!isPaymentProcessing && <SiteFooter />}
+          <Toaster />
+          {!isPaymentProcessing && <SisterAppsPopup />}
+        </div>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
