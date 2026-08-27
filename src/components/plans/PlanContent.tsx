@@ -1,7 +1,9 @@
-import { AlertTriangle, CheckCircle2, Download, ShoppingBasket, Utensils } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Download, ShoppingBasket } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { toneClasses, type SmartyTone } from "@/components/SmartyCard";
+import { cn } from "@/lib/utils";
 import { exportGroceryPdf, exportPlanPdf } from "@/lib/pdf-export";
 import { toast } from "sonner";
 import {
@@ -15,6 +17,19 @@ type Props = {
   durationWeeks: number;
   showDownloads?: boolean;
 };
+
+const WEEK_TONES: SmartyTone[] = ["cyan", "green", "pink", "orange", "purple", "yellow", "blue"];
+const WEEK_EMOJIS = ["🥗", "🍓", "🥑", "🍇", "🥕", "🍋", "🫐"];
+
+function mealEmoji(name: string) {
+  const n = String(name ?? "").toLowerCase();
+  if (n.includes("breakfast")) return "🍳";
+  if (n.includes("lunch")) return "🥗";
+  if (n.includes("dinner")) return "🍽️";
+  if (n.includes("bed")) return "🌙";
+  if (n.includes("snack")) return "🍎";
+  return "🥄";
+}
 
 function jumpTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -151,88 +166,152 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
 
       {weeks.length > 0 && (
         <Card>
-          <CardContent className="space-y-3 p-4">
-            {weeks.map((week: any) => (
-              <div key={`nav-${week.weekNumber}`} className="space-y-2">
-                <button
-                  type="button"
-                  className="text-sm font-semibold text-primary hover:underline"
-                  onClick={() => jumpTo(`week-${week.weekNumber}`)}
-                >
-                  Week {week.weekNumber}
-                </button>
-                <div className="flex flex-wrap gap-1.5">
-                  {(week.days ?? []).map((day: any) => (
-                    <Button
-                      key={`nav-day-${day.day}`}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => jumpTo(`week-${week.weekNumber}-day-${day.day}`)}
-                    >
-                      Day {day.day}
-                    </Button>
-                  ))}
+          <CardContent className="space-y-4 p-4">
+            {weeks.map((week: any, weekIndex: number) => {
+              const tone = toneClasses(WEEK_TONES[weekIndex % WEEK_TONES.length]);
+              return (
+                <div key={`nav-${week.weekNumber}`} className="space-y-2">
+                  <button
+                    type="button"
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider transition hover:opacity-80",
+                      tone.softBorder,
+                      tone.softBg,
+                      tone.text,
+                    )}
+                    onClick={() => jumpTo(`week-${week.weekNumber}`)}
+                  >
+                    {WEEK_EMOJIS[weekIndex % WEEK_EMOJIS.length]} Week {week.weekNumber}
+                  </button>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(week.days ?? []).map((day: any) => (
+                      <button
+                        key={`nav-day-${day.day}`}
+                        type="button"
+                        className={cn(
+                          "rounded-lg border px-2.5 py-1 text-xs font-semibold transition hover:opacity-80",
+                          tone.softBorder,
+                          "bg-card",
+                          tone.text,
+                        )}
+                        onClick={() => jumpTo(`week-${week.weekNumber}-day-${day.day}`)}
+                      >
+                        Day {day.day}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       )}
 
 
-      {weeks.map((week: any) => (
-        <div key={week.weekNumber} id={`week-${week.weekNumber}`} className="scroll-mt-24 space-y-3">
-          <h3 className="text-lg font-bold">Week {week.weekNumber}</h3>
-          {(week.days ?? []).map((day: any) => (
-            <Card key={day.day} id={`week-${week.weekNumber}-day-${day.day}`} className="scroll-mt-24">
-              <CardContent className="p-4">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <p className="font-semibold">Week {week.weekNumber} · Day {day.day}</p>
-                  <p className="text-xs text-muted-foreground">{day.totals?.calories ?? "-"} kcal</p>
-                </div>
-                <div className="space-y-3">
-                  {(day.meals ?? []).map((meal: any, index: number) => (
-                    <div key={index} className="rounded-md border p-3 text-sm">
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <p className="font-medium">
-                          <Utensils className="mr-1.5 inline h-3.5 w-3.5 text-primary" />
-                          {meal.name}: {meal.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {meal.calories} kcal · P{meal.protein_g} C{meal.carbs_g} F{meal.fat_g}
-                        </p>
+      {weeks.map((week: any, weekIndex: number) => {
+        const tone = toneClasses(WEEK_TONES[weekIndex % WEEK_TONES.length]);
+        const emoji = WEEK_EMOJIS[weekIndex % WEEK_EMOJIS.length];
+        return (
+          <div key={week.weekNumber} id={`week-${week.weekNumber}`} className="scroll-mt-24 space-y-3">
+            <div
+              className={cn(
+                "flex items-center gap-2.5 rounded-2xl border-2 px-4 py-3",
+                tone.border,
+                tone.softBg,
+              )}
+            >
+              <span className="text-2xl leading-none">{emoji}</span>
+              <h3 className={cn("text-lg font-extrabold tracking-tight sm:text-xl", tone.text)}>
+                Week {week.weekNumber}
+              </h3>
+              <span className="ml-auto text-xs font-semibold text-muted-foreground">
+                {(week.days ?? []).length} days
+              </span>
+            </div>
+
+            {(week.days ?? []).map((day: any) => (
+              <Card
+                key={day.day}
+                id={`week-${week.weekNumber}-day-${day.day}`}
+                className={cn("scroll-mt-24 border-2", tone.softBorder)}
+              >
+                <CardContent className="p-4">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold",
+                        tone.softBorder,
+                        tone.softBg,
+                        tone.text,
+                      )}
+                    >
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      Week {week.weekNumber} · Day {day.day}
+                    </span>
+                    <span
+                      className={cn(
+                        "rounded-full border px-2.5 py-0.5 text-xs font-bold",
+                        tone.softBorder,
+                        tone.text,
+                      )}
+                    >
+                      🔥 {day.totals?.calories ?? "-"} kcal
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {(day.meals ?? []).map((meal: any, index: number) => (
+                      <div
+                        key={index}
+                        className={cn(
+                          "rounded-xl border p-3 text-sm",
+                          tone.softBorder,
+                          tone.softBg,
+                        )}
+                      >
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <p className="font-semibold text-foreground">
+                            <span className="mr-1.5">{mealEmoji(meal.name)}</span>
+                            <span className={tone.text}>{meal.name}</span>
+                            <span className="text-muted-foreground"> — </span>
+                            {meal.title}
+                          </p>
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {meal.calories} kcal · P{meal.protein_g} C{meal.carbs_g} F{meal.fat_g}
+                          </p>
+                        </div>
+                        {meal.ingredients?.length ? (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {meal.ingredients.map((item: any) => `${item.qty} ${item.item}`).join(", ")}
+                          </p>
+                        ) : null}
+                        {meal.instructions && <p className="mt-1 text-xs">{meal.instructions}</p>}
                       </div>
-                      {meal.ingredients?.length ? (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {meal.ingredients.map((item: any) => `${item.qty} ${item.item}`).join(", ")}
-                        </p>
-                      ) : null}
-                      {meal.instructions && <p className="mt-1 text-xs">{meal.instructions}</p>}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {week.groceryList?.length ? (
-            <Card>
-              <CardContent className="p-4">
-                <p className="mb-2 font-semibold">
-                  <ShoppingBasket className="mr-1.5 inline h-4 w-4 text-primary" />
-                  Grocery list — week {week.weekNumber}
-                </p>
-                <ul className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
-                  {week.groceryList.map((item: any, index: number) => (
-                    <li key={index} className="text-muted-foreground">
-                      • {item.qty} {item.item}{item.category ? ` (${item.category})` : ""}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ) : null}
-        </div>
-      ))}
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {week.groceryList?.length ? (
+              <Card className={cn("border-2", tone.softBorder)}>
+                <CardContent className="p-4">
+                  <p className={cn("mb-2 flex items-center gap-1.5 font-bold", tone.text)}>
+                    <ShoppingBasket className="h-4 w-4" />
+                    Grocery list — Week {week.weekNumber}
+                  </p>
+                  <ul className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
+                    {week.groceryList.map((item: any, index: number) => (
+                      <li key={index} className="text-muted-foreground">
+                        • {item.qty} {item.item}{item.category ? ` (${item.category})` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ) : null}
+          </div>
+        );
+      })}
 
       {plan?.rationale && (
         <Card>
