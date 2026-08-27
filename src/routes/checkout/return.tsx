@@ -44,7 +44,7 @@ function Return() {
     if (processingStarted.current) return;
     processingStarted.current = true;
     (async () => {
-      let operationId = crypto.randomUUID();
+      let operationId: string = crypto.randomUUID();
       let generationSessionId: string | undefined;
       if (!session_id) {
         setStatus("error");
