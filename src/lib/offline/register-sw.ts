@@ -54,6 +54,7 @@ export function registerServiceWorker(): Promise<ServiceWorkerRegistration | nul
   registrationPromise = (async () => {
     try {
       await deleteLegacyIdentityCache();
+      sessionStorage.removeItem(UPDATE_RELOAD_KEY);
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;

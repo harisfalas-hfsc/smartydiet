@@ -66,7 +66,6 @@ export default defineConfig({
               handler: "NetworkFirst",
               options: {
                 cacheName: "smartydiet-pages",
-                networkTimeoutSeconds: 3,
                 expiration: { maxEntries: 80, maxAgeSeconds: 30 * 24 * 60 * 60 },
               },
             },
