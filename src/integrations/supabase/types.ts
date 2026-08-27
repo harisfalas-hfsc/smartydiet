@@ -635,6 +635,7 @@ export type Database = {
         Returns: boolean
       }
       is_app_admin: { Args: { _user_id: string }; Returns: boolean }
+      run_generation_retry_cron: { Args: never; Returns: undefined }
       run_recovery_cron: { Args: never; Returns: undefined }
     }
     Enums: {
