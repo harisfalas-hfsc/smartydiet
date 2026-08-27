@@ -95,6 +95,15 @@ async function renderToPdf(bodyHtml: string, title: string, filename: string) {
       measure.remove();
       return height;
     };
+    const outerHeight = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+      const styles = window.getComputedStyle(element);
+      return Math.ceil(
+        rect.height +
+        (Number.parseFloat(styles.marginTop) || 0) +
+        (Number.parseFloat(styles.marginBottom) || 0),
+      );
+    };
 
     for (let index = 0; index < blocks.length; index += 1) {
       const block = blocks[index];
@@ -104,10 +113,10 @@ async function renderToPdf(bodyHtml: string, title: string, filename: string) {
         sectionContext = "";
       }
       if (block.dataset.pdfSectionContext) sectionContext = block.dataset.pdfSectionContext;
-      const blockHeight = Math.ceil(block.getBoundingClientRect().height);
+      const blockHeight = outerHeight(block);
       const nextBlock = blocks[index + 1];
       const nextHeight = block.dataset.pdfKeepNext === "true" && nextBlock
-        ? Math.ceil(nextBlock.getBoundingClientRect().height)
+        ? outerHeight(nextBlock)
         : 0;
       const requiredHeight = blockHeight + nextHeight;
       const currentPage = pages[pages.length - 1];
@@ -253,6 +262,7 @@ export async function exportPlanPdf(plan: any, durationWeeks: number) {
                     <span style="color:${PRIMARY_DARK};">${esc(m.name)}:</span> ${esc(m.title)}
                   </div>
                   <div style="font-size:11px;color:${MUTED};white-space:nowrap;">
+                    Week ${esc(w.weekNumber)} · Day ${esc(d.day)} ·
                     ${esc(m.calories)} kcal · P${esc(m.protein_g)} C${esc(m.carbs_g)} F${esc(m.fat_g)}
                   </div>
                 </div>
@@ -303,7 +313,7 @@ export async function exportGroceryPdf(plan: any) {
         <div data-pdf-block="true" style="display:grid;grid-template-columns:18px 120px 1fr;align-items:start;column-gap:9px;padding:8px 10px;border:1px solid ${BORDER};border-radius:6px;background:#fff;font-size:12px;line-height:1.35;margin-bottom:6px;">
           <span style="display:block;width:13px;height:13px;border:2px solid ${PRIMARY};border-radius:3px;box-sizing:border-box;margin-top:1px;"></span>
           <b style="color:${PRIMARY_DARK};">${esc(item.qty)}</b>
-          <span style="color:${INK};">${esc(item.item)}</span>
+          <span style="color:${INK};">${esc(item.item)} <small style="display:block;margin-top:2px;color:${MUTED};font-size:9px;">Week ${week.weekNumber} · ${esc(category.name)}</small></span>
         </div>`).join("");
       return `
         <div data-pdf-block="true" data-pdf-keep-next="true" data-pdf-section-context="${esc(category.name)}" style="display:flex;justify-content:space-between;align-items:center;margin:13px 0 7px;padding-bottom:5px;border-bottom:1px solid ${BORDER};">
