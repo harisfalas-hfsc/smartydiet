@@ -17,7 +17,7 @@ export async function findResumablePayment(userId: string): Promise<ResumablePay
     .from("generation_sessions")
     .select("id,stripe_session_id,status,created_at")
     .eq("user_id", userId)
-    .in("status", ["authorized", "paid", "completed"])
+    .in("status", ["authorized", "paid", "completed", "failed"])
     .not("stripe_session_id", "is", null)
     .order("created_at", { ascending: false })
     .limit(5);

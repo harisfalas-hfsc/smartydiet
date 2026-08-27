@@ -417,6 +417,47 @@ export const generatePlan = createServerFn({ method: "POST" })
         .update({ status: "failed" })
         .eq("id", data.sessionId)
         .in("status", ["authorized", "paid"]);
+      // Generation failure must never leave money reserved on the customer's
+      // card. Release any still-uncaptured authorization server-side even if
+      // the browser disconnects before it receives this response.
+      try {
+        const { data: payment } = await supabase
+          .from("generation_sessions")
+          .select("stripe_payment_intent")
+          .eq("id", data.sessionId)
+          .eq("user_id", userId)
+          .maybeSingle();
+        const { data: attempt } = await supabase
+          .from("diet_plan_attempts")
+          .select("environment")
+          .eq("generation_session_id", data.sessionId)
+          .maybeSingle();
+        if (payment?.stripe_payment_intent) {
+          const { createStripeClient } = await import("@/lib/stripe.server");
+          const environment = attempt?.environment === "sandbox" ? "sandbox" : "live";
+          const stripe = createStripeClient(environment);
+          const intent = await stripe.paymentIntents.retrieve(payment.stripe_payment_intent);
+          if (intent.status === "requires_capture" || intent.status === "requires_confirmation") {
+            await stripe.paymentIntents.cancel(
+              payment.stripe_payment_intent,
+              {},
+              { idempotencyKey: `generation-failed-release-${data.sessionId}` },
+            );
+            await supabase
+              .from("generation_sessions")
+              .update({ status: "authorization_released" })
+              .eq("id", data.sessionId)
+              .eq("user_id", userId);
+            await supabase
+              .from("diet_plan_attempts")
+              .update({ payment_failure_code: "authorization_released" })
+              .eq("generation_session_id", data.sessionId);
+          }
+        }
+      } catch {
+        // Failure alerts below still record the original problem. A later
+        // recovery can safely retry the same idempotent authorization release.
+      }
       const { sendPlanGenerationFailureAlert } = await import("@/lib/plan-generation-alert.server");
       await sendPlanGenerationFailureAlert(
         { supabase, userId, claims: claims as Record<string, unknown> },

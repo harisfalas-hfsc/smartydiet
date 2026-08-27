@@ -20,35 +20,29 @@ async function handleCheckoutCompleted(session: any) {
     typeof session.payment_intent === "string"
       ? session.payment_intent
       : (session.payment_intent?.id ?? null);
-  const { data: existing } = await getSupabase()
+  const sessionPayload = {
+    id: genSessionId,
+    user_id: userId,
+    questionnaire_id: questionnaireId,
+    duration_weeks: durationWeeks,
+    status: "authorized",
+    stripe_session_id: session.id,
+    stripe_payment_intent: paymentIntent,
+    amount_cents: session.amount_total ?? 999,
+    currency: session.currency ?? "eur",
+  };
+  const { error: insertError } = await getSupabase()
     .from("generation_sessions")
-    .select("status")
-    .eq("id", genSessionId)
-    .maybeSingle();
-  const terminalStatuses = new Set([
-    "paid",
-    "completed",
-    "failed",
-    "refunded",
-    "authorization_released",
-  ]);
-  const nextStatus = terminalStatuses.has(existing?.status) ? existing.status : "authorized";
-  await getSupabase()
-    .from("generation_sessions")
-    .upsert(
-      {
-        id: genSessionId,
-        user_id: userId,
-        questionnaire_id: questionnaireId,
-        duration_weeks: durationWeeks,
-        status: nextStatus,
-        stripe_session_id: session.id,
-        stripe_payment_intent: paymentIntent,
-        amount_cents: session.amount_total ?? 999,
-        currency: session.currency ?? "eur",
-      },
-      { onConflict: "id" },
-    );
+    .insert(sessionPayload);
+  if (insertError?.code === "23505") {
+    await getSupabase()
+      .from("generation_sessions")
+      .update(sessionPayload)
+      .eq("id", genSessionId)
+      .in("status", ["pending", "authorized", "failed"]);
+  } else if (insertError) {
+    throw insertError;
+  }
   await getSupabase()
     .from("questionnaires")
     .update({ status: "paid" })
@@ -72,7 +66,8 @@ async function handlePaymentIntentSettled(intent: any, captured: boolean) {
     await getSupabase()
       .from("generation_sessions")
       .update({ status: "paid" })
-      .eq("stripe_payment_intent", intent.id);
+      .eq("stripe_payment_intent", intent.id)
+      .in("status", ["authorized", "completed", "paid"]);
     await getSupabase()
       .from("diet_plan_attempts")
       .update({
@@ -87,7 +82,8 @@ async function handlePaymentIntentSettled(intent: any, captured: boolean) {
   await getSupabase()
     .from("generation_sessions")
     .update({ status: "authorization_released" })
-    .eq("stripe_payment_intent", intent.id);
+    .eq("stripe_payment_intent", intent.id)
+    .in("status", ["authorized", "failed", "authorization_released"]);
   await getSupabase()
     .from("diet_plan_attempts")
     .update({ payment_failure_code: "authorization_released" })
