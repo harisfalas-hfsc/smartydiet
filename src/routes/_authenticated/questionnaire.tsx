@@ -1022,7 +1022,11 @@ function StepNotes({
             </label>
           ))}
         </RadioGroup>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Need a month? Repeat your 2-week plan twice — the structure is designed to cycle.
+        </p>
       </div>
+
     </div>
   );
 }
