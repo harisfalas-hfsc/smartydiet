@@ -157,28 +157,15 @@ function PlanView() {
     }
   }
 
-  // Recovery: an uncaptured authorization must return through the payment
-  // completion route so generation and capture both finish in order.
+  // Initial paid-plan creation is owned by the Stripe webhook. This page only
+  // polls the durable server state; it never starts another charge or generation.
   useEffect(() => {
-    if (!online || !session || versions.length > 0 || !session.stripe_session_id) return;
-    if (session.status !== "authorized" && session.status !== "failed") return;
-    navigate({
-      to: "/checkout/return",
-      search: { session_id: session.stripe_session_id },
-      replace: true,
-    });
-  }, [navigate, online, session, versions.length]);
-
-  // Recovery: captured legacy sessions with no plan can generate directly.
-  useEffect(() => {
-    if (!online) return;
-    if (!session || versions.length > 0 || autoGenerating || generationError) return;
-    if (session.status !== "paid" && session.status !== "completed") return;
-    if ((session.credits_used ?? 0) > 0) return;
+    if (!online || !session || versions.length > 0) return;
+    if (!["authorized", "generating", "completed"].includes(session.status)) return;
     setAutoGenerating(true);
-    setGenerationError(null);
-    void runGeneration();
-  }, [session, versions.length, autoGenerating, generationError, online]);
+    const interval = window.setInterval(() => void load(), 5_000);
+    return () => window.clearInterval(interval);
+  }, [load, online, session, versions.length]);
 
   async function refine() {
     if (!refineText.trim()) return toast.error("Describe the change you want");

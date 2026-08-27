@@ -17,7 +17,7 @@ export async function findResumablePayment(userId: string): Promise<ResumablePay
     .from("generation_sessions")
     .select("id,stripe_session_id,status,created_at")
     .eq("user_id", userId)
-    .in("status", ["authorized", "paid", "completed"])
+    .in("status", ["authorized", "generating", "completed", "paid"])
     .not("stripe_session_id", "is", null)
     .order("created_at", { ascending: false })
     .limit(5);
@@ -33,7 +33,7 @@ export async function findResumablePayment(userId: string): Promise<ResumablePay
       .limit(1)
       .maybeSingle();
     if (planError) throw planError;
-    if (session.status === "paid" && plan) continue;
+    if ((session.status === "paid" || session.status === "completed") && plan) continue;
     return {
       stripeSessionId: session.stripe_session_id,
       generationSessionId: session.id,

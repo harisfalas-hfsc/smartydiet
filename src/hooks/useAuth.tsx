@@ -6,7 +6,9 @@ import {
   getOfflineSession,
   getOfflineSessionAsync,
   setOfflineSession,
+  clearOfflineSession,
 } from "@/lib/offline/credentials";
+import { isOnlineNow } from "@/lib/offline/connectivity";
 
 type ProfileSummary = {
   display_name: string | null;
@@ -65,6 +67,7 @@ export function useAuth() {
     }
 
     async function applyOfflineFallback() {
+      if (isOnlineNow()) return false;
       const cached = (await getOfflineSessionAsync()) ?? getOfflineSession();
       if (!cached || !active) return false;
       setUser({
@@ -108,6 +111,7 @@ export function useAuth() {
         } else {
           const restored = await applyOfflineFallback();
           if (!restored && active) {
+            await clearOfflineSession();
             setSession(null);
             setUser(null);
           }
@@ -124,6 +128,7 @@ export function useAuth() {
       if (!s) {
         void applyOfflineFallback().then((restored) => {
           if (!active || restored) return;
+          void clearOfflineSession();
           setSession(null);
           setUser(null);
           setProfile(null);
