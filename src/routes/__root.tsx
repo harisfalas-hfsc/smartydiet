@@ -17,8 +17,6 @@ import { SiteFooter } from "../components/SiteFooter";
 import { PaymentTestModeBanner } from "../components/PaymentTestModeBanner";
 import { Toaster } from "../components/ui/sonner";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
-import { OfflineBootstrap } from "../components/offline/OfflineBootstrap";
-import { SyncStatusPill } from "../components/offline/SyncStatus";
 
 const SITE_URL = "https://smartydiet.com";
 const OG_IMAGE =
@@ -355,6 +353,29 @@ function RootComponent() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isPaymentProcessing = pathname === "/checkout/return";
 
+  // Always-fresh app: wipe every cache left by the old offline worker and keep
+  // only a network-only worker so each open loads the latest published build.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+    void (async () => {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      } catch {
+        // Cache clearing is best-effort.
+      }
+      try {
+        await navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" });
+        const registration = await navigator.serviceWorker.ready;
+        void registration.update();
+      } catch {
+        // A blocked worker registration must never break the app.
+      }
+    })();
+  }, []);
+
+
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex min-h-screen flex-col bg-background">
@@ -366,8 +387,6 @@ function RootComponent() {
         {!isPaymentProcessing && <SiteFooter />}
         <Toaster />
         {!isPaymentProcessing && <SisterAppsPopup />}
-        <OfflineBootstrap />
-        {!isPaymentProcessing && <SyncStatusPill />}
       </div>
     </QueryClientProvider>
   );

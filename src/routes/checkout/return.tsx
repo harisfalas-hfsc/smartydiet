@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { markSessionAuthorized } from "@/lib/payments.functions";
+import { markSessionPaid } from "@/lib/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, AlertTriangle, Apple, Clock3, ShieldCheck } from "lucide-react";
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/checkout/return")({
 
 function Return() {
   const { session_id } = Route.useSearch();
-  const mark = useServerFn(markSessionAuthorized);
+  const mark = useServerFn(markSessionPaid);
   const reportFailure = useServerFn(reportPlanGenerationFailure);
   const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ function Return() {
         if (!active || data.session?.access_token) return;
         setStatus("error");
         setMessage(
-          "Your secure session expired before the diet could start. Sign in again with the same account; your card authorization and questionnaire are saved.",
+          "Your secure session expired. Sign in again with the same account — your payment and questionnaire are saved and your diet will still be created.",
         );
       });
       return () => {
@@ -89,14 +89,14 @@ function Return() {
         let paidRes = await mark({
           data: { stripeSessionId: session_id, environment: getStripeEnvironment() },
         });
-        // Card authorization can settle shortly after Stripe returns. Keep this
-        // page stationary and retry here rather than sending the customer away.
+        // The payment can settle shortly after Stripe returns. Keep this page
+        // stationary and retry here rather than sending the customer away.
         for (
           let attempt = 0;
           attempt < 15 && !paidRes.error && (!paidRes.paid || !paidRes.generationSessionId);
           attempt++
         ) {
-          if (active) setMessage("Confirming your card authorization…");
+          if (active) setMessage("Confirming your payment…");
           await new Promise((resolve) => setTimeout(resolve, 2_000));
           paidRes = await mark({
             data: { stripeSessionId: session_id, environment: getStripeEnvironment() },
@@ -114,7 +114,7 @@ function Return() {
             setStatus("error");
             setMessage(
               paidRes.error ||
-                "Your card authorization could not be confirmed. Your card has not been charged.",
+                "Your payment could not be confirmed. Your card has not been charged.",
             );
           }
           return;
@@ -145,8 +145,9 @@ function Return() {
               .maybeSingle(),
           ]);
           if (plan && (generation?.status === "paid" || generation?.status === "completed")) break;
-          if (generation?.status === "failed" || generation?.status === "authorization_released") {
-            planError = "We could not create your diet this time. Your card was not charged.";
+          if (generation?.status === "failed" || generation?.status === "generation_failed") {
+            planError =
+              "We could not finish your diet this time. Your payment is safe and we already owe you this plan — we are retrying automatically in the background and our team has been alerted. It will appear in My Plans.";
             break;
           }
           await new Promise((resolve) => setTimeout(resolve, 4_000));

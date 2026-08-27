@@ -23,7 +23,6 @@ import { Route as GlossaryRouteImport } from './routes/glossary'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DietScienceRouteImport } from './routes/diet-science'
-import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -47,6 +46,7 @@ import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
+import { Route as ApiPublicRetryGenerationsRouteImport } from './routes/api/public/retry-generations'
 import { Route as ApiPublicRecoverAbandonedRouteImport } from './routes/api/public/recover-abandoned'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedPlansSessionIdRouteImport } from './routes/_authenticated/plans.$sessionId'
@@ -125,11 +125,6 @@ const DisclaimerRoute = DisclaimerRouteImport.update({
 const DietScienceRoute = DietScienceRouteImport.update({
   id: '/diet-science',
   path: '/diet-science',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DiagnosticsRoute = DiagnosticsRouteImport.update({
-  id: '/diagnostics',
-  path: '/diagnostics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -249,6 +244,12 @@ const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
   path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRetryGenerationsRoute =
+  ApiPublicRetryGenerationsRouteImport.update({
+    id: '/api/public/retry-generations',
+    path: '/api/public/retry-generations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicRecoverAbandonedRoute =
   ApiPublicRecoverAbandonedRouteImport.update({
     id: '/api/public/recover-abandoned',
@@ -306,7 +307,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
-  '/diagnostics': typeof DiagnosticsRoute
   '/diet-science': typeof DietScienceRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
@@ -342,6 +342,7 @@ export interface FileRoutesByFullPath {
   '/plans/$sessionId': typeof AuthenticatedPlansSessionIdRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/recover-abandoned': typeof ApiPublicRecoverAbandonedRoute
+  '/api/public/retry-generations': typeof ApiPublicRetryGenerationsRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -354,7 +355,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
-  '/diagnostics': typeof DiagnosticsRoute
   '/diet-science': typeof DietScienceRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
@@ -390,6 +390,7 @@ export interface FileRoutesByTo {
   '/plans/$sessionId': typeof AuthenticatedPlansSessionIdRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/recover-abandoned': typeof ApiPublicRecoverAbandonedRoute
+  '/api/public/retry-generations': typeof ApiPublicRetryGenerationsRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -404,7 +405,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
-  '/diagnostics': typeof DiagnosticsRoute
   '/diet-science': typeof DietScienceRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
@@ -440,6 +440,7 @@ export interface FileRoutesById {
   '/_authenticated/plans/$sessionId': typeof AuthenticatedPlansSessionIdRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/recover-abandoned': typeof ApiPublicRecoverAbandonedRoute
+  '/api/public/retry-generations': typeof ApiPublicRetryGenerationsRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -454,7 +455,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/contact'
-    | '/diagnostics'
     | '/diet-science'
     | '/disclaimer'
     | '/faq'
@@ -490,6 +490,7 @@ export interface FileRouteTypes {
     | '/plans/$sessionId'
     | '/api/public/health'
     | '/api/public/recover-abandoned'
+    | '/api/public/retry-generations'
     | '/lovable/email/events'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -502,7 +503,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/contact'
-    | '/diagnostics'
     | '/diet-science'
     | '/disclaimer'
     | '/faq'
@@ -538,6 +538,7 @@ export interface FileRouteTypes {
     | '/plans/$sessionId'
     | '/api/public/health'
     | '/api/public/recover-abandoned'
+    | '/api/public/retry-generations'
     | '/lovable/email/events'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -551,7 +552,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/contact'
-    | '/diagnostics'
     | '/diet-science'
     | '/disclaimer'
     | '/faq'
@@ -587,6 +587,7 @@ export interface FileRouteTypes {
     | '/_authenticated/plans/$sessionId'
     | '/api/public/health'
     | '/api/public/recover-abandoned'
+    | '/api/public/retry-generations'
     | '/lovable/email/events'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -601,7 +602,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
   ContactRoute: typeof ContactRoute
-  DiagnosticsRoute: typeof DiagnosticsRoute
   DietScienceRoute: typeof DietScienceRoute
   DisclaimerRoute: typeof DisclaimerRoute
   FaqRoute: typeof FaqRoute
@@ -631,6 +631,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicRecoverAbandonedRoute: typeof ApiPublicRecoverAbandonedRoute
+  ApiPublicRetryGenerationsRoute: typeof ApiPublicRetryGenerationsRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -736,13 +737,6 @@ declare module '@tanstack/react-router' {
       path: '/diet-science'
       fullPath: '/diet-science'
       preLoaderRoute: typeof DietScienceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/diagnostics': {
-      id: '/diagnostics'
-      path: '/diagnostics'
-      fullPath: '/diagnostics'
-      preLoaderRoute: typeof DiagnosticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -906,6 +900,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/retry-generations': {
+      id: '/api/public/retry-generations'
+      path: '/api/public/retry-generations'
+      fullPath: '/api/public/retry-generations'
+      preLoaderRoute: typeof ApiPublicRetryGenerationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/recover-abandoned': {
       id: '/api/public/recover-abandoned'
       path: '/api/public/recover-abandoned'
@@ -1019,7 +1020,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
   ContactRoute: ContactRoute,
-  DiagnosticsRoute: DiagnosticsRoute,
   DietScienceRoute: DietScienceRoute,
   DisclaimerRoute: DisclaimerRoute,
   FaqRoute: FaqRoute,
@@ -1050,6 +1050,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicRecoverAbandonedRoute: ApiPublicRecoverAbandonedRoute,
+  ApiPublicRetryGenerationsRoute: ApiPublicRetryGenerationsRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

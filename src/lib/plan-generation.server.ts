@@ -374,52 +374,29 @@ export async function runPlanGeneration(
 ): Promise<PlanResult> {
     const { supabase, userId, claims } = context;
     const fail = async (reason: string): Promise<PlanResult> => {
+      // The customer already paid. Never lose the debt: keep the session and
+      // questionnaire on record, schedule an automatic background retry, and
+      // alert support immediately.
+      const { data: current } = await supabase
+        .from("generation_sessions")
+        .select("attempt_count")
+        .eq("id", data.sessionId)
+        .maybeSingle();
+      const attemptCount = (current?.attempt_count ?? 0) + 1;
+      const backoffMinutes = [2, 10, 30, 120][Math.min(attemptCount - 1, 3)];
       await supabase
         .from("generation_sessions")
-        .update({ status: "failed" })
+        .update({
+          status: "generation_failed",
+          attempt_count: attemptCount,
+          last_error: reason.slice(0, 2000),
+          next_retry_at:
+            attemptCount >= 5
+              ? null
+              : new Date(Date.now() + backoffMinutes * 60_000).toISOString(),
+        })
         .eq("id", data.sessionId)
-        .in("status", ["authorized", "generating", "paid"]);
-      // Generation failure must never leave money reserved on the customer's
-      // card. Release any still-uncaptured authorization server-side even if
-      // the browser disconnects before it receives this response.
-      try {
-        const { data: payment } = await supabase
-          .from("generation_sessions")
-          .select("stripe_payment_intent")
-          .eq("id", data.sessionId)
-          .eq("user_id", userId)
-          .maybeSingle();
-        const { data: attempt } = await supabase
-          .from("diet_plan_attempts")
-          .select("environment")
-          .eq("generation_session_id", data.sessionId)
-          .maybeSingle();
-        if (payment?.stripe_payment_intent) {
-          const { createStripeClient } = await import("@/lib/stripe.server");
-          const environment = attempt?.environment === "sandbox" ? "sandbox" : "live";
-          const stripe = createStripeClient(environment);
-          const intent = await stripe.paymentIntents.retrieve(payment.stripe_payment_intent);
-          if (intent.status === "requires_capture" || intent.status === "requires_confirmation") {
-            await stripe.paymentIntents.cancel(
-              payment.stripe_payment_intent,
-              {},
-              { idempotencyKey: `generation-failed-release-${data.sessionId}` },
-            );
-            await supabase
-              .from("generation_sessions")
-              .update({ status: "authorization_released" })
-              .eq("id", data.sessionId)
-              .eq("user_id", userId);
-            await supabase
-              .from("diet_plan_attempts")
-              .update({ payment_failure_code: "authorization_released" })
-              .eq("generation_session_id", data.sessionId);
-          }
-        }
-      } catch {
-        // Failure alerts below still record the original problem. A later
-        // recovery can safely retry the same idempotent authorization release.
-      }
+        .in("status", ["paid", "generating", "completed", "generation_failed"]);
       const { sendPlanGenerationFailureAlert } = await import("@/lib/plan-generation-alert.server");
       await sendPlanGenerationFailureAlert(
         { supabase, userId, claims: claims as Record<string, unknown> },
@@ -429,7 +406,7 @@ export async function runPlanGeneration(
           refinement: data.refinement,
           reason,
         },
-      );
+      ).catch(() => undefined);
       return { error: "We encountered an error this time. Please try again later." };
     };
     if (data.operationId && data.refinement) {
@@ -464,49 +441,20 @@ export async function runPlanGeneration(
       return { processing: true };
     }
     if (
-      session.status !== "authorized" &&
       session.status !== "paid" &&
-      session.status !== "completed"
+      session.status !== "completed" &&
+      session.status !== "generation_failed"
     ) {
       return fail(`Session has invalid status: ${session.status}`);
     }
 
-    // Never spend AI credits unless Stripe confirms that funds are reserved.
-    // Complimentary sessions are already marked paid and have no payment intent.
-    if (session.status === "authorized") {
-      if (!session.stripe_payment_intent) {
-        return fail("Payment authorization is missing");
-      }
-      try {
-        const { data: attempt } = await supabase
-          .from("diet_plan_attempts")
-          .select("environment")
-          .eq("generation_session_id", session.id)
-          .maybeSingle();
-        const { createStripeClient } = await import("@/lib/stripe.server");
-        const environment = attempt?.environment === "sandbox" ? "sandbox" : "live";
-        const stripe = createStripeClient(environment);
-        const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
-        if (intent.metadata?.userId && intent.metadata.userId !== userId) {
-          return fail("Payment authorization does not belong to this account");
-        }
-        if (intent.status !== "requires_capture" && intent.status !== "succeeded") {
-          return fail(`Payment authorization is not active (${intent.status})`);
-        }
-      } catch (error) {
-        return fail(
-          `Payment authorization could not be verified: ${error instanceof Error ? error.message : "unknown error"}`,
-        );
-      }
-    }
-
-    if (!data.refinement && session.status === "authorized") {
+    if (!data.refinement && session.status !== "completed") {
       const { data: claimed, error: claimError } = await supabase
         .from("generation_sessions")
         .update({ status: "generating" })
         .eq("id", session.id)
         .eq("user_id", userId)
-        .eq("status", "authorized")
+        .in("status", ["paid", "generation_failed"])
         .select("id")
         .maybeSingle();
       if (claimError) return fail(`Generation could not start: ${claimError.message}`);
@@ -523,38 +471,10 @@ export async function runPlanGeneration(
         .limit(1)
         .maybeSingle();
       if (existingPlan?.plan) {
-        if (session.stripe_payment_intent && session.status !== "paid") {
-          try {
-            const { data: attempt } = await supabase
-              .from("diet_plan_attempts")
-              .select("environment")
-              .eq("generation_session_id", session.id)
-              .maybeSingle();
-            const { createStripeClient } = await import("@/lib/stripe.server");
-            const environment = attempt?.environment === "sandbox" ? "sandbox" : "live";
-            const stripe = createStripeClient(environment);
-            const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
-            if (intent.status === "requires_capture") {
-              await stripe.paymentIntents.capture(
-                session.stripe_payment_intent,
-                {},
-                { idempotencyKey: `capture-diet-${session.id}` },
-              );
-            } else if (intent.status !== "succeeded") {
-              return fail(`Saved plan payment is in state ${intent.status}`);
-            }
-            const paidAt = new Date().toISOString();
-            await supabase.from("generation_sessions").update({ status: "paid" }).eq("id", session.id);
-            await supabase
-              .from("diet_plan_attempts")
-              .update({ status: "generated", reached_stage: "Plan delivered", paid_at: paidAt, completed_at: paidAt })
-              .eq("generation_session_id", session.id);
-          } catch (error) {
-            return fail(
-              `Saved plan payment could not be completed: ${error instanceof Error ? error.message : "unknown error"}`,
-            );
-          }
-        }
+        await supabase
+          .from("generation_sessions")
+          .update({ status: "paid", next_retry_at: null })
+          .eq("id", session.id);
         const savedPlan = existingPlan.plan as any;
         return {
           plan: savedPlan,
@@ -650,8 +570,9 @@ export async function runPlanGeneration(
         .from("generation_sessions")
         .update({
           credits_used: newCreditsUsed,
-          // A refinement must never downgrade an already captured payment.
-          status: session.status === "paid" ? "paid" : "completed",
+          status: "paid",
+          next_retry_at: null,
+          last_error: null,
         })
         .eq("id", session.id);
 
@@ -666,126 +587,6 @@ export async function runPlanGeneration(
           failed_at: null,
         })
         .eq("generation_session_id", session.id);
-
-      // Capture in the same server request that persisted the plan. The
-      // browser may close or lose connectivity without leaving a card hold.
-      if (!data.refinement && session.stripe_payment_intent && session.status !== "paid") {
-        try {
-          const { data: attempt } = await supabase
-            .from("diet_plan_attempts")
-            .select("environment")
-            .eq("generation_session_id", session.id)
-            .maybeSingle();
-          const { createStripeClient } = await import("@/lib/stripe.server");
-          const environment = attempt?.environment === "sandbox" ? "sandbox" : "live";
-          const stripe = createStripeClient(environment);
-          const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
-          if (intent.metadata?.userId && intent.metadata.userId !== userId) {
-            throw new Error("Payment does not belong to this account");
-          }
-          if (intent.status === "requires_capture") {
-            await stripe.paymentIntents.capture(
-              session.stripe_payment_intent,
-              {},
-              { idempotencyKey: `capture-diet-${session.id}` },
-            );
-          } else if (intent.status !== "succeeded") {
-            throw new Error(`Payment is in state ${intent.status} and cannot be captured`);
-          }
-          const paidAt = new Date().toISOString();
-          await supabase
-            .from("generation_sessions")
-            .update({ status: "paid" })
-            .eq("id", session.id);
-          await supabase
-            .from("diet_plan_attempts")
-            .update({
-              status: "generated",
-              reached_stage: "Plan delivered",
-              paid_at: paidAt,
-              completed_at: paidAt,
-            })
-            .eq("generation_session_id", session.id);
-        } catch (error) {
-          const reason = error instanceof Error ? error.message : "Payment capture failed";
-          let authorizationReleased = false;
-          try {
-            const { createStripeClient } = await import("@/lib/stripe.server");
-            const { data: attempt } = await supabase
-              .from("diet_plan_attempts")
-              .select("environment")
-              .eq("generation_session_id", session.id)
-              .maybeSingle();
-            const environment = attempt?.environment === "sandbox" ? "sandbox" : "live";
-            const stripe = createStripeClient(environment);
-            const currentIntent = await stripe.paymentIntents.retrieve(
-              session.stripe_payment_intent,
-            );
-            if (currentIntent.status === "succeeded") {
-              const paidAt = new Date().toISOString();
-              await supabase
-                .from("generation_sessions")
-                .update({ status: "paid" })
-                .eq("id", session.id);
-              await supabase
-                .from("diet_plan_attempts")
-                .update({
-                  status: "generated",
-                  reached_stage: "Plan delivered",
-                  paid_at: paidAt,
-                  completed_at: paidAt,
-                })
-                .eq("generation_session_id", session.id);
-              return { plan: planToSave, rationale: plan?.rationale, warnings };
-            }
-            if (
-              currentIntent.status === "requires_capture" ||
-              currentIntent.status === "requires_confirmation"
-            ) {
-              await stripe.paymentIntents.cancel(
-                session.stripe_payment_intent,
-                {},
-                { idempotencyKey: `capture-failed-release-${session.id}` },
-              );
-              authorizationReleased = true;
-              await supabase
-                .from("generation_sessions")
-                .update({ status: "authorization_released" })
-                .eq("id", session.id);
-            }
-          } catch {
-            // The admin alert below records the unresolved capture failure.
-          }
-          await supabase
-            .from("diet_plan_attempts")
-            .update({
-              status: authorizationReleased ? "authorization_released" : "capture_failed",
-              reached_stage: authorizationReleased
-                ? "Plan saved — authorization released"
-                : "Plan saved — payment capture pending",
-              failure_stage: "Payment capture",
-              failure_reason: reason.slice(0, 4000),
-              failure_kind: "capture_failed",
-              payment_failure_code: authorizationReleased ? "authorization_released" : null,
-              failed_at: new Date().toISOString(),
-            })
-            .eq("generation_session_id", session.id);
-          try {
-            const { sendCapturePaymentAlert } = await import("@/lib/plan-generation-alert.server");
-            await sendCapturePaymentAlert(
-              { supabase, userId, claims: claims as Record<string, unknown> },
-              { sessionId: session.id, reason },
-            );
-          } catch {
-            // Alerting must not discard a successfully persisted plan.
-          }
-          return {
-            error: authorizationReleased
-              ? "Payment could not be completed, so your card authorization was released. You were not charged."
-              : "Your plan was saved, but payment could not be completed. Support has been notified.",
-          };
-        }
-      }
 
       return { plan: planToSave, rationale: plan?.rationale, warnings };
     } catch (err: any) {

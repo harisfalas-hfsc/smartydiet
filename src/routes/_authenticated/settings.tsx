@@ -20,8 +20,7 @@ import { deleteMyAccount, exportMyAccountData } from "@/lib/account.functions";
 import { downloadAccountExport } from "@/lib/account-export";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { clearOfflineSession } from "@/lib/offline/credentials";
-import { clearAllOffline } from "@/lib/offline/store";
+import { clearLocalAppData } from "@/lib/local-data";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -71,9 +70,8 @@ function SettingsPage() {
         toast.error(result.error);
         return;
       }
-      await clearOfflineSession();
-      await clearAllOffline();
       await supabase.auth.signOut();
+      await clearLocalAppData();
       toast.success("Your account and data have been permanently deleted.");
       navigate({ to: "/", replace: true });
     } catch {

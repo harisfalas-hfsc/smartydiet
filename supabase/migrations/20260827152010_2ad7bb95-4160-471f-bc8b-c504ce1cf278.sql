@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.run_generation_retry_cron() FROM PUBLIC, anon, authenticated;

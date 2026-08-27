@@ -30,12 +30,8 @@ import { saveQuestionnaire } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import { analytics } from "@/lib/analytics";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { OfflineActionNotice } from "@/components/offline/OfflineNotice";
 import { useAuth } from "@/hooks/useAuth";
 import { isAdminEmail } from "@/lib/admin";
-import { enqueueMutation } from "@/lib/offline/queue";
-import { OFFLINE_KEYS, readCached, removeLocal, saveLocal } from "@/lib/offline/store";
 
 export const Route = createFileRoute("/_authenticated/questionnaire")({
   head: () => ({
@@ -53,11 +49,21 @@ export const Route = createFileRoute("/_authenticated/questionnaire")({
 
 type SavedDraft = { data: QuestionnaireData; step: number; durationWeeks: 1 | 2 | 4 };
 
+const draftKey = (userId: string) => `smartydiet.questionnaire.draft.${userId}`;
+
+function readDraft(userId: string): SavedDraft | null {
+  try {
+    const raw = localStorage.getItem(draftKey(userId));
+    return raw ? (JSON.parse(raw) as SavedDraft) : null;
+  } catch {
+    return null;
+  }
+}
+
 function QuestionnairePage() {
   const navigate = useNavigate();
   const { freeAccessMode } = useFreeAccessMode();
   const save = useServerFn(saveQuestionnaire);
-  const online = useOnlineStatus();
   const { user } = useAuth();
   const complimentaryAccess = freeAccessMode || isAdminEmail(user?.email);
   const [step, setStep] = useState(0);
@@ -67,16 +73,11 @@ function QuestionnairePage() {
 
   useEffect(() => {
     if (!user?.id) return;
-    let active = true;
-    void readCached<SavedDraft>(OFFLINE_KEYS.questionnaireDraft, user.id).then((saved) => {
-      if (!active || !saved) return;
-      setData({ ...DEFAULT_QUESTIONNAIRE, ...saved.data });
-      setStep(saved.step ?? 0);
-      setDurationWeeks(saved.durationWeeks ?? 2);
-    });
-    return () => {
-      active = false;
-    };
+    const saved = readDraft(user.id);
+    if (!saved) return;
+    setData({ ...DEFAULT_QUESTIONNAIRE, ...saved.data });
+    setStep(saved.step ?? 0);
+    setDurationWeeks(saved.durationWeeks ?? 2);
   }, [user?.id]);
 
   useEffect(() => {
@@ -85,11 +86,11 @@ function QuestionnairePage() {
 
   useEffect(() => {
     if (!user?.id) return;
-    void saveLocal<SavedDraft>(OFFLINE_KEYS.questionnaireDraft, user.id, {
-      data,
-      step,
-      durationWeeks,
-    });
+    try {
+      localStorage.setItem(draftKey(user.id), JSON.stringify({ data, step, durationWeeks }));
+    } catch {
+      /* storage full or unavailable — drafts are best-effort */
+    }
   }, [data, step, durationWeeks, user?.id]);
 
   const upd = <K extends keyof QuestionnaireData>(key: K, patch: Partial<QuestionnaireData[K]>) =>
@@ -127,39 +128,14 @@ function QuestionnairePage() {
     analytics.questionnaireComplete(durationWeeks);
     setBusy(true);
     try {
-      if (!online) {
-        const questionnaireId = crypto.randomUUID();
-        const sessionId = crypto.randomUUID();
-        await enqueueMutation(user.id, {
-          kind: "questionnaire.save",
-          questionnaireId,
-          data,
-          durationWeeks,
-          questionnaireStatus: "submitted",
-          priority: 3,
-        });
-        if (complimentaryAccess) {
-          await enqueueMutation(user.id, {
-            kind: "generation.request",
-            questionnaireId,
-            sessionId,
-            durationWeeks,
-            priority: 2,
-          });
-        }
-        await removeLocal(OFFLINE_KEYS.questionnaireDraft, user.id);
-        toast.success(
-          complimentaryAccess
-            ? "Saved offline. Your plan will be built automatically when you reconnect."
-            : "Saved offline. Reconnect to continue to secure payment.",
-        );
-        navigate({ to: "/plans" });
-        return;
-      }
       const res = await save({
         data: { data: data as any, durationWeeks, status: "submitted" as const },
       });
-      await removeLocal(OFFLINE_KEYS.questionnaireDraft, user.id);
+      try {
+        localStorage.removeItem(draftKey(user.id));
+      } catch {
+        /* ignore */
+      }
       navigate({ to: "/checkout", search: { qid: res.id } });
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to save");
@@ -172,7 +148,6 @@ function QuestionnairePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
-      <OfflineActionNotice className="mb-4" />
       <div className="mb-6 flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">

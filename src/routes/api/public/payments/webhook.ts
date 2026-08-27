@@ -25,7 +25,7 @@ async function handleCheckoutCompleted(session: any, environment: StripeEnv) {
     user_id: userId,
     questionnaire_id: questionnaireId,
     duration_weeks: durationWeeks,
-    status: "authorized",
+    status: "paid",
     stripe_session_id: session.id,
     stripe_payment_intent: paymentIntent,
     amount_cents: session.amount_total ?? 999,
@@ -39,7 +39,7 @@ async function handleCheckoutCompleted(session: any, environment: StripeEnv) {
       .from("generation_sessions")
       .update(sessionPayload)
       .eq("id", genSessionId)
-      .in("status", ["pending", "authorized", "failed"]);
+      .in("status", ["pending", "failed", "generation_failed"]);
   } else if (insertError) {
     throw insertError;
   }
@@ -51,16 +51,16 @@ async function handleCheckoutCompleted(session: any, environment: StripeEnv) {
   await getSupabase()
     .from("diet_plan_attempts")
     .update({
-      status: "authorized",
-      reached_stage: "Payment authorized",
+      status: "paid",
+      reached_stage: "Payment received",
       generation_session_id: genSessionId,
       stripe_payment_intent: paymentIntent,
     })
     .eq("stripe_session_id", session.id)
-    .in("status", ["checkout_opened", "payment_processing", "authorized"]);
+    .in("status", ["checkout_opened", "payment_processing", "authorized", "paid"]);
 
   // Stripe owns the handoff: generation starts here even if the customer
-  // closes the return tab immediately after authorizing the card.
+  // closes the return tab immediately after paying.
   const { runPlanGeneration } = await import("@/lib/plan-generation.server");
   const { data: authUser } = await getSupabase().auth.admin.getUserById(userId);
   await runPlanGeneration(
@@ -77,49 +77,18 @@ async function handleCheckoutCompleted(session: any, environment: StripeEnv) {
   );
 }
 
-async function handlePaymentIntentSettled(intent: any, captured: boolean) {
+async function handlePaymentSucceeded(intent: any) {
   if (!intent?.id) return;
-  if (captured) {
-    const { data: paymentSession } = await getSupabase()
-      .from("generation_sessions")
-      .select("id")
-      .eq("stripe_payment_intent", intent.id)
-      .maybeSingle();
-    if (!paymentSession?.id) return;
-    const { data: plan } = await getSupabase()
-      .from("diet_plans")
-      .select("id")
-      .eq("session_id", paymentSession.id)
-      .limit(1)
-      .maybeSingle();
-    // A provider-side capture must never be recorded as delivered unless the
-    // diet was already persisted. Recovery will keep this session resumable.
-    if (!plan) return;
-    await getSupabase()
-      .from("generation_sessions")
-      .update({ status: "paid" })
-      .eq("stripe_payment_intent", intent.id)
-      .in("status", ["authorized", "completed", "paid"]);
-    await getSupabase()
-      .from("diet_plan_attempts")
-      .update({
-        status: "paid",
-        reached_stage: "Payment captured",
-        paid_at: new Date().toISOString(),
-      })
-      .eq("stripe_payment_intent", intent.id)
-      .in("status", ["authorized", "paid"]);
-    return;
-  }
   await getSupabase()
     .from("generation_sessions")
-    .update({ status: "authorization_released" })
+    .update({ status: "paid" })
     .eq("stripe_payment_intent", intent.id)
-    .in("status", ["authorized", "failed", "authorization_released"]);
+    .in("status", ["pending", "failed"]);
   await getSupabase()
     .from("diet_plan_attempts")
-    .update({ payment_failure_code: "authorization_released" })
-    .eq("stripe_payment_intent", intent.id);
+    .update({ paid_at: new Date().toISOString() })
+    .eq("stripe_payment_intent", intent.id)
+    .is("paid_at", null);
 }
 
 async function handleCheckoutFailure(session: any, declined: boolean) {
@@ -201,10 +170,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       await handleCheckoutCompleted(event.data.object, env);
       break;
     case "payment_intent.succeeded":
-      await handlePaymentIntentSettled(event.data.object, true);
-      break;
-    case "payment_intent.canceled":
-      await handlePaymentIntentSettled(event.data.object, false);
+      await handlePaymentSucceeded(event.data.object);
       break;
     case "checkout.session.async_payment_failed":
       await handleCheckoutFailure(event.data.object, true);
