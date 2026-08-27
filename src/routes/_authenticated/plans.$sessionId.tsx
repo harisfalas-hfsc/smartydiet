@@ -23,6 +23,21 @@ import { exportGroceryPdf, exportPlanPdf } from "@/lib/pdf-export";
 
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
 
+const PLAN_TIPS = [
+  "Protein at breakfast keeps you fuller for hours and cuts afternoon cravings.",
+  "Most people confuse thirst with hunger — a glass of water before a meal often settles it.",
+  "Fibre from vegetables, beans and oats feeds your gut bacteria, not just your stomach.",
+  "Eating slowly gives your brain the ~20 minutes it needs to register fullness.",
+  "Colour on the plate usually means a wider spread of vitamins and antioxidants.",
+  "Cooking tomatoes increases the lycopene your body can actually absorb.",
+  "Healthy fats — olive oil, nuts, avocado — help you absorb vitamins A, D, E and K.",
+  "Strength training plus enough protein protects muscle while you lose fat.",
+  "Sleeping under 6 hours raises hunger hormones the next day.",
+  "Meal prepping just two days ahead is one of the strongest predictors of sticking to a plan.",
+  "Salt hides mostly in bread, sauces and processed food — not the salt shaker.",
+  "A consistent eating schedule steadies blood sugar and energy across the day.",
+];
+
 export const Route = createFileRoute("/_authenticated/plans/$sessionId")({
   head: () => ({
     meta: [{ title: "My plan — SmartyDiet" }, { name: "robots", content: "noindex" }],
@@ -64,6 +79,7 @@ function PlanView() {
   const [busy, setBusy] = useState(false);
   const [autoGenerating, setAutoGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [tipIndex, setTipIndex] = useState(0);
 
   const load = useCallback(async () => {
     setSessionLoading(true);
@@ -106,6 +122,15 @@ function PlanView() {
     }, 5000);
     return () => window.clearInterval(interval);
   }, [autoGenerating, load]);
+
+  useEffect(() => {
+    if (!autoGenerating) return;
+    const interval = window.setInterval(
+      () => setTipIndex((current) => (current + 1) % PLAN_TIPS.length),
+      7_000,
+    );
+    return () => window.clearInterval(interval);
+  }, [autoGenerating]);
 
   useEffect(() => {
     if (autoGenerating && versions.length > 0) {
@@ -268,7 +293,21 @@ function PlanView() {
             {autoGenerating ? (
               <>
                 <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
-                Building your plan… this can take up to 2 minutes.
+                <p className="font-medium text-foreground">
+                  Building your plan… this can take up to 2 minutes.
+                </p>
+                <div
+                  className="mx-auto mt-6 max-w-md rounded-md border border-border bg-muted/40 p-4 text-left"
+                  aria-live="polite"
+                >
+                  <p className="text-xs font-bold uppercase text-primary">Did you know?</p>
+                  <p className="mt-1 min-h-12 text-sm leading-6 text-foreground">
+                    {PLAN_TIPS[tipIndex]}
+                  </p>
+                </div>
+                <p className="mt-4 text-xs leading-5 text-muted-foreground">
+                  Stay on this page — your plan will appear here automatically when it is ready.
+                </p>
               </>
             ) : generationError ? (
               <>
