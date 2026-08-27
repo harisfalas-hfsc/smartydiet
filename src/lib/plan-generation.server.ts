@@ -351,7 +351,15 @@ async function generateWithRepair(
         },
         dietStyle: rules.dietStyle,
         goal: rules.goal,
+        // Rules the plan was calculated from, so the customer can verify it.
+        weeks: rules.weeks,
+        daysPerWeek: 7,
+        mealsPerDay: rules.mealsPerDay,
+        mealSlots: mealSlotsFor(rules.mealsPerDay),
+        fastingWindow: rules.fastingWindow ?? null,
+        excludeFoods: rules.excludeFoods,
       },
+
       weeks,
       rationale: `This plan follows the selected ${rules.dietStyle} style, ${rules.goal} goal, calorie target, meal schedule, and stated food restrictions.`,
       disclaimer: "This plan is not medical advice. Consult a qualified professional for medical conditions.",
