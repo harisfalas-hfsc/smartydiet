@@ -193,7 +193,7 @@ function Return() {
         if (active) {
           setStatus("error");
           setMessage(
-            "The connection was interrupted. Your card has not been charged. Please try again to continue the same plan.",
+              "The connection was interrupted. Your saved process may still be completing securely. Please try again to check the same plan; do not start another questionnaire or payment.",
           );
         }
       }

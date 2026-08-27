@@ -1,4 +1,4 @@
-const GENERATION_TIMEOUT_MS = 150_000;
+const GENERATION_TIMEOUT_MS = 300_000;
 
 export async function waitForPlanGeneration<T>(request: Promise<T>): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;

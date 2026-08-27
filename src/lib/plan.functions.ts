@@ -696,14 +696,48 @@ export const generatePlan = createServerFn({ method: "POST" })
             .eq("generation_session_id", session.id);
         } catch (error) {
           const reason = error instanceof Error ? error.message : "Payment capture failed";
+          let authorizationReleased = false;
+          try {
+            const { createStripeClient } = await import("@/lib/stripe.server");
+            const { data: attempt } = await supabase
+              .from("diet_plan_attempts")
+              .select("environment")
+              .eq("generation_session_id", session.id)
+              .maybeSingle();
+            const environment = attempt?.environment === "sandbox" ? "sandbox" : "live";
+            const stripe = createStripeClient(environment);
+            const currentIntent = await stripe.paymentIntents.retrieve(
+              session.stripe_payment_intent,
+            );
+            if (
+              currentIntent.status === "requires_capture" ||
+              currentIntent.status === "requires_confirmation"
+            ) {
+              await stripe.paymentIntents.cancel(
+                session.stripe_payment_intent,
+                {},
+                { idempotencyKey: `capture-failed-release-${session.id}` },
+              );
+              authorizationReleased = true;
+              await supabase
+                .from("generation_sessions")
+                .update({ status: "authorization_released" })
+                .eq("id", session.id);
+            }
+          } catch {
+            // The admin alert below records the unresolved capture failure.
+          }
           await supabase
             .from("diet_plan_attempts")
             .update({
-              status: "capture_failed",
-              reached_stage: "Plan saved — payment capture pending",
+              status: authorizationReleased ? "authorization_released" : "capture_failed",
+              reached_stage: authorizationReleased
+                ? "Plan saved — authorization released"
+                : "Plan saved — payment capture pending",
               failure_stage: "Payment capture",
               failure_reason: reason.slice(0, 4000),
               failure_kind: "capture_failed",
+              payment_failure_code: authorizationReleased ? "authorization_released" : null,
               failed_at: new Date().toISOString(),
             })
             .eq("generation_session_id", session.id);

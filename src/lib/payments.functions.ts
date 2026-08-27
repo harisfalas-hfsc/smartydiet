@@ -275,14 +275,39 @@ export const captureDietPayment = createServerFn({ method: "POST" })
       return { captured: true };
     } catch (err) {
       const message = getStripeErrorMessage(err);
+      let authorizationReleased = false;
+      try {
+        const session = await loadOwnedPaymentSession(supabase, userId, data.generationSessionId);
+        if (session?.stripe_payment_intent) {
+          const stripe = createStripeClient(data.environment);
+          const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
+          if (intent.status === "requires_capture" || intent.status === "requires_confirmation") {
+            await stripe.paymentIntents.cancel(
+              session.stripe_payment_intent,
+              {},
+              { idempotencyKey: `capture-failed-release-${data.generationSessionId}` },
+            );
+            authorizationReleased = true;
+            await supabase
+              .from("generation_sessions")
+              .update({ status: "authorization_released" })
+              .eq("id", data.generationSessionId);
+          }
+        }
+      } catch {
+        // The support alert below records the unresolved payment state.
+      }
       await supabase
         .from("diet_plan_attempts")
         .update({
-          status: "capture_failed",
-          reached_stage: "Plan delivered — payment not captured",
+          status: authorizationReleased ? "authorization_released" : "capture_failed",
+          reached_stage: authorizationReleased
+            ? "Plan delivered — authorization released"
+            : "Plan delivered — payment not captured",
           failure_stage: "Payment capture",
           failure_reason: message.slice(0, 4000),
           failure_kind: "capture_failed",
+          payment_failure_code: authorizationReleased ? "authorization_released" : null,
           failed_at: new Date().toISOString(),
         })
         .eq("generation_session_id", data.generationSessionId);
