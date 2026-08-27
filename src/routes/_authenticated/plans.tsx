@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Sparkles, ClipboardList } from "lucide-react";
 import { SmartyCard, SmartyRow } from "@/components/SmartyCard";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
-import { toast } from "sonner";
-import { retryPlanGeneration } from "@/lib/plan.functions";
 
 
 export const Route = createFileRoute("/_authenticated/plans")({
@@ -26,7 +24,6 @@ interface Row {
   credits_used: number;
   credits_total: number;
   created_at: string;
-  has_plan: boolean;
 }
 
 const TONES: Array<"cyan" | "green" | "orange" | "purple" | "yellow" | "pink" | "blue"> = [
@@ -43,43 +40,25 @@ function PlansList() {
   const { freeAccessMode } = useFreeAccessMode();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [rows, setRows] = useState<Row[] | null>(null);
-  const [retrying, setRetrying] = useState<string | null>(null);
-
-  async function retryNow(sessionId: string) {
-    setRetrying(sessionId);
-    try {
-      const result = await retryPlanGeneration({ data: { sessionId } });
-      if (result?.ok) {
-        toast.success("Your diet is being rebuilt now.");
-      } else {
-        toast.error(result?.error ?? "Still failing — our team has been alerted.");
-      }
-      const fresh = await fetchRows();
-      setRows(fresh);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Retry failed — our team has been alerted.");
-    } finally {
-      setRetrying(null);
-    }
-  }
 
 
   async function fetchRows() {
-    const [{ data: fresh, error }, { data: plans, error: plansError }] = await Promise.all([
+    const { data: plans, error: plansError } = await supabase
+      .from("diet_plans")
+      .select("session_id");
+    if (plansError) throw plansError;
+
+    const readySessionIds = [...new Set((plans ?? []).map((plan) => plan.session_id))];
+    if (readySessionIds.length === 0) return [];
+
+    const { data: fresh, error } = await supabase
       supabase
         .from("generation_sessions")
         .select("id,duration_weeks,status,credits_used,credits_total,created_at")
-        .in("status", ["generating", "completed", "paid", "generation_failed"])
-        .order("created_at", { ascending: false }),
-      supabase.from("diet_plans").select("session_id"),
-    ]);
+        .in("id", readySessionIds)
+        .order("created_at", { ascending: false });
     if (error) throw error;
-    if (plansError) throw plansError;
-    const readySessionIds = new Set((plans ?? []).map((plan) => plan.session_id));
-    return ((fresh ?? []) as Omit<Row, "has_plan">[]).map((row) => ({
-      ...row,
-      has_plan: readySessionIds.has(row.id),
-    }));
+    return (fresh ?? []) as Row[];
   }
 
   useEffect(() => {
@@ -95,17 +74,6 @@ function PlansList() {
       active = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (!(rows ?? []).some((row) => !row.has_plan)) return;
-    const interval = window.setInterval(() => {
-      void fetchRows()
-        .then(setRows)
-        .catch(() => undefined);
-    }, 5_000);
-    return () => window.clearInterval(interval);
-  }, [rows]);
-
 
   if (pathname !== "/plans") return <Outlet />;
 
@@ -156,15 +124,13 @@ function PlansList() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {rows.map((r, i) => {
               const active = (r.credits_used ?? 0) < (r.credits_total ?? 0);
-              const building = !r.has_plan;
-              const owed = building && r.status === "generation_failed";
               const tone = active ? "green" : TONES[i % TONES.length];
               return (
                 <SmartyCard
                   key={r.id}
                   tone={tone}
-                  eyebrow={owed ? "We owe you this diet" : building ? "Building now" : active ? "Active" : "Completed"}
-                  eyebrowIcon={owed ? "🔁" : building ? "⏳" : active ? "✅" : "📁"}
+                  eyebrow={active ? "Active" : "Completed"}
+                  eyebrowIcon={active ? "✅" : "📁"}
                   cornerIcon={ClipboardList}
                   title={`${r.duration_weeks}-week`}
                   accent="plan"
@@ -184,27 +150,9 @@ function PlansList() {
                     />
                   </div>
                   <div className="mt-6">
-                    {owed ? (
-                      <div className="space-y-3">
-                        <p className="text-sm font-semibold text-primary">
-                          Your payment is safe — we&apos;re retrying automatically. Your answers are
-                          saved, you never need to fill the questionnaire again.
-                        </p>
-                        <Button
-                          size="sm"
-                          disabled={retrying === r.id}
-                          onClick={() => void retryNow(r.id)}
-                        >
-                          {retrying === r.id ? "Retrying…" : "Try again now"}
-                        </Button>
-                      </div>
-                    ) : building ? (
-                      <p className="text-sm font-semibold text-primary">Analyzing your questionnaire…</p>
-                    ) : (
-                      <Button asChild size="sm">
-                        <Link to="/plans/$sessionId" params={{ sessionId: r.id }}>View plan →</Link>
-                      </Button>
-                    )}
+                    <Button asChild size="sm">
+                      <Link to="/plans/$sessionId" params={{ sessionId: r.id }}>View plan →</Link>
+                    </Button>
                   </div>
                 </SmartyCard>
               );
