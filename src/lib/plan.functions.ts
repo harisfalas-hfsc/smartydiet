@@ -456,7 +456,8 @@ export const generatePlan = createServerFn({ method: "POST" })
     if (
       session.status !== "authorized" &&
       session.status !== "paid" &&
-      session.status !== "completed"
+      session.status !== "completed" &&
+      session.status !== "failed"
     ) {
       return fail(`Session has invalid status: ${session.status}`);
     }
