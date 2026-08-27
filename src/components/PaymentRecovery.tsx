@@ -10,7 +10,9 @@ export function PaymentRecovery() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading || !user?.id || pathname === "/checkout/return") return;
+    // Checkout owns its own redirect lifecycle. Global recovery must never
+    // navigate while Stripe is open or while the return page is processing.
+    if (loading || !user?.id || pathname.startsWith("/checkout")) return;
 
     let active = true;
     void findResumablePayment(user.id)
