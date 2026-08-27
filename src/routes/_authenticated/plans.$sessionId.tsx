@@ -226,13 +226,16 @@ function PlanView() {
 
   const active = versions.find((v) => v.id === activeId) ?? versions[0] ?? null;
 
+  // Always open a plan at the very top of the page (like every other page).
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [sessionId]);
+
   // Whenever the shown version changes, start the reader at the top of the plan
   // (Week 1 · Day 1) instead of wherever the page happened to be scrolled.
   useEffect(() => {
     if (!active?.id) return;
-    requestAnimationFrame(() => {
-      document.getElementById("plan-top")?.scrollIntoView({ behavior: "auto", block: "start" });
-    });
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [active?.id]);
 
   async function exportPdf() {
