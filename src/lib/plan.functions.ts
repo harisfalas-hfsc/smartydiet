@@ -681,7 +681,10 @@ export const generatePlan = createServerFn({ method: "POST" })
             throw new Error(`Payment is in state ${intent.status} and cannot be captured`);
           }
           const paidAt = new Date().toISOString();
-          await supabase.from("generation_sessions").update({ status: "paid" }).eq("id", session.id);
+          await supabase
+            .from("generation_sessions")
+            .update({ status: "paid" })
+            .eq("id", session.id);
           await supabase
             .from("diet_plan_attempts")
             .update({

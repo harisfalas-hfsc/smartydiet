@@ -19,7 +19,7 @@ export function PaymentRecovery() {
     void findResumablePayment(user.id)
       .then((result) => {
         if (!active || !result?.stripeSessionId) return;
-        
+
         toast.info("Your saved diet is ready to continue.", {
           id: `payment-recovery-${result.stripeSessionId}`,
           duration: Infinity,
