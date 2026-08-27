@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { generatePlan, listPlanVersions, restorePlanVersion } from "@/lib/plan.functions";
+import { generatePlan, listPlanVersions } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,6 @@ function PlanView() {
   const navigate = useNavigate();
   const generate = useServerFn(generatePlan);
   const listVersions = useServerFn(listPlanVersions);
-  const restore = useServerFn(restorePlanVersion);
   const reportFailure = useServerFn(reportPlanGenerationFailure);
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
@@ -77,6 +76,7 @@ function PlanView() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [refineText, setRefineText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [refining, setRefining] = useState(false);
   const [autoGenerating, setAutoGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [tipIndex, setTipIndex] = useState(0);
@@ -124,13 +124,13 @@ function PlanView() {
   }, [autoGenerating, load]);
 
   useEffect(() => {
-    if (!autoGenerating) return;
+    if (!autoGenerating && !refining) return;
     const interval = window.setInterval(
       () => setTipIndex((current) => (current + 1) % PLAN_TIPS.length),
       7_000,
     );
     return () => window.clearInterval(interval);
-  }, [autoGenerating]);
+  }, [autoGenerating, refining]);
 
   useEffect(() => {
     if (autoGenerating && versions.length > 0) {
@@ -181,6 +181,7 @@ function PlanView() {
   async function refine() {
     if (!refineText.trim()) return toast.error("Describe the change you want");
     setBusy(true);
+    setRefining(true);
     const operationId = crypto.randomUUID();
     try {
       const res = await waitForPlanGeneration(
@@ -208,20 +209,7 @@ function PlanView() {
       navigate({ to: "/", replace: true });
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function doRestore(version: number) {
-    setBusy(true);
-    try {
-      await restore({ data: { sessionId, version } });
-      setActiveId(null);
-      await load();
-      toast.success(`Restored version ${version} (no credit spent)`);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Restore failed");
-    } finally {
-      setBusy(false);
+      setRefining(false);
     }
   }
 
