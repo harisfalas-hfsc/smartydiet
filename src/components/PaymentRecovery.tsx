@@ -3,6 +3,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/useAuth";
 import { getResumableDietSession } from "@/lib/payments.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 /** Automatically continues an unfinished authorized purchase on any app visit. */
 export function PaymentRecovery() {
