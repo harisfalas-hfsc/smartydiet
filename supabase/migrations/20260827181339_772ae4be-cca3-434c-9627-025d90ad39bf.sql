@@ -1,0 +1,1 @@
+UPDATE public.generation_sessions SET credits_total = 2, updated_at = now() WHERE credits_total <> 2;
