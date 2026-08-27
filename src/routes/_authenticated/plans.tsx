@@ -83,19 +83,22 @@ function PlansList() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
-      <div className="mb-8 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Your plans
-          </p>
-          <h1 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
-            My <span className="text-primary">Smarty Meal Plans™</span>
-          </h1>
-        </div>
+      <div className="mb-8 text-center">
+        <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+          Your plans
+        </p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+          My <span className="text-primary">Smarty Meal Plans™</span>
+        </h1>
+        <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
+          Every plan you build lives here — original and refined versions included.
+        </p>
         {rows !== null && rows.length > 0 && (
-          <Button asChild size="sm" variant={hasActive ? "outline" : "default"}>
-            <Link to="/questionnaire">New plan</Link>
-          </Button>
+          <div className="mt-5 flex justify-center">
+            <Button asChild size="sm" variant={hasActive ? "outline" : "default"}>
+              <Link to="/questionnaire">New plan</Link>
+            </Button>
+          </div>
         )}
       </div>
 
