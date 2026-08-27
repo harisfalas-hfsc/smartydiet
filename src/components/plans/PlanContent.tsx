@@ -1,7 +1,15 @@
+import { useState } from "react";
 import { AlertTriangle, Brain, CalendarDays, CheckCircle2, Download, ShoppingBasket } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toneClasses, type SmartyTone } from "@/components/SmartyCard";
 import { cn } from "@/lib/utils";
 import { exportGroceryPdf, exportPlanPdf } from "@/lib/pdf-export";
