@@ -36,7 +36,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { isAdminEmail } from "@/lib/admin";
 import { enqueueMutation } from "@/lib/offline/queue";
 import { OFFLINE_KEYS, readCached, removeLocal, saveLocal } from "@/lib/offline/store";
-import { findResumablePayment } from "@/lib/payment-recovery.client";
+import { findResumablePayment } from "@/lib/payment-recovery.browser";
 
 export const Route = createFileRoute("/_authenticated/questionnaire")({
   head: () => ({

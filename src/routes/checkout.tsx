@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { waitForPlanGeneration } from "@/lib/generation-client";
 import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
-import { findResumablePayment } from "@/lib/payment-recovery.client";
+import { findResumablePayment } from "@/lib/payment-recovery.browser";
 
 type Search = { qid?: string; weeks?: number };
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
