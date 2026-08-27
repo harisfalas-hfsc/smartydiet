@@ -136,7 +136,7 @@ function Return() {
           params: { sessionId: paidRes.generationSessionId },
           replace: true,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         // An interrupted browser request does not prove server-side generation
         // failed. Keep this page stationary so global recovery cannot create a
         // redirect loop, and let the customer safely retry the same operation.
