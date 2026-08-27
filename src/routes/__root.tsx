@@ -311,7 +311,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", href: "/favicon.v2.png" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.v2.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
-
     ],
     scripts: [
       {
@@ -339,7 +338,6 @@ const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('smartydie
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
-
       <head>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
