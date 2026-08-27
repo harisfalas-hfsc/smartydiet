@@ -17,6 +17,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
+const CREATION_TIPS = [
+  "We are checking every answer from your questionnaire.",
+  "We are matching meals to your diet style, allergies, and food preferences.",
+  "We are balancing daily calories, portions, and meal timing.",
+  "We are validating every day before your plan is delivered.",
+];
 
 export const Route = createFileRoute("/checkout/return")({
   ssr: false,
@@ -42,8 +48,18 @@ function Return() {
   const [retryKey, setRetryKey] = useState(0);
   const [status, setStatus] = useState<"working" | "done" | "error">("working");
   const [message, setMessage] = useState(
-    "Hold on. We are creating the best diet we can for your questionnaire needs.",
+    "Hold on. We are creating your diet plan according to your needs.",
   );
+  const [tipIndex, setTipIndex] = useState(0);
+
+  useEffect(() => {
+    if (status !== "working") return;
+    const interval = window.setInterval(
+      () => setTipIndex((current) => (current + 1) % CREATION_TIPS.length),
+      7_000,
+    );
+    return () => window.clearInterval(interval);
+  }, [status]);
 
   useEffect(() => {
     if (authLoading || !session?.access_token) return;
@@ -68,7 +84,7 @@ function Return() {
         // page stationary and retry here rather than sending the customer away.
         for (
           let attempt = 0;
-          attempt < 15 && (!paidRes.paid || !paidRes.generationSessionId);
+          attempt < 15 && !paidRes.error && (!paidRes.paid || !paidRes.generationSessionId);
           attempt++
         ) {
           if (active) setMessage("Confirming your card authorization…");
@@ -123,16 +139,33 @@ function Return() {
           return;
         }
         if (active) setMessage("Your plan is ready. Completing payment…");
-        const captureResult = await capture({
+        let captureResult = await capture({
           data: {
             generationSessionId: paidRes.generationSessionId,
             environment: getStripeEnvironment(),
           },
         });
+        for (let attempt = 0; attempt < 2 && !captureResult.captured; attempt++) {
+          if (active) setMessage("Your plan is ready. Securing payment and delivery…");
+          await new Promise((resolve) => setTimeout(resolve, 1_500));
+          captureResult = await capture({
+            data: {
+              generationSessionId: paidRes.generationSessionId,
+              environment: getStripeEnvironment(),
+            },
+          });
+        }
         if (!captureResult.captured) {
           toast.error(
             "Your diet is ready, but payment could not be completed. Support has been notified.",
           );
+          if (active) {
+            setStatus("error");
+            setMessage(
+              "Your plan is safely saved, but payment could not be completed. Please try again; a new plan will not be generated.",
+            );
+          }
+          return;
         }
         analytics.planReady(false);
         if (!active) return;
@@ -188,6 +221,18 @@ function Return() {
         {status === "error" ? "We could not finish this time" : "Creating your diet"}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+      {status === "working" && (
+        <div className="mt-6 w-full border-t border-border pt-5" aria-live="polite">
+          <p className="text-xs font-semibold uppercase text-primary">What we are doing now</p>
+          <p className="mt-2 min-h-10 text-sm text-foreground">{CREATION_TIPS[tipIndex]}</p>
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Keep this screen open. Your answers are already saved.
+          </p>
+        </div>
+      )}
       {status === "error" && (
         <Button className="mt-6" onClick={retry}>
           Try again

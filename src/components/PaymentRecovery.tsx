@@ -2,8 +2,9 @@ import { useEffect } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { findResumablePayment } from "@/lib/payment-recovery.browser";
+import { toast } from "sonner";
 
-/** Automatically continues an unfinished authorized purchase on any app visit. */
+/** Offers recovery without forcing navigation or creating redirect loops. */
 export function PaymentRecovery() {
   const { user, loading } = useAuth();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -19,10 +20,18 @@ export function PaymentRecovery() {
       .then((result) => {
         if (!active || !result?.stripeSessionId) return;
         
-        navigate({
-          to: "/checkout/return",
-          search: { session_id: result.stripeSessionId },
-          replace: true,
+        toast.info("Your saved diet is ready to continue.", {
+          id: `payment-recovery-${result.stripeSessionId}`,
+          duration: Infinity,
+          description: "Continue from your saved questionnaire and card authorization.",
+          action: {
+            label: "Continue",
+            onClick: () =>
+              navigate({
+                to: "/checkout/return",
+                search: { session_id: result.stripeSessionId ?? undefined },
+              }),
+          },
         });
       })
       .catch(() => undefined);
