@@ -412,6 +412,11 @@ export const generatePlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<PlanResult> => {
     const { supabase, userId, claims } = context;
     const fail = async (reason: string): Promise<PlanResult> => {
+      await supabase
+        .from("generation_sessions")
+        .update({ status: "failed" })
+        .eq("id", data.sessionId)
+        .in("status", ["authorized", "paid"]);
       const { sendPlanGenerationFailureAlert } = await import("@/lib/plan-generation-alert.server");
       await sendPlanGenerationFailureAlert(
         { supabase, userId, claims: claims as Record<string, unknown> },
@@ -534,7 +539,28 @@ export const generatePlan = createServerFn({ method: "POST" })
         refinement_note: data.refinement ?? null,
         is_final: isFinal,
       });
-      if (insErr) return fail(`Saving the generated plan failed: ${insErr.message}`);
+      if (insErr) {
+        // A resumed return page can overlap the original request. The stable
+        // operation id makes that retry idempotent: if the other request won
+        // the insert race, return its saved plan instead of reporting failure.
+        if (data.operationId) {
+          const { data: racedPlan } = await supabase
+            .from("diet_plans")
+            .select("plan,rationale")
+            .eq("id", data.operationId)
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (racedPlan?.plan) {
+            const savedPlan = racedPlan.plan as any;
+            return {
+              plan: savedPlan,
+              rationale: racedPlan.rationale ?? savedPlan?.rationale,
+              warnings: savedPlan?._warnings ?? [],
+            };
+          }
+        }
+        return fail(`Saving the generated plan failed: ${insErr.message}`);
+      }
 
       await supabase
         .from("generation_sessions")

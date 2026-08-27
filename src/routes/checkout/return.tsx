@@ -44,7 +44,7 @@ function Return() {
     if (processingStarted.current) return;
     processingStarted.current = true;
     (async () => {
-      const operationId = crypto.randomUUID();
+      let operationId: string = crypto.randomUUID();
       let generationSessionId: string | undefined;
       if (!session_id) {
         setStatus("error");
@@ -69,6 +69,7 @@ function Return() {
         }
         analytics.purchase(session_id);
         generationSessionId = paidRes.generationSessionId;
+        operationId = paidRes.generationSessionId;
         setMessage("Payment authorized. Building your plan… this can take up to 2 minutes.");
         const planRes = await waitForPlanGeneration(
           generate({ data: { sessionId: paidRes.generationSessionId, operationId } }),
@@ -106,15 +107,9 @@ function Return() {
           replace: true,
         });
       } catch (err: any) {
-        if (generationSessionId) {
-          await release({
-            data: {
-              generationSessionId,
-              environment: getStripeEnvironment(),
-              reason: err instanceof Error ? err.message : "Plan creation request failed",
-            },
-          }).catch(() => undefined);
-        }
+        // A client timeout or closed tab does not prove server-side generation
+        // failed. Keep the authorization resumable rather than canceling a hold
+        // while the plan may still be finishing in the background.
         await reportFailure({
           data: {
             sessionId: generationSessionId,
