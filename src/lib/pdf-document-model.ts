@@ -132,7 +132,7 @@ export function prepareGroceryWeeks(plan: any): GroceryWeek[] {
   return weeks.map((week: any, weekIndex: number) => {
     const stored = Array.isArray(week?.groceryList) ? week.groceryList.filter(validItem) : [];
     const source = stored.length > 0 ? stored : deriveIngredients(week);
-    const normalized = consolidate(source.map((entry) => {
+    const normalized = consolidate(source.map((entry: Record<string, unknown>) => {
       const item = clean(entry.item);
       return {
         item,
