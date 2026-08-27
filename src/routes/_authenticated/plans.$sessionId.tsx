@@ -40,6 +40,7 @@ interface Session {
   credits_total: number;
   credits_used: number;
   status: string;
+  stripe_session_id: string | null;
 }
 interface PlanRow {
   id: string;
@@ -80,7 +81,7 @@ function PlanView() {
         async () => {
           const { data, error } = await supabase
             .from("generation_sessions")
-            .select("id,duration_weeks,credits_total,credits_used,status")
+            .select("id,duration_weeks,credits_total,credits_used,status,stripe_session_id")
             .eq("id", sessionId)
             .maybeSingle();
           if (error) throw error;
@@ -156,11 +157,23 @@ function PlanView() {
     }
   }
 
-  // Recovery: paid, no plan → auto-generate.
+  // Recovery: an uncaptured authorization must return through the payment
+  // completion route so generation and capture both finish in order.
+  useEffect(() => {
+    if (!online || !session || versions.length > 0 || !session.stripe_session_id) return;
+    if (session.status !== "authorized" && session.status !== "failed") return;
+    navigate({
+      to: "/checkout/return",
+      search: { session_id: session.stripe_session_id },
+      replace: true,
+    });
+  }, [navigate, online, session, versions.length]);
+
+  // Recovery: captured legacy sessions with no plan can generate directly.
   useEffect(() => {
     if (!online) return;
     if (!session || versions.length > 0 || autoGenerating || generationError) return;
-    if (session.status !== "paid") return;
+    if (session.status !== "paid" && session.status !== "completed") return;
     if ((session.credits_used ?? 0) > 0) return;
     setAutoGenerating(true);
     setGenerationError(null);
@@ -314,7 +327,7 @@ function PlanView() {
                   <Link to="/">Back to homepage</Link>
                 </Button>
               </>
-            ) : session.status === "paid" ? (
+            ) : session.status === "paid" || session.status === "completed" ? (
               <>
                 <p className="mb-4">Your payment is confirmed. Tap below to build your plan.</p>
                 <Button onClick={runGeneration}>Generate my plan</Button>

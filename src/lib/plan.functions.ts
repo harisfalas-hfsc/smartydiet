@@ -565,7 +565,11 @@ export const generatePlan = createServerFn({ method: "POST" })
 
       await supabase
         .from("generation_sessions")
-        .update({ credits_used: newCreditsUsed, status: "completed" })
+        .update({
+          credits_used: newCreditsUsed,
+          // A refinement must never downgrade an already captured payment.
+          status: session.status === "paid" ? "paid" : "completed",
+        })
         .eq("id", session.id);
 
       await supabase
