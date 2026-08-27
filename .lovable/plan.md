@@ -23,7 +23,17 @@ Keep a normal installable PWA (icons, manifest, home-screen install) but stop it
 - Checkout switches from manual authorization to an immediate charge (`capture_method: automatic`). Declines simply fail at Stripe checkout and no session, no plan, no record of an "authorized" state is created.
 - Plan generation starts only after Stripe confirms the payment succeeded (webhook `checkout.session.completed` / `payment_intent.succeeded`).
 - All authorize/capture/release code paths are removed: `captureDietPayment`, release-on-failure logic, `requires_capture` branches, `authorization_released` / `capture_failed` statuses. Statuses reduce to: `pending` → `paid` → `generating` → `completed` / `generation_failed`.
-- Bank-statement branding: keep `SMARTYDIET` as statement descriptor suffix. The account-level prefix belongs to the shared payment account and can only be changed in the payment account settings — I will report exactly what needs changing there; code cannot override the prefix.
+
+## 3b. Billing shows "SmartyMove" instead of "SmartyDiet" — final fix
+
+This is the descriptor the bank prints. Today the charge inherits the payment account's global descriptor ("smartymove.com"), and a code-level suffix only appends to it, which is why it kept showing SmartyMove.
+
+Fix, in order:
+1. Confirm which payment account this project's live keys belong to. If SmartyDiet is charging through the same account as SmartyMove, that alone guarantees the wrong name and the account must be separated — I will state clearly which case it is with the account id.
+2. Set a full, hard-coded descriptor on the charge itself (`statement_descriptor: "SMARTYDIET"` on the payment intent, plus a matching `SMARTYDIET` suffix), so the printed name is fixed per charge instead of inheriting the account default. This overrides the prefix where the card network allows it.
+3. Set the payment account's own public business name, statement descriptor and website to SMARTYDIET / smartydiet.com. This part lives in the payment account settings; if it needs your click I will give you the exact one-line instruction, otherwise I do it.
+4. Verify with a real test charge and read back the descriptor Stripe reports on the resulting charge object — I only report this fixed after I have seen "SMARTYDIET" on the actual charge record, not after changing code.
+
 
 ## 4. Paid but no plan: we owe the customer a diet
 
