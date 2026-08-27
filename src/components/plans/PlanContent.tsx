@@ -91,24 +91,6 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
         </Card>
       )}
 
-      {[...(plan?.weeks ?? [])]
-            .sort((a: any, b: any) => (a.weekNumber ?? 0) - (b.weekNumber ?? 0))
-            .map((week: any) => (
-              <Button
-                key={`jump-${week.weekNumber}`}
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  document
-                    .getElementById(`week-${week.weekNumber}`)
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                }
-              >
-                Week {week.weekNumber}
-              </Button>
-            ))}
-        </div>
-      )}
 
       {weeks.map((week: any) => (
         <div key={week.weekNumber} id={`week-${week.weekNumber}`} className="scroll-mt-24 space-y-3">
