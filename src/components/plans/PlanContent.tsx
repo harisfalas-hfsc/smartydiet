@@ -282,7 +282,7 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
                             {meal.title}
                           </p>
                           <p className="text-xs font-medium text-muted-foreground">
-                            {meal.calories} kcal · P{meal.protein_g} C{meal.carbs_g} F{meal.fat_g}
+                            {meal.calories} kcal · Protein {meal.protein_g}g · Carbs {meal.carbs_g}g · Fat {meal.fat_g}g
                           </p>
                         </div>
                         {meal.ingredients?.length ? (
