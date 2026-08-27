@@ -181,12 +181,15 @@ export type Database = {
       generation_sessions: {
         Row: {
           amount_cents: number
+          attempt_count: number
           created_at: string
           credits_total: number
           credits_used: number
           currency: string
           duration_weeks: number
           id: string
+          last_error: string | null
+          next_retry_at: string | null
           questionnaire_id: string
           status: string
           stripe_payment_intent: string | null
@@ -196,12 +199,15 @@ export type Database = {
         }
         Insert: {
           amount_cents?: number
+          attempt_count?: number
           created_at?: string
           credits_total?: number
           credits_used?: number
           currency?: string
           duration_weeks: number
           id?: string
+          last_error?: string | null
+          next_retry_at?: string | null
           questionnaire_id: string
           status?: string
           stripe_payment_intent?: string | null
@@ -211,12 +217,15 @@ export type Database = {
         }
         Update: {
           amount_cents?: number
+          attempt_count?: number
           created_at?: string
           credits_total?: number
           credits_used?: number
           currency?: string
           duration_weeks?: number
           id?: string
+          last_error?: string | null
+          next_retry_at?: string | null
           questionnaire_id?: string
           status?: string
           stripe_payment_intent?: string | null

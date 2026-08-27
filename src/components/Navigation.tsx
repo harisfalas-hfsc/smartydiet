@@ -1,5 +1,4 @@
 import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { registerDebugTap } from "@/lib/offline/debug-gesture";
 import {
   LogOut,
   Menu,
@@ -20,7 +19,6 @@ import {
   User,
   Sun,
   Moon,
-  ShieldOff,
   Settings,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -38,8 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import { useTheme } from "@/hooks/useTheme";
-import { clearOfflineSession, forgetDeviceCredentials } from "@/lib/offline/credentials";
-import { clearUserCache } from "@/lib/offline/store";
+import { clearLocalAppData } from "@/lib/local-data";
 
 export function Navigation() {
   const { user, profile, displayName, loading } = useAuth();
@@ -78,11 +75,9 @@ export function Navigation() {
   const canGoBack = navCount > 0 && pathname !== "/";
 
   async function handleSignOut() {
-    // Multi-user isolation: this account's private cache never survives sign-out.
-    const signedOutId = user?.id;
-    await clearOfflineSession();
-    if (signedOutId) await clearUserCache(signedOutId);
+    // Multi-user isolation: nothing from this account survives sign-out.
     await supabase.auth.signOut();
+    await clearLocalAppData();
     navigate({ to: "/", replace: true });
   }
 
@@ -119,11 +114,6 @@ export function Navigation() {
             to="/"
             aria-label={pathname === "/" ? "Refresh SmartyDiet" : "SmartyDiet home"}
             onClick={(event) => {
-              if (registerDebugTap()) {
-                event.preventDefault();
-                window.location.assign("/diagnostics?qa=1");
-                return;
-              }
               if (pathname !== "/") return;
               event.preventDefault();
               window.location.reload();
@@ -231,16 +221,6 @@ export function Navigation() {
                         <Moon className="h-4 w-4 mr-2" /> Dark mode
                       </>
                     )}
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      void forgetDeviceCredentials();
-                      setAccountOpen(false);
-                    }}
-                  >
-                    <ShieldOff className="h-4 w-4 mr-2" /> Forget offline sign-in
                   </DropdownMenuItem>
 
                   {user && (

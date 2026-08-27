@@ -1,8 +1,4 @@
 import { useServerFn } from "@tanstack/react-start";
-import { OFFLINE_KEYS, offlineFirst } from "@/lib/offline/store";
-import { useOfflineUserId } from "@/hooks/useOfflineUser";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { enqueueMutation } from "@/lib/offline/queue";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CheckCheck, Loader2, Mail, MailOpen, Trash2, X } from "lucide-react";
@@ -34,8 +30,6 @@ function when(iso: string) {
 }
 
 export function UpdatesPanel({ onUnread }: { onUnread?: (n: number) => void }) {
-  const userId = useOfflineUserId();
-  const online = useOnlineStatus();
   const load = useServerFn(listNotifications);
   const setRead = useServerFn(setNotificationsRead);
   const removeMany = useServerFn(deleteNotifications);
@@ -48,18 +42,15 @@ export function UpdatesPanel({ onUnread }: { onUnread?: (n: number) => void }) {
   const [confirm, setConfirm] = useState<string[] | null>(null);
 
   const reload = useCallback(async () => {
-    if (!userId) return;
     try {
-      const list = await offlineFirst<AppNotification[]>(
-        OFFLINE_KEYS.notifications,
-        async () => (await load({})).notifications,
-        userId,
-      ).catch(() => [] as AppNotification[]);
+      const list = await load({})
+        .then((res) => res.notifications)
+        .catch(() => [] as AppNotification[]);
       setItems(list);
     } finally {
       setLoading(false);
     }
-  }, [load, userId]);
+  }, [load]);
 
   useEffect(() => {
     void reload();
@@ -96,8 +87,7 @@ export function UpdatesPanel({ onUnread }: { onUnread?: (n: number) => void }) {
       ),
     );
     setSelected(new Set());
-    if (!online && userId) await enqueueMutation(userId, { kind: "notifications.setRead", ids, read });
-    else await setRead({ data: { ids, read } }).catch(() => undefined);
+    await setRead({ data: { ids, read } }).catch(() => undefined);
     toast.success(`${ids.length} marked as ${read ? "read" : "unread"}`);
   }
 
@@ -108,8 +98,7 @@ export function UpdatesPanel({ onUnread }: { onUnread?: (n: number) => void }) {
     setItems((prev) => prev.filter((n) => !ids.includes(n.id)));
     setSelected(new Set());
     if (openId && ids.includes(openId)) setOpenId(null);
-    if (!online && userId) await enqueueMutation(userId, { kind: "notifications.delete", ids });
-    else await removeMany({ data: { ids } }).catch(() => undefined);
+    await removeMany({ data: { ids } }).catch(() => undefined);
     toast.success(`${ids.length} message${ids.length === 1 ? "" : "s"} deleted`);
   }
 

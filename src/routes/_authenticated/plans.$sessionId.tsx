@@ -1,10 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { OFFLINE_KEYS, offlineFirst } from "@/lib/offline/store";
-import { useOfflineUserId } from "@/hooks/useOfflineUser";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { OfflineActionNotice, OfflineEmptyState } from "@/components/offline/OfflineNotice";
 import { generatePlan, listPlanVersions, restorePlanVersion } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,7 +15,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { enqueueMutation } from "@/lib/offline/queue";
+
 import { waitForPlanGeneration } from "@/lib/generation-client";
 import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
 import { PlanContent } from "@/components/plans/PlanContent";
@@ -55,8 +51,6 @@ interface PlanRow {
 function PlanView() {
   const { sessionId } = Route.useParams();
   const navigate = useNavigate();
-  const userId = useOfflineUserId();
-  const online = useOnlineStatus();
   const generate = useServerFn(generatePlan);
   const listVersions = useServerFn(listPlanVersions);
   const restore = useServerFn(restorePlanVersion);
@@ -72,30 +66,21 @@ function PlanView() {
   const [generationError, setGenerationError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!userId) return;
     setSessionLoading(true);
     setSessionLoadError(null);
     try {
-      const s = await offlineFirst<Session | null>(
-        OFFLINE_KEYS.session(sessionId),
-        async () => {
-          const { data, error } = await supabase
-            .from("generation_sessions")
-            .select("id,duration_weeks,credits_total,credits_used,status,stripe_session_id")
-            .eq("id", sessionId)
-            .maybeSingle();
-          if (error) throw error;
-          return (data as Session | null) ?? null;
-        },
-        userId,
-      );
+      const { data, error } = await supabase
+        .from("generation_sessions")
+        .select("id,duration_weeks,credits_total,credits_used,status,stripe_session_id")
+        .eq("id", sessionId)
+        .maybeSingle();
+      if (error) throw error;
+      const s = (data as Session | null) ?? null;
       if (!s) throw new Error("This plan session could not be found.");
       setSession(s);
-      const rows = await offlineFirst<PlanRow[]>(
-        OFFLINE_KEYS.planVersions(sessionId),
-        async () => (await listVersions({ data: { sessionId } })) as PlanRow[],
-        userId,
-      ).catch(() => [] as PlanRow[]);
+      const rows = await (listVersions({ data: { sessionId } }) as Promise<PlanRow[]>).catch(
+        () => [] as PlanRow[],
+      );
       setVersions(rows);
       // Prefer is_final; else newest
       const active = rows.find((r) => r.is_final) ?? rows[0];
@@ -107,7 +92,8 @@ function PlanView() {
     } finally {
       setSessionLoading(false);
     }
-  }, [sessionId, listVersions, userId]);
+  }, [sessionId, listVersions]);
+
 
   useEffect(() => {
     load();
@@ -160,32 +146,18 @@ function PlanView() {
   // Initial paid-plan creation is owned by the Stripe webhook. This page only
   // polls the durable server state; it never starts another charge or generation.
   useEffect(() => {
-    if (!online || !session || versions.length > 0) return;
-    if (!["authorized", "generating", "completed"].includes(session.status)) return;
+    if (!session || versions.length > 0) return;
+    if (!["generating", "paid", "completed"].includes(session.status)) return;
     setAutoGenerating(true);
     const interval = window.setInterval(() => void load(), 5_000);
     return () => window.clearInterval(interval);
-  }, [load, online, session, versions.length]);
+  }, [load, session, versions.length]);
 
   async function refine() {
     if (!refineText.trim()) return toast.error("Describe the change you want");
-    if (!userId) return toast.error("Sign in to refine this plan");
     setBusy(true);
     const operationId = crypto.randomUUID();
     try {
-      if (!online) {
-        await enqueueMutation(userId, {
-          kind: "plan.refine",
-          sessionId,
-          refinement: refineText.trim(),
-          operationId,
-          id: operationId,
-          priority: 2,
-        });
-        setRefineText("");
-        toast.success("Saved offline. Your refinement will run when you reconnect.");
-        return;
-      }
       const res = await waitForPlanGeneration(
         generate({ data: { sessionId, refinement: refineText.trim(), operationId } }),
       );
@@ -215,19 +187,8 @@ function PlanView() {
   }
 
   async function doRestore(version: number) {
-    if (!userId) return toast.error("Sign in to restore this version");
     setBusy(true);
     try {
-      if (!online) {
-        await enqueueMutation(userId, {
-          kind: "plan.restore",
-          sessionId,
-          version,
-          priority: 2,
-        });
-        toast.success(`Version ${version} will be restored when you reconnect.`);
-        return;
-      }
       await restore({ data: { sessionId, version } });
       setActiveId(null);
       await load();
@@ -238,6 +199,7 @@ function PlanView() {
       setBusy(false);
     }
   }
+
 
   const active = versions.find((v) => v.id === activeId) ?? versions[0] ?? null;
 
@@ -262,19 +224,20 @@ function PlanView() {
   if (!session)
     return (
       <div className="flex min-h-[40vh] items-center justify-center px-4">
-        {sessionLoading && online ? (
+        {sessionLoading ? (
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        ) : sessionLoadError ? (
+        ) : (
           <Card className="w-full max-w-md">
             <CardContent className="p-6 text-center">
               <AlertTriangle className="mx-auto mb-3 h-6 w-6 text-destructive" />
-              <p className="mb-4 text-sm text-destructive">{sessionLoadError}</p>
+              <p className="mb-4 text-sm text-destructive">
+                {sessionLoadError ?? "This plan could not be loaded."}
+              </p>
               <Button onClick={() => void load()}>Try again</Button>
             </CardContent>
           </Card>
-        ) : (
-          <OfflineEmptyState />
         )}
+
       </div>
     );
 
@@ -391,7 +354,6 @@ function PlanView() {
               value={refineText}
               onChange={(e) => setRefineText(e.target.value)}
             />
-            <OfflineActionNotice className="mt-2" />
             <div className="mt-2 flex justify-end">
               <Button onClick={refine} disabled={busy}>
                 {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

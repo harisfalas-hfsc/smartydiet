@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Sparkles, ClipboardList } from "lucide-react";
 import { SmartyCard, SmartyRow } from "@/components/SmartyCard";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
-import { OFFLINE_KEYS, offlineFirst, saveLocal } from "@/lib/offline/store";
-import { useOfflineUserId } from "@/hooks/useOfflineUser";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { OfflineEmptyState } from "@/components/offline/OfflineNotice";
+import { toast } from "sonner";
+import { retryPlanGeneration } from "@/lib/plan.functions";
+
 
 export const Route = createFileRoute("/_authenticated/plans")({
   head: () => ({
@@ -44,15 +43,33 @@ function PlansList() {
   const { freeAccessMode } = useFreeAccessMode();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [rows, setRows] = useState<Row[] | null>(null);
-  const userId = useOfflineUserId();
-  const online = useOnlineStatus();
+  const [retrying, setRetrying] = useState<string | null>(null);
+
+  async function retryNow(sessionId: string) {
+    setRetrying(sessionId);
+    try {
+      const result = await retryPlanGeneration({ data: { sessionId } });
+      if (result?.ok) {
+        toast.success("Your diet is being rebuilt now.");
+      } else {
+        toast.error(result?.error ?? "Still failing — our team has been alerted.");
+      }
+      const fresh = await fetchRows();
+      setRows(fresh);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Retry failed — our team has been alerted.");
+    } finally {
+      setRetrying(null);
+    }
+  }
+
 
   async function fetchRows() {
     const [{ data: fresh, error }, { data: plans, error: plansError }] = await Promise.all([
       supabase
         .from("generation_sessions")
         .select("id,duration_weeks,status,credits_used,credits_total,created_at")
-        .in("status", ["authorized", "generating", "completed", "paid"])
+        .in("status", ["generating", "completed", "paid", "generation_failed"])
         .order("created_at", { ascending: false }),
       supabase.from("diet_plans").select("session_id"),
     ]);
@@ -66,33 +83,29 @@ function PlansList() {
   }
 
   useEffect(() => {
-    if (!userId) return;
     let active = true;
-    (async () => {
-      const data = await offlineFirst<Row[]>(
-        OFFLINE_KEYS.sessions,
-        async () => {
-          return fetchRows();
-        },
-        userId,
-      ).catch(() => [] as Row[]);
-      if (active) setRows(data);
-    })();
+    void fetchRows()
+      .then((data) => {
+        if (active) setRows(data);
+      })
+      .catch(() => {
+        if (active) setRows([]);
+      });
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
-    if (!online || !userId || !(rows ?? []).some((row) => !row.has_plan)) return;
+    if (!(rows ?? []).some((row) => !row.has_plan)) return;
     const interval = window.setInterval(() => {
-      void fetchRows().then((fresh) => {
-        setRows(fresh);
-        void saveLocal(OFFLINE_KEYS.sessions, userId, fresh);
-      });
+      void fetchRows()
+        .then(setRows)
+        .catch(() => undefined);
     }, 5_000);
     return () => window.clearInterval(interval);
-  }, [online, rows, userId]);
+  }, [rows]);
+
 
   if (pathname !== "/plans") return <Outlet />;
 
@@ -131,32 +144,27 @@ function PlansList() {
           cornerIcon={FileText}
           title="No plans"
           accent="yet."
-          description={
-            online
-              ? "Build your first personalized Smarty Meal Plan™ in a few minutes."
-              : undefined
-          }
+          description="Build your first personalized Smarty Meal Plan™ in a few minutes."
         >
-          <OfflineEmptyState />
-          {online && (
-            <Button asChild size="lg">
-              <Link to="/questionnaire">Build my first plan</Link>
-            </Button>
-          )}
+          <Button asChild size="lg">
+            <Link to="/questionnaire">Build my first plan</Link>
+          </Button>
         </SmartyCard>
+
       ) : (
         <>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {rows.map((r, i) => {
               const active = (r.credits_used ?? 0) < (r.credits_total ?? 0);
               const building = !r.has_plan;
+              const owed = building && r.status === "generation_failed";
               const tone = active ? "green" : TONES[i % TONES.length];
               return (
                 <SmartyCard
                   key={r.id}
                   tone={tone}
-                  eyebrow={building ? "Building now" : active ? "Active" : "Completed"}
-                  eyebrowIcon={building ? "⏳" : active ? "✅" : "📁"}
+                  eyebrow={owed ? "We owe you this diet" : building ? "Building now" : active ? "Active" : "Completed"}
+                  eyebrowIcon={owed ? "🔁" : building ? "⏳" : active ? "✅" : "📁"}
                   cornerIcon={ClipboardList}
                   title={`${r.duration_weeks}-week`}
                   accent="plan"
@@ -176,7 +184,21 @@ function PlansList() {
                     />
                   </div>
                   <div className="mt-6">
-                    {building ? (
+                    {owed ? (
+                      <div className="space-y-3">
+                        <p className="text-sm font-semibold text-primary">
+                          Your payment is safe — we&apos;re retrying automatically. Your answers are
+                          saved, you never need to fill the questionnaire again.
+                        </p>
+                        <Button
+                          size="sm"
+                          disabled={retrying === r.id}
+                          onClick={() => void retryNow(r.id)}
+                        >
+                          {retrying === r.id ? "Retrying…" : "Try again now"}
+                        </Button>
+                      </div>
+                    ) : building ? (
                       <p className="text-sm font-semibold text-primary">Analyzing your questionnaire…</p>
                     ) : (
                       <Button asChild size="sm">
@@ -187,6 +209,7 @@ function PlansList() {
                 </SmartyCard>
               );
             })}
+
           </div>
 
           {showNewPlanCard && (
