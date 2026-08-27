@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/questionnaire")({
   component: QuestionnairePage,
 });
 
-type SavedDraft = { data: QuestionnaireData; step: number; durationWeeks: 1 | 2 | 4 };
+type SavedDraft = { data: QuestionnaireData; step: number; durationWeeks: 1 | 2 };
 
 const draftKey = (userId: string) => `smartydiet.questionnaire.draft.${userId}`;
 
@@ -68,7 +68,7 @@ function QuestionnairePage() {
   const complimentaryAccess = freeAccessMode || isAdminEmail(user?.email);
   const [step, setStep] = useState(0);
   const [data, setData] = useState<QuestionnaireData>(DEFAULT_QUESTIONNAIRE);
-  const [durationWeeks, setDurationWeeks] = useState<1 | 2 | 4>(2);
+  const [durationWeeks, setDurationWeeks] = useState<1 | 2>(2);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -988,8 +988,8 @@ function StepNotes({
 }: {
   data: QuestionnaireData;
   setNotes: (v: string) => void;
-  durationWeeks: 1 | 2 | 4;
-  setDurationWeeks: (v: 1 | 2 | 4) => void;
+  durationWeeks: 1 | 2;
+  setDurationWeeks: (v: 1 | 2) => void;
 }) {
   return (
     <div className="space-y-5">
@@ -1006,10 +1006,10 @@ function StepNotes({
         <Label>Plan duration</Label>
         <RadioGroup
           value={String(durationWeeks)}
-          onValueChange={(v) => setDurationWeeks(Number(v) as 1 | 2 | 4)}
-          className="mt-2 grid grid-cols-3 gap-2"
+          onValueChange={(v) => setDurationWeeks(Number(v) as 1 | 2)}
+          className="mt-2 grid grid-cols-2 gap-2"
         >
-          {[1, 2, 4].map((w) => (
+          {[1, 2].map((w) => (
             <label
               key={w}
               className={`flex cursor-pointer flex-col items-center rounded-lg border p-3 text-sm ${

@@ -218,7 +218,7 @@ function GlossaryPage() {
         cornerIcon={Compass}
         title="How SmartyDiet"
         accent="works."
-        description="SmartyDiet is an online diet planner that turns a short questionnaire into a personalized diet plan: daily calories from BMR and TDEE, protein, carbohydrate and fat targets, a meal-by-meal menu for 1, 2 or 4 weeks, and a weekly grocery list. Plans respect your goal — weight loss, muscle gain, body recomposition or maintenance — along with allergies, disliked foods, budget, cooking time and eating pattern, including balanced, Mediterranean, high-protein, low-carb, keto, vegetarian and vegan."
+        description="SmartyDiet is an online diet planner that turns a short questionnaire into a personalized diet plan: daily calories from BMR and TDEE, protein, carbohydrate and fat targets, a meal-by-meal menu for 1 or 2 weeks, and a weekly grocery list. Plans respect your goal — weight loss, muscle gain, body recomposition or maintenance — along with allergies, disliked foods, budget, cooking time and eating pattern, including balanced, Mediterranean, high-protein, low-carb, keto, vegetarian and vegan."
       >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {EXPLORE.map((l) => (

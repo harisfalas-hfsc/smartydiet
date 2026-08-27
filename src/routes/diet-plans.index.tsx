@@ -60,7 +60,7 @@ function DietPlansHub() {
           bullets: [
             "Daily calorie target derived from your BMR and TDEE",
             "Protein, carbohydrate and fat targets in grams, plus fiber and water",
-            "A meal-by-meal plan for 1, 2 or 4 weeks with the number of meals per day you chose",
+            "A meal-by-meal plan for 1 or 2 weeks with the number of meals per day you chose",
             "A consolidated weekly grocery list so shopping takes one trip",
             "Allergy and dislike exclusions applied to every single meal",
             "PDF export so you can print the plan or take it to the kitchen",

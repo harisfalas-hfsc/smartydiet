@@ -136,7 +136,7 @@ function Home() {
               <span className="text-primary">built in minutes.</span>
             </h1>
             <p className="mt-5 text-base leading-relaxed text-white/80 lg:mt-6 lg:text-lg">
-              Answer a smart questionnaire. Get a full 1, 2 or 4-week diet plan
+              Answer a smart questionnaire. Get a full 1- or 2-week diet plan
               tailored to your body, goals, food preferences and constraints.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">

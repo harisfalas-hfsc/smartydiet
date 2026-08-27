@@ -22,7 +22,7 @@ const ITEMS: { q: string; a: string }[] = [
 
   {
     q: "What do I get with a SmartyDiet plan?",
-    a: "You get a full 1, 2 or 4-week personalized meal plan with daily meals, portions, calorie and macro totals, a weekly grocery list sorted by category, and a short rationale explaining why the plan fits your goal. You can export it as a PDF and download a printable grocery list.",
+    a: "You get a full 1- or 2-week personalized meal plan with daily meals, portions, calorie and macro totals, a weekly grocery list sorted by category, and a short rationale explaining why the plan fits your goal. You can export it as a PDF and download a printable grocery list.",
   },
   {
     q: "How is SmartyDiet different from generic calorie trackers?",

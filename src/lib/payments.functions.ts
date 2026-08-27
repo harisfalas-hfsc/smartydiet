@@ -10,7 +10,7 @@ export const createDietCheckout = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
       questionnaireId: string;
-      durationWeeks: 1 | 2 | 4;
+      durationWeeks: 1 | 2;
       returnUrl: string;
       environment: StripeEnv;
     }) => input,
@@ -132,7 +132,7 @@ export const markSessionPaid = createServerFn({ method: "POST" })
       const genSessionId = cs.metadata?.generationSessionId;
       const questionnaireId = cs.metadata?.questionnaireId;
       const durationWeeks = Number(cs.metadata?.durationWeeks);
-      if (!genSessionId || !questionnaireId || ![1, 2, 4].includes(durationWeeks)) {
+      if (!genSessionId || !questionnaireId || ![1, 2].includes(durationWeeks)) {
         return { paid: false, error: "Checkout metadata is incomplete" };
       }
       const { data: questionnaire } = await supabase

@@ -29,7 +29,7 @@ function rules(weeks: number, mealsPerDay: number): StrictRules {
 }
 
 describe("paid plan structural validation", () => {
-  for (const weeks of [1, 2, 4]) {
+  for (const weeks of [1, 2]) {
     for (const meals of [1, 2, 3, 4, 5, 6]) {
       test(`${weeks} week(s), ${meals} meal(s) is complete`, () => {
         assert.deepEqual(validatePlan(completePlan(weeks, meals), rules(weeks, meals)), []);
