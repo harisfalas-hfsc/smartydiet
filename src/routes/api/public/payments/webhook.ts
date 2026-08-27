@@ -5,10 +5,7 @@ import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 let _supabase: any = null;
 function getSupabase(): any {
   if (!_supabase) {
-    _supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
+    _supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   }
   return _supabase;
 }
@@ -22,27 +19,36 @@ async function handleCheckoutCompleted(session: any) {
   const paymentIntent =
     typeof session.payment_intent === "string"
       ? session.payment_intent
-      : session.payment_intent?.id ?? null;
+      : (session.payment_intent?.id ?? null);
   const { data: existing } = await getSupabase()
     .from("generation_sessions")
     .select("status")
     .eq("id", genSessionId)
     .maybeSingle();
-  const terminalStatuses = new Set(["paid", "completed", "refunded", "authorization_released"]);
+  const terminalStatuses = new Set([
+    "paid",
+    "completed",
+    "failed",
+    "refunded",
+    "authorization_released",
+  ]);
   const nextStatus = terminalStatuses.has(existing?.status) ? existing.status : "authorized";
   await getSupabase()
     .from("generation_sessions")
-    .upsert({
-      id: genSessionId,
-      user_id: userId,
-      questionnaire_id: questionnaireId,
-      duration_weeks: durationWeeks,
-      status: nextStatus,
-      stripe_session_id: session.id,
-      stripe_payment_intent: paymentIntent,
-      amount_cents: session.amount_total ?? 999,
-      currency: session.currency ?? "eur",
-    }, { onConflict: "id" });
+    .upsert(
+      {
+        id: genSessionId,
+        user_id: userId,
+        questionnaire_id: questionnaireId,
+        duration_weeks: durationWeeks,
+        status: nextStatus,
+        stripe_session_id: session.id,
+        stripe_payment_intent: paymentIntent,
+        amount_cents: session.amount_total ?? 999,
+        currency: session.currency ?? "eur",
+      },
+      { onConflict: "id" },
+    );
   await getSupabase()
     .from("questionnaires")
     .update({ status: "paid" })
@@ -69,7 +75,11 @@ async function handlePaymentIntentSettled(intent: any, captured: boolean) {
       .eq("stripe_payment_intent", intent.id);
     await getSupabase()
       .from("diet_plan_attempts")
-      .update({ status: "paid", reached_stage: "Payment captured", paid_at: new Date().toISOString() })
+      .update({
+        status: "paid",
+        reached_stage: "Payment captured",
+        paid_at: new Date().toISOString(),
+      })
       .eq("stripe_payment_intent", intent.id)
       .in("status", ["authorized", "paid"]);
     return;
@@ -85,7 +95,8 @@ async function handlePaymentIntentSettled(intent: any, captured: boolean) {
 }
 
 async function handleCheckoutFailure(session: any, declined: boolean) {
-  const paymentCode = session?.last_payment_error?.decline_code ?? session?.last_payment_error?.code ?? null;
+  const paymentCode =
+    session?.last_payment_error?.decline_code ?? session?.last_payment_error?.code ?? null;
   const failureReason = declined
     ? `Payment was declined${paymentCode ? ` (${paymentCode})` : ""}.`
     : "Checkout expired before payment was completed.";
@@ -112,32 +123,43 @@ async function handleCheckoutFailure(session: any, declined: boolean) {
     if (attempt) {
       try {
         const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-        const delivery = await sendTemplateEmail("plan-generation-failure", "smartydiet@outlook.com", {
-          idempotencyKey: `payment-declined-${attempt.id}`,
-          templateData: {
-            userId: attempt.user_id,
-            questionnaireId: attempt.questionnaire_id,
-            sessionId: attempt.generation_session_id,
-            stage: "Payment",
-            outcomeLabel: "Payment failed — card declined",
-            paymentState: "Card declined",
-            reason: failureReason,
-            occurredAt: failedAt,
+        const delivery = await sendTemplateEmail(
+          "plan-generation-failure",
+          "smartydiet@outlook.com",
+          {
+            idempotencyKey: `payment-declined-${attempt.id}`,
+            templateData: {
+              userId: attempt.user_id,
+              questionnaireId: attempt.questionnaire_id,
+              sessionId: attempt.generation_session_id,
+              stage: "Payment",
+              outcomeLabel: "Payment failed — card declined",
+              paymentState: "Card declined",
+              reason: failureReason,
+              occurredAt: failedAt,
+            },
           },
-        });
-        await getSupabase().from("diet_plan_attempts").update({
-          email_status: delivery.sent ? "accepted" : "suppressed",
-          email_error: delivery.sent ? null : delivery.reason,
-          email_message_id: delivery.sent ? delivery.messageId : null,
-          email_recipient: "smartydiet@outlook.com",
-          email_dispatched_at: delivery.sent ? new Date().toISOString() : null,
-        }).eq("id", attempt.id);
+        );
+        await getSupabase()
+          .from("diet_plan_attempts")
+          .update({
+            email_status: delivery.sent ? "accepted" : "suppressed",
+            email_error: delivery.sent ? null : delivery.reason,
+            email_message_id: delivery.sent ? delivery.messageId : null,
+            email_recipient: "smartydiet@outlook.com",
+            email_dispatched_at: delivery.sent ? new Date().toISOString() : null,
+          })
+          .eq("id", attempt.id);
       } catch (error) {
-        await getSupabase().from("diet_plan_attempts").update({
-          email_status: "failed",
-          email_error: error instanceof Error ? error.message.slice(0, 1000) : "Email dispatch failed",
-          email_recipient: "smartydiet@outlook.com",
-        }).eq("id", attempt.id);
+        await getSupabase()
+          .from("diet_plan_attempts")
+          .update({
+            email_status: "failed",
+            email_error:
+              error instanceof Error ? error.message.slice(0, 1000) : "Email dispatch failed",
+            email_recipient: "smartydiet@outlook.com",
+          })
+          .eq("id", attempt.id);
       }
     }
   }
