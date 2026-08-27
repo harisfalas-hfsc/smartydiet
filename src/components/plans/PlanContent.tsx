@@ -166,14 +166,6 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
                 <MacroInfoIcon />
               </p>
             </CalorieTooltip>
-            <MacroBar
-              macros={{
-                protein_g: summary.macros?.protein_g ?? 0,
-                carbs_g: summary.macros?.carbs_g ?? 0,
-                fat_g: summary.macros?.fat_g ?? 0,
-              }}
-              size="md"
-            />
             <p className="text-xs uppercase text-muted-foreground">
               {summary.dietStyle} · {summary.goal}
             </p>
