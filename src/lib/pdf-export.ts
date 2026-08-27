@@ -17,103 +17,110 @@ function esc(s: unknown) {
     .replace(/>/g, "&gt;");
 }
 
-function shell(bodyHtml: string, title: string) {
+function shell(bodyHtml: string, title: string, logoSrc: string, pageNumber: number, pageCount: number) {
   return `
   <div style="
-    width:720px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple Color Emoji','Segoe UI Emoji',Roboto,Helvetica,Arial,sans-serif;
-    color:${INK};background:#ffffff;padding:0;">
-    <div style="background:linear-gradient(135deg,${PRIMARY} 0%,${PRIMARY_DARK} 100%);
-      padding:24px 28px;display:flex;align-items:center;gap:14px;border-radius:0 0 20px 20px;">
-      <img src="${logoUrl}" style="width:44px;height:44px;object-fit:contain;" crossorigin="anonymous"/>
-      <div>
-        <div style="color:#fff;font-size:22px;font-weight:800;letter-spacing:-0.02em;">SmartyDiet</div>
-        <div style="color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;">${esc(title)}</div>
+    width:720px;height:1018px;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    color:${INK};background:#ffffff;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="height:88px;box-sizing:border-box;background:linear-gradient(135deg,${PRIMARY} 0%,${PRIMARY_DARK} 100%);
+      padding:16px 30px;display:flex;align-items:center;gap:14px;">
+      <div style="width:48px;height:48px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;flex:0 0 48px;background:#fff;border-radius:12px;padding:5px;box-shadow:0 3px 10px rgba(15,23,42,0.16);">
+        <img src="${logoSrc}" alt="SmartyDiet apple" style="display:block;width:34px;height:38px;object-fit:contain;"/>
       </div>
+      <div style="min-width:0;">
+        <div style="color:#fff;font-size:23px;font-weight:800;letter-spacing:0;line-height:1.1;">SmartyDiet</div>
+        <div style="color:rgba(255,255,255,0.92);font-size:12px;font-weight:600;margin-top:4px;">${esc(title)}</div>
+      </div>
+      <div style="margin-left:auto;color:#fff;font-size:12px;font-weight:700;">smartydiet.com</div>
     </div>
-    <div style="padding:24px 28px;">${bodyHtml}</div>
-    <div style="padding:16px 28px;color:${MUTED};font-size:11px;text-align:center;border-top:1px solid ${BORDER};margin-top:8px;">
-      Built by SmartyDiet · smartydiet.com
+    <div style="height:884px;box-sizing:border-box;padding:22px 30px;overflow:hidden;">${bodyHtml}</div>
+    <div style="height:46px;box-sizing:border-box;padding:13px 30px;color:${MUTED};font-size:10px;border-top:1px solid ${BORDER};display:flex;justify-content:space-between;align-items:center;">
+      <span>Personalized nutrition by SmartyDiet</span>
+      <span>smartydiet.com&nbsp;&nbsp;·&nbsp;&nbsp;Page ${pageNumber} of ${pageCount}</span>
     </div>
   </div>`;
 }
 
-async function renderToPdf(html: string, filename: string) {
+async function imageAsDataUrl(url: string) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return url;
+    const blob = await response.blob();
+    return await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : url);
+      reader.onerror = () => resolve(url);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return url;
+  }
+}
+
+async function renderToPdf(bodyHtml: string, title: string, filename: string) {
+  const PAGE_CONTENT_HEIGHT = 840;
   const holder = document.createElement("div");
   holder.style.cssText =
-    "position:fixed;left:-10000px;top:0;width:720px;background:#fff;z-index:-1;";
-  holder.innerHTML = html;
+    "position:fixed;left:-10000px;top:0;width:660px;background:#fff;z-index:-1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
+  holder.innerHTML = bodyHtml;
   document.body.appendChild(holder);
 
-  // wait for logo image
-  const img = holder.querySelector("img");
-  if (img && !(img as HTMLImageElement).complete) {
-    await new Promise<void>((r) => {
-      (img as HTMLImageElement).onload = () => r();
-      (img as HTMLImageElement).onerror = () => r();
-    });
-  }
-  await new Promise((r) => setTimeout(r, 50));
-
   try {
-    const canvas = await html2canvas(holder, {
-      scale: 2,
-      backgroundColor: "#ffffff",
-      useCORS: true,
-      logging: false,
-    });
+    await document.fonts.ready;
+    const blocks = Array.from(holder.children) as HTMLElement[];
+    const pages: string[][] = [[]];
+    let usedHeight = 0;
+
+    for (let index = 0; index < blocks.length; index += 1) {
+      const block = blocks[index];
+      if (!block) continue;
+      const blockHeight = Math.ceil(block.getBoundingClientRect().height);
+      const nextBlock = blocks[index + 1];
+      const nextHeight = block.dataset.pdfKeepNext === "true" && nextBlock
+        ? Math.ceil(nextBlock.getBoundingClientRect().height)
+        : 0;
+      const requiredHeight = blockHeight + nextHeight;
+      const currentPage = pages[pages.length - 1];
+      if (!currentPage) continue;
+
+      if (currentPage.length > 0 && usedHeight + requiredHeight > PAGE_CONTENT_HEIGHT) {
+        pages.push([]);
+        usedHeight = 0;
+      }
+
+      const targetPage = pages[pages.length - 1];
+      if (!targetPage) continue;
+      targetPage.push(block.outerHTML);
+      usedHeight += blockHeight;
+    }
+
+    const logoSrc = await imageAsDataUrl(logoUrl);
     const pdf = new jsPDF({ unit: "pt", format: "a4" });
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW;
-    const imgH = (canvas.height * imgW) / canvas.width;
 
-    if (imgH <= pageH) {
-      pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, imgW, imgH);
-    } else {
-      // Slice into pages, cutting on a blank row so day cards are never split.
-      const pxPerPt = canvas.width / pageW;
-      const pageHpx = Math.floor(pageH * pxPerPt);
-      const source = canvas.getContext("2d")!;
-      const isBlankRow = (y: number) => {
-        const { data } = source.getImageData(0, y, canvas.width, 1);
-        for (let i = 0; i < data.length; i += 4) {
-          if (data[i]! < 250 || data[i + 1]! < 250 || data[i + 2]! < 250) return false;
-        }
-        return true;
-      };
-      let offset = 0;
-      let first = true;
-      while (offset < canvas.height) {
-        let sliceH = Math.min(pageHpx, canvas.height - offset);
-        if (offset + sliceH < canvas.height) {
-          // Search back up to 20% of a page for a clean break.
-          const minH = Math.floor(sliceH * 0.8);
-          for (let candidate = sliceH; candidate > minH; candidate -= 2) {
-            if (isBlankRow(offset + candidate - 1)) {
-              sliceH = candidate;
-              break;
-            }
-          }
-        }
-        const slice = document.createElement("canvas");
-        slice.width = canvas.width;
-        slice.height = sliceH;
-        const ctx = slice.getContext("2d")!;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, slice.width, slice.height);
-        ctx.drawImage(canvas, 0, offset, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-        if (!first) pdf.addPage();
-        first = false;
-        pdf.addImage(
-          slice.toDataURL("image/jpeg", 0.92),
-          "JPEG",
-          0,
-          0,
-          pageW,
-          (sliceH * pageW) / canvas.width,
-        );
-        offset += sliceH;
-      }
+    for (let pageIndex = 0; pageIndex < pages.length; pageIndex += 1) {
+      const page = document.createElement("div");
+      page.style.cssText = "position:fixed;left:-10000px;top:0;width:720px;height:1018px;background:#fff;z-index:-1;";
+      page.innerHTML = shell(
+        pages[pageIndex]?.join("") ?? "",
+        title,
+        logoSrc,
+        pageIndex + 1,
+        pages.length,
+      );
+      document.body.appendChild(page);
+      const canvas = await html2canvas(page, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        logging: false,
+        width: 720,
+        height: 1018,
+      });
+      if (pageIndex > 0) pdf.addPage();
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.94), "JPEG", 0, 0, pageW, pageH);
+      page.remove();
     }
 
     pdf.save(filename);
@@ -139,7 +146,7 @@ function rulesBlock(plan: any, durationWeeks: number) {
       <div style="font-size:13px;font-weight:600;color:${INK};margin-top:2px;">${esc(value)}</div>
     </div>`;
   return `
-    <div style="border:1px solid ${BORDER};border-left:4px solid ${okColor};border-radius:14px;
+    <div data-pdf-block="true" style="border:1px solid ${BORDER};border-left:4px solid ${okColor};border-radius:10px;
       background:${okBg};padding:14px 16px;margin-bottom:20px;">
       <div style="font-size:14px;font-weight:800;color:${okColor};">
         ${report.ok ? "Plan verified &mdash; complete" : "Plan incomplete"}
@@ -165,7 +172,7 @@ export async function exportPlanPdf(plan: any, durationWeeks: number) {
   const s = plan?.summary;
   const summary = s
     ? `
-      <div style="background:${BG_SOFT};border:1px solid ${BORDER};border-radius:14px;padding:16px;margin-bottom:20px;">
+      <div data-pdf-block="true" style="background:${BG_SOFT};border:1px solid ${BORDER};border-radius:10px;padding:16px;margin-bottom:20px;">
         <div style="font-size:26px;font-weight:800;color:${PRIMARY_DARK};">${esc(s.calorieTarget)} kcal <span style="font-size:14px;color:${MUTED};font-weight:500;">/ day</span></div>
         <div style="margin-top:6px;font-size:13px;color:${INK};">
           <span style="display:inline-block;background:#fff;border:1px solid ${BORDER};border-radius:999px;padding:3px 10px;margin-right:6px;">Protein ${esc(s.macros?.protein_g)}g</span>
@@ -181,21 +188,23 @@ export async function exportPlanPdf(plan: any, durationWeeks: number) {
   const weeksHtml = (plan?.weeks ?? [])
     .map(
       (w: any) => `
-      <div style="margin-bottom:26px;">
-        <h2 style="font-size:18px;font-weight:800;color:${PRIMARY_DARK};margin:0 0 12px;
-          border-left:4px solid ${PRIMARY};padding-left:10px;">Week ${esc(w.weekNumber)}</h2>
+        <div data-pdf-block="true" data-pdf-keep-next="true" style="font-size:18px;font-weight:800;color:${PRIMARY_DARK};margin:8px 0 12px;
+          border-left:4px solid ${PRIMARY};padding:4px 0 4px 10px;">Week ${esc(w.weekNumber)}</div>
         ${(w.days ?? [])
           .map(
             (d: any) => `
-          <div style="border:1px solid ${BORDER};border-radius:12px;padding:14px;margin-bottom:12px;background:#fff;">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+          <div data-pdf-block="true" data-pdf-keep-next="true" style="border:1px solid ${BORDER};border-bottom:0;border-radius:10px 10px 0 0;padding:11px 13px 9px;background:#fff;margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
               <div style="font-weight:700;font-size:15px;color:${INK};">Week ${esc(w.weekNumber)} &middot; Day ${esc(d.day)}</div>
               <div style="font-size:12px;color:${MUTED};font-weight:600;">${esc(d.totals?.calories ?? "-")} kcal</div>
             </div>
+          </div>
             ${(d.meals ?? [])
               .map(
-                (m: any) => `
-              <div style="background:${BG_SOFT};border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+                (m: any, mealIndex: number, meals: any[]) => `
+              <div data-pdf-block="true" style="background:${BG_SOFT};border:1px solid ${BORDER};border-top-color:#fff;
+                border-radius:${mealIndex === meals.length - 1 ? "0 0 10px 10px" : "0"};padding:10px 12px;
+                margin-bottom:${mealIndex === meals.length - 1 ? "12px" : "0"};">
                 <div style="display:flex;justify-content:space-between;gap:10px;">
                   <div style="font-weight:600;font-size:13px;color:${INK};">
                     <span style="color:${PRIMARY_DARK};">${esc(m.name)}:</span> ${esc(m.title)}
@@ -219,26 +228,26 @@ export async function exportPlanPdf(plan: any, durationWeeks: number) {
               </div>`,
               )
               .join("")}
-          </div>`,
+          `,
           )
           .join("")}
-      </div>`,
+      `,
     )
     .join("");
 
   const rationale = plan?.rationale
-    ? `<div style="border:1px solid ${BORDER};border-radius:12px;padding:14px;margin-top:12px;background:#fff;">
+    ? `<div data-pdf-block="true" style="border:1px solid ${BORDER};border-radius:10px;padding:14px;margin-top:12px;background:#fff;">
         <div style="font-weight:700;color:${PRIMARY_DARK};margin-bottom:6px;">Why this plan fits you</div>
         <div style="font-size:12px;color:${INK};line-height:1.6;">${esc(plan.rationale)}</div>
       </div>`
     : "";
 
   const disclaimer = plan?.disclaimer
-    ? `<div style="margin-top:14px;font-size:10px;color:${MUTED};line-height:1.5;">${esc(plan.disclaimer)}</div>`
+    ? `<div data-pdf-block="true" style="margin-top:14px;font-size:10px;color:${MUTED};line-height:1.5;">${esc(plan.disclaimer)}</div>`
     : "";
 
   const body = rulesBlock(plan, durationWeeks) + summary + weeksHtml + rationale + disclaimer;
-  await renderToPdf(shell(body, `Your ${durationWeeks}-week personalized plan`), "smartydiet-plan.pdf");
+  await renderToPdf(body, `Your ${durationWeeks}-week personalized plan`, "smartydiet-plan.pdf");
 }
 
 export async function exportGroceryPdf(plan: any) {
@@ -248,24 +257,23 @@ export async function exportGroceryPdf(plan: any) {
       const items = (w.groceryList ?? [])
         .map(
           (g: any) => `
-          <li style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid ${BORDER};border-radius:8px;background:#fff;font-size:13px;">
+          <div data-pdf-block="true" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid ${BORDER};border-radius:6px;background:#fff;font-size:13px;margin-bottom:7px;">
             <span style="display:inline-block;width:14px;height:14px;border:2px solid ${PRIMARY};border-radius:4px;flex-shrink:0;"></span>
             <span style="color:${INK};"><b>${esc(g.qty)}</b> ${esc(g.item)}</span>
             ${g.category ? `<span style="margin-left:auto;font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:0.05em;">${esc(g.category)}</span>` : ""}
-          </li>`,
+          </div>`,
         )
         .join("");
       return `
-        <div style="margin-bottom:22px;">
-          <h2 style="font-size:18px;font-weight:800;color:${PRIMARY_DARK};margin:0 0 12px;
-            border-left:4px solid ${PRIMARY};padding-left:10px;">Week ${esc(w.weekNumber)}</h2>
-          <ul style="list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:8px;">${items}</ul>
-        </div>`;
+        <div data-pdf-block="true" data-pdf-keep-next="true" style="font-size:18px;font-weight:800;color:${PRIMARY_DARK};margin:8px 0 12px;
+          border-left:4px solid ${PRIMARY};padding:4px 0 4px 10px;">Week ${esc(w.weekNumber)}</div>
+        ${items}`;
     })
     .join("");
 
   await renderToPdf(
-    shell(rulesBlock(plan, weekCount) + weeksHtml, "Your printable grocery list"),
+    rulesBlock(plan, weekCount) + weeksHtml,
+    "Your printable grocery list",
     "smartydiet-grocery.pdf",
   );
 }
