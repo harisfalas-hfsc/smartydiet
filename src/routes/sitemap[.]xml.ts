@@ -23,6 +23,7 @@ const ENTRIES: SitemapEntry[] = [
   { path: "/faq", changefreq: "monthly", priority: "0.8" },
   { path: "/contact", changefreq: "yearly", priority: "0.5" },
   { path: "/nutrition-intelligence", changefreq: "monthly", priority: "0.95" },
+  { path: "/nutrition-library", changefreq: "monthly", priority: "0.9" },
   { path: "/glossary", changefreq: "monthly", priority: "0.75" },
   { path: "/diet-science", changefreq: "monthly", priority: "0.85" },
 
