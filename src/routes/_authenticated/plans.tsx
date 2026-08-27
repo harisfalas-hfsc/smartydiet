@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Sparkles, ClipboardList } from "lucide-react";
 import { SmartyCard, SmartyRow } from "@/components/SmartyCard";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
-import { OFFLINE_KEYS, offlineFirst } from "@/lib/offline/store";
+import { OFFLINE_KEYS, offlineFirst, saveLocal } from "@/lib/offline/store";
 import { useOfflineUserId } from "@/hooks/useOfflineUser";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { OfflineEmptyState } from "@/components/offline/OfflineNotice";
@@ -27,6 +27,7 @@ interface Row {
   credits_used: number;
   credits_total: number;
   created_at: string;
+  has_plan: boolean;
 }
 
 const TONES: Array<"cyan" | "green" | "orange" | "purple" | "yellow" | "pink" | "blue"> = [
@@ -46,6 +47,24 @@ function PlansList() {
   const userId = useOfflineUserId();
   const online = useOnlineStatus();
 
+  async function fetchRows() {
+    const [{ data: fresh, error }, { data: plans, error: plansError }] = await Promise.all([
+      supabase
+        .from("generation_sessions")
+        .select("id,duration_weeks,status,credits_used,credits_total,created_at")
+        .in("status", ["authorized", "generating", "completed", "paid"])
+        .order("created_at", { ascending: false }),
+      supabase.from("diet_plans").select("session_id"),
+    ]);
+    if (error) throw error;
+    if (plansError) throw plansError;
+    const readySessionIds = new Set((plans ?? []).map((plan) => plan.session_id));
+    return ((fresh ?? []) as Omit<Row, "has_plan">[]).map((row) => ({
+      ...row,
+      has_plan: readySessionIds.has(row.id),
+    }));
+  }
+
   useEffect(() => {
     if (!userId) return;
     let active = true;
@@ -53,19 +72,7 @@ function PlansList() {
       const data = await offlineFirst<Row[]>(
         OFFLINE_KEYS.sessions,
         async () => {
-          const { data: plans, error: plansError } = await supabase
-            .from("diet_plans")
-            .select("session_id");
-          if (plansError) throw plansError;
-          const sessionIds = [...new Set((plans ?? []).map((plan) => plan.session_id))];
-          if (!sessionIds.length) return [];
-          const { data: fresh, error: sessionsError } = await supabase
-            .from("generation_sessions")
-            .select("id,duration_weeks,status,credits_used,credits_total,created_at")
-            .in("id", sessionIds)
-            .order("created_at", { ascending: false });
-          if (sessionsError) throw sessionsError;
-          return (fresh as Row[]) ?? [];
+          return fetchRows();
         },
         userId,
       ).catch(() => [] as Row[]);
@@ -75,6 +82,17 @@ function PlansList() {
       active = false;
     };
   }, [userId]);
+
+  useEffect(() => {
+    if (!online || !userId || !(rows ?? []).some((row) => !row.has_plan)) return;
+    const interval = window.setInterval(() => {
+      void fetchRows().then((fresh) => {
+        setRows(fresh);
+        void saveLocal(OFFLINE_KEYS.sessions, userId, fresh);
+      });
+    }, 5_000);
+    return () => window.clearInterval(interval);
+  }, [online, rows, userId]);
 
   if (pathname !== "/plans") return <Outlet />;
 
@@ -131,13 +149,14 @@ function PlansList() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {rows.map((r, i) => {
               const active = (r.credits_used ?? 0) < (r.credits_total ?? 0);
+              const building = !r.has_plan;
               const tone = active ? "green" : TONES[i % TONES.length];
               return (
                 <SmartyCard
                   key={r.id}
                   tone={tone}
-                  eyebrow={active ? "Active" : "Completed"}
-                  eyebrowIcon={active ? "✅" : "📁"}
+                  eyebrow={building ? "Building now" : active ? "Active" : "Completed"}
+                  eyebrowIcon={building ? "⏳" : active ? "✅" : "📁"}
                   cornerIcon={ClipboardList}
                   title={`${r.duration_weeks}-week`}
                   accent="plan"
@@ -157,11 +176,13 @@ function PlansList() {
                     />
                   </div>
                   <div className="mt-6">
-                    <Button asChild size="sm">
-                      <Link to="/plans/$sessionId" params={{ sessionId: r.id }}>
-                        View plan →
-                      </Link>
-                    </Button>
+                    {building ? (
+                      <p className="text-sm font-semibold text-primary">Analyzing your questionnaire…</p>
+                    ) : (
+                      <Button asChild size="sm">
+                        <Link to="/plans/$sessionId" params={{ sessionId: r.id }}>View plan →</Link>
+                      </Button>
+                    )}
                   </div>
                 </SmartyCard>
               );

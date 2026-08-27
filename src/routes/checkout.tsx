@@ -18,7 +18,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { waitForPlanGeneration } from "@/lib/generation-client";
 import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
-import { findResumablePayment } from "@/lib/payment-recovery.browser";
 
 type Search = { qid?: string; weeks?: number };
 const GENERATION_ERROR_MESSAGE = "We encountered an error this time. Please try again later.";
@@ -58,36 +57,11 @@ function CheckoutPage() {
   const [freeError, setFreeError] = useState(false);
   const [weeks, setWeeks] = useState<1 | 2 | 4 | null>(null);
   const [ready, setReady] = useState(false);
-  const [checkingResumable, setCheckingResumable] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (authLoading || !user?.id) return;
-    let active = true;
-    void findResumablePayment(user.id)
-      .then((result) => {
-        if (!active) return;
-        if (result.stripeSessionId) {
-          navigate({
-            to: "/checkout/return",
-            search: { session_id: result.stripeSessionId },
-            replace: true,
-          });
-          return;
-        }
-        if (!qid) {
-          navigate({ to: "/questionnaire", replace: true });
-          return;
-        }
-        setCheckingResumable(false);
-      })
-      .catch(() => {
-        if (active) setCheckingResumable(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [authLoading, navigate, qid, user?.id]);
+    if (!authLoading && !qid) navigate({ to: "/questionnaire", replace: true });
+  }, [authLoading, navigate, qid]);
 
   useEffect(() => {
     (async () => {
@@ -213,7 +187,6 @@ function CheckoutPage() {
   if (
     freeLoading ||
     authLoading ||
-    checkingResumable ||
     (serverComplimentaryAccess === null && !!user?.id)
   ) {
     return (

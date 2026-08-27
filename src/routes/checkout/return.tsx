@@ -1,13 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { markSessionAuthorized } from "@/lib/payments.functions";
-import { generatePlan } from "@/lib/plan.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Apple, Clock3, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { analytics } from "@/lib/analytics";
-import { waitForPlanGeneration } from "@/lib/generation-client";
 import { reportPlanGenerationFailure } from "@/lib/plan-generation-alert.functions";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -35,7 +33,6 @@ export const Route = createFileRoute("/checkout/return")({
 function Return() {
   const { session_id } = Route.useSearch();
   const mark = useServerFn(markSessionAuthorized);
-  const generate = useServerFn(generatePlan);
   const reportFailure = useServerFn(reportPlanGenerationFailure);
   const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -130,19 +127,38 @@ function Return() {
             "Hold on. We are creating the best diet we can for your questionnaire needs. This can take up to 3 minutes.",
           );
         }
-        const planRes = await waitForPlanGeneration(
-          generate({ data: { sessionId: paidRes.generationSessionId, operationId } }),
-        );
-        if (planRes.error) {
-          toast.error(GENERATION_ERROR_MESSAGE);
-          if (active) {
-            setStatus("error");
-            setMessage(planRes.error);
+        // The payment webhook is the sole owner of initial generation, so
+        // closing this tab can never terminate the job or create a duplicate.
+        let planError: string | undefined;
+        while (active) {
+          const [{ data: plan }, { data: generation }] = await Promise.all([
+            supabase
+              .from("diet_plans")
+              .select("id")
+              .eq("session_id", paidRes.generationSessionId)
+              .limit(1)
+              .maybeSingle(),
+            supabase
+              .from("generation_sessions")
+              .select("status")
+              .eq("id", paidRes.generationSessionId)
+              .maybeSingle(),
+          ]);
+          if (plan && (generation?.status === "paid" || generation?.status === "completed")) break;
+          if (generation?.status === "failed" || generation?.status === "authorization_released") {
+            planError = "We could not create your diet this time. Your card was not charged.";
+            break;
           }
+          await new Promise((resolve) => setTimeout(resolve, 4_000));
+        }
+        if (!active) return;
+        if (planError) {
+          toast.error(GENERATION_ERROR_MESSAGE);
+          setStatus("error");
+          setMessage(planError);
           return;
         }
         analytics.planReady(false);
-        if (!active) return;
         setStatus("done");
         setMessage("Your plan is ready. Opening it now…");
         navigate({
@@ -187,31 +203,63 @@ function Return() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 py-10 text-center">
-      {status === "working" && <Loader2 className="h-10 w-10 animate-spin text-primary" />}
-      {status === "done" && <CheckCircle2 className="h-10 w-10 text-primary" />}
-      {status === "error" && <AlertTriangle className="h-10 w-10 text-destructive" />}
-      <h1 className="mt-4 text-xl font-bold">
-        {status === "error" ? "We could not finish this time" : "Creating your diet"}
-      </h1>
-      <p className="mt-2 text-sm text-muted-foreground">{message}</p>
-      {status === "working" && (
-        <div className="mt-6 w-full border-t border-border pt-5" aria-live="polite">
-          <p className="text-xs font-semibold uppercase text-primary">What we are doing now</p>
-          <p className="mt-2 min-h-10 text-sm text-foreground">{CREATION_TIPS[tipIndex]}</p>
-          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8 sm:px-8">
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="diet-processing-title"
+        className="w-full max-w-lg overflow-hidden rounded-lg border border-border bg-card text-left shadow-2xl"
+      >
+        <div className="h-1.5 w-full bg-gradient-to-r from-primary via-accent to-primary" />
+        <div className="p-6 sm:p-8">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+              {status === "working" && <Apple className="h-6 w-6" />}
+              {status === "done" && <CheckCircle2 className="h-6 w-6" />}
+              {status === "error" && <AlertTriangle className="h-6 w-6 text-destructive" />}
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase text-primary">
+                {status === "working" ? "Your personalized plan is underway" : "SmartyDiet update"}
+              </p>
+              <h1 id="diet-processing-title" className="mt-1 text-2xl font-extrabold">
+                {status === "error" ? "We could not finish this time" : "Please be patient"}
+              </h1>
+            </div>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Keep this screen open. Your answers are already saved.
-          </p>
+
+          <p className="mt-5 text-sm leading-6 text-foreground">{message}</p>
+          {status === "working" && (
+            <>
+              <div className="mt-6 h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+                <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />
+              </div>
+              <div className="mt-6 rounded-md border border-border bg-muted/40 p-4" aria-live="polite">
+                <div className="flex gap-3">
+                  <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <div>
+                    <p className="text-xs font-bold uppercase text-primary">What we are doing now</p>
+                    <p className="mt-1 min-h-12 text-sm leading-6 text-foreground">
+                      {CREATION_TIPS[tipIndex]}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-5 flex gap-3 border-t border-border pt-5">
+                <ShieldCheck className="h-5 w-5 shrink-0 text-primary" />
+                <p className="text-sm font-semibold leading-5">
+                  Stay on this screen and do not close this window. If you must leave, your saved
+                  questionnaire will continue processing securely in the background and your diet
+                  will appear in My Plans when it is ready.
+                </p>
+              </div>
+            </>
+          )}
+          {status === "error" && (
+            <Button className="mt-6 w-full" onClick={retry}>Try again</Button>
+          )}
         </div>
-      )}
-      {status === "error" && (
-        <Button className="mt-6" onClick={retry}>
-          Try again
-        </Button>
-      )}
+      </section>
     </div>
   );
 }

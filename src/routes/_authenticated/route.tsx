@@ -15,8 +15,6 @@ export const Route = createFileRoute("/_authenticated")({
 
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
-      const cached = getOfflineSession();
-      if (cached) return { user: cached.user };
       throw redirect({ to: "/auth" });
     }
     return { user: data.user };

@@ -19,7 +19,6 @@ import { Toaster } from "../components/ui/sonner";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
 import { OfflineBootstrap } from "../components/offline/OfflineBootstrap";
 import { SyncStatusPill } from "../components/offline/SyncStatus";
-import { PaymentRecovery } from "../components/PaymentRecovery";
 
 const SITE_URL = "https://smartydiet.com";
 const OG_IMAGE =
@@ -367,7 +366,6 @@ function RootComponent() {
         {!isPaymentProcessing && <SiteFooter />}
         <Toaster />
         {!isPaymentProcessing && <SisterAppsPopup />}
-        {!isPaymentProcessing && <PaymentRecovery />}
         <OfflineBootstrap />
         {!isPaymentProcessing && <SyncStatusPill />}
       </div>

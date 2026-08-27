@@ -10,7 +10,7 @@ function getSupabase(): any {
   return _supabase;
 }
 
-async function handleCheckoutCompleted(session: any) {
+async function handleCheckoutCompleted(session: any, environment: StripeEnv) {
   const genSessionId = session?.metadata?.generationSessionId;
   const userId = session?.metadata?.userId;
   const questionnaireId = session?.metadata?.questionnaireId;
@@ -58,6 +58,23 @@ async function handleCheckoutCompleted(session: any) {
     })
     .eq("stripe_session_id", session.id)
     .in("status", ["checkout_opened", "payment_processing", "authorized"]);
+
+  // Stripe owns the handoff: generation starts here even if the customer
+  // closes the return tab immediately after authorizing the card.
+  const { runPlanGeneration } = await import("@/lib/plan-generation.server");
+  const { data: authUser } = await getSupabase().auth.admin.getUserById(userId);
+  await runPlanGeneration(
+    { sessionId: genSessionId, operationId: genSessionId },
+    {
+      supabase: getSupabase(),
+      userId,
+      claims: {
+        email: authUser?.user?.email,
+        user_metadata: authUser?.user?.user_metadata,
+        payment_environment: environment,
+      },
+    },
+  );
 }
 
 async function handlePaymentIntentSettled(intent: any, captured: boolean) {
@@ -181,7 +198,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
   switch (event.type) {
     case "checkout.session.completed":
     case "transaction.completed":
-      await handleCheckoutCompleted(event.data.object);
+      await handleCheckoutCompleted(event.data.object, env);
       break;
     case "payment_intent.succeeded":
       await handlePaymentIntentSettled(event.data.object, true);
