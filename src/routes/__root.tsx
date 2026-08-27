@@ -16,6 +16,7 @@ import { Navigation } from "../components/Navigation";
 import { SiteFooter } from "../components/SiteFooter";
 import { PaymentTestModeBanner } from "../components/PaymentTestModeBanner";
 import { Toaster } from "../components/ui/sonner";
+import { TooltipProvider } from "../components/ui/tooltip";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
 
 const SITE_URL = "https://smartydiet.com";
