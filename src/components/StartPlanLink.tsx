@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode, type CSSProperties } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { findResumablePayment } from "@/lib/payment-recovery.client";
+import { findResumablePayment } from "@/lib/payment-recovery.browser";
 
 /**
  * Single source of truth for "start a diet plan" navigation.

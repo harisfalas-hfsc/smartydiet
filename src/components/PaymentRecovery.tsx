@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
-import { findResumablePayment } from "@/lib/payment-recovery.client";
+import { findResumablePayment } from "@/lib/payment-recovery.browser";
 
 /** Automatically continues an unfinished authorized purchase on any app visit. */
 export function PaymentRecovery() {
