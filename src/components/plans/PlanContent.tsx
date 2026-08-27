@@ -159,12 +159,22 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
 
       {summary && (
         <Card>
-          <CardContent className="p-4 text-sm">
-            <p className="font-semibold">{summary.calorieTarget} kcal / day</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Protein {summary.macros?.protein_g}g · Carbs {summary.macros?.carbs_g}g · Fat {summary.macros?.fat_g}g
-            </p>
-            <p className="mt-1 text-xs uppercase text-muted-foreground">
+          <CardContent className="space-y-3 p-4 text-sm">
+            <CalorieTooltip calories={summary.calorieTarget}>
+              <p className="inline-flex cursor-help items-center gap-1.5 font-semibold">
+                {summary.calorieTarget} kcal / day
+                <MacroInfoIcon />
+              </p>
+            </CalorieTooltip>
+            <MacroBar
+              macros={{
+                protein_g: summary.macros?.protein_g ?? 0,
+                carbs_g: summary.macros?.carbs_g ?? 0,
+                fat_g: summary.macros?.fat_g ?? 0,
+              }}
+              size="md"
+            />
+            <p className="text-xs uppercase text-muted-foreground">
               {summary.dietStyle} · {summary.goal}
             </p>
           </CardContent>
