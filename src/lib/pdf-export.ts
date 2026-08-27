@@ -70,13 +70,31 @@ async function renderToPdf(html: string, filename: string) {
     if (imgH <= pageH) {
       pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, imgW, imgH);
     } else {
-      // slice into pages
+      // Slice into pages, cutting on a blank row so day cards are never split.
       const pxPerPt = canvas.width / pageW;
-      const pageHpx = pageH * pxPerPt;
+      const pageHpx = Math.floor(pageH * pxPerPt);
+      const source = canvas.getContext("2d")!;
+      const isBlankRow = (y: number) => {
+        const { data } = source.getImageData(0, y, canvas.width, 1);
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i]! < 250 || data[i + 1]! < 250 || data[i + 2]! < 250) return false;
+        }
+        return true;
+      };
       let offset = 0;
       let first = true;
       while (offset < canvas.height) {
-        const sliceH = Math.min(pageHpx, canvas.height - offset);
+        let sliceH = Math.min(pageHpx, canvas.height - offset);
+        if (offset + sliceH < canvas.height) {
+          // Search back up to 20% of a page for a clean break.
+          const minH = Math.floor(sliceH * 0.8);
+          for (let candidate = sliceH; candidate > minH; candidate -= 2) {
+            if (isBlankRow(offset + candidate - 1)) {
+              sliceH = candidate;
+              break;
+            }
+          }
+        }
         const slice = document.createElement("canvas");
         slice.width = canvas.width;
         slice.height = sliceH;
@@ -97,6 +115,7 @@ async function renderToPdf(html: string, filename: string) {
         offset += sliceH;
       }
     }
+
     pdf.save(filename);
   } finally {
     holder.remove();
