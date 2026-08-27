@@ -183,6 +183,7 @@ function PlanView() {
     if (!refineText.trim()) return toast.error("Describe the change you want");
     setBusy(true);
     setRefining(true);
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     const operationId = crypto.randomUUID();
     try {
       const res = await waitForPlanGeneration(
