@@ -54,6 +54,7 @@ export function registerServiceWorker(): Promise<ServiceWorkerRegistration | nul
   registrationPromise = (async () => {
     try {
       await deleteLegacyIdentityCache();
+      const justReloadedForUpdate = sessionStorage.getItem(UPDATE_RELOAD_KEY) === "1";
       sessionStorage.removeItem(UPDATE_RELOAD_KEY);
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -63,10 +64,7 @@ export function registerServiceWorker(): Promise<ServiceWorkerRegistration | nul
         // The new worker is active, but an already-open tab is still running
         // the previous hashed app bundle. Reload once so every published fix
         // takes effect without asking customers for a hard refresh.
-        if (sessionStorage.getItem(UPDATE_RELOAD_KEY) === "1") {
-          sessionStorage.removeItem(UPDATE_RELOAD_KEY);
-          return;
-        }
+        if (justReloadedForUpdate) return;
         sessionStorage.setItem(UPDATE_RELOAD_KEY, "1");
         window.location.reload();
       });
@@ -78,8 +76,12 @@ export function registerServiceWorker(): Promise<ServiceWorkerRegistration | nul
       await navigator.serviceWorker.ready;
       await registration.update().catch(() => undefined);
 
+      let lastUpdateCheck = Date.now();
       const checkForUpdate = () => {
         if (document.visibilityState === "visible" && navigator.onLine) {
+          const now = Date.now();
+          if (now - lastUpdateCheck < 60_000) return;
+          lastUpdateCheck = now;
           void registration.update().catch(() => undefined);
         }
       };
