@@ -123,13 +123,25 @@ export const markSessionAuthorized = createServerFn({ method: "POST" })
       const paymentIntent =
         typeof cs.payment_intent === "string" ? cs.payment_intent : (cs.payment_intent?.id ?? null);
       const captured = pi?.status === "succeeded" || cs.payment_status === "paid";
+      const { data: existingSession } = await supabase
+        .from("generation_sessions")
+        .select("status")
+        .eq("id", genSessionId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      const preservedStatuses = new Set(["paid", "completed", "refunded", "authorization_released"]);
+      const nextStatus = preservedStatuses.has(existingSession?.status ?? "")
+        ? existingSession?.status
+        : captured
+          ? "paid"
+          : "authorized";
       const { error: sessionError } = await supabase.from("generation_sessions").upsert(
         {
           id: genSessionId,
           user_id: userId,
           questionnaire_id: questionnaireId,
           duration_weeks: durationWeeks,
-          status: captured ? "paid" : "authorized",
+          status: nextStatus,
           stripe_session_id: cs.id,
           stripe_payment_intent: paymentIntent,
           amount_cents: cs.amount_total ?? 999,
@@ -219,7 +231,11 @@ export const captureDietPayment = createServerFn({ method: "POST" })
       const stripe = createStripeClient(data.environment);
       const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
       if (intent.status === "requires_capture") {
-        await stripe.paymentIntents.capture(session.stripe_payment_intent);
+        await stripe.paymentIntents.capture(
+          session.stripe_payment_intent,
+          {},
+          { idempotencyKey: `capture-diet-${data.generationSessionId}` },
+        );
       } else if (intent.status !== "succeeded") {
         throw new Error(`Payment is in state ${intent.status} and cannot be captured`);
       }
@@ -279,7 +295,11 @@ export const releaseDietAuthorization = createServerFn({ method: "POST" })
       const stripe = createStripeClient(data.environment);
       const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
       if (intent.status === "requires_capture" || intent.status === "requires_confirmation") {
-        await stripe.paymentIntents.cancel(session.stripe_payment_intent);
+        await stripe.paymentIntents.cancel(
+          session.stripe_payment_intent,
+          {},
+          { idempotencyKey: `release-diet-${data.generationSessionId}` },
+        );
       } else if (intent.status !== "canceled") {
         return { released: false, error: `Payment is in state ${intent.status}` };
       }

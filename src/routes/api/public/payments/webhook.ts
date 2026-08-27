@@ -28,7 +28,13 @@ async function handleCheckoutCompleted(session: any) {
     .select("status")
     .eq("id", genSessionId)
     .maybeSingle();
-  const terminalStatuses = new Set(["paid", "completed", "refunded", "authorization_released"]);
+  const terminalStatuses = new Set([
+    "paid",
+    "completed",
+    "failed",
+    "refunded",
+    "authorization_released",
+  ]);
   const nextStatus = terminalStatuses.has(existing?.status) ? existing.status : "authorized";
   await getSupabase()
     .from("generation_sessions")
