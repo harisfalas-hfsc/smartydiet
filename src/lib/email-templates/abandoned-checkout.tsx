@@ -40,7 +40,7 @@ const Email = ({ name, stage = 'checkout', resumeUrl }: Props) => (
           {stage === 'questionnaire' ? 'Finish my questionnaire' : 'Get my diet plan'}
         </Button>
         <Text style={small}>
-          One-time €9.99 — includes your full meal plan, macros, grocery list, 2 refinements and
+          One-time €9.99 — includes your full meal plan, macros, grocery list, 1 refinement and
           PDF export. No subscription.
         </Text>
         <Hr style={hr} />
