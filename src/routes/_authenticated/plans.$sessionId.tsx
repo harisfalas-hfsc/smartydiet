@@ -340,7 +340,9 @@ function PlanView() {
           </CardContent>
         </Card>
       ) : (
-        <PlanContent plan={active.plan} durationWeeks={session.duration_weeks} />
+        <div id="plan-top">
+          <PlanContent plan={active.plan} durationWeeks={session.duration_weeks} />
+        </div>
       )}
 
       {versions.length > 1 && (
@@ -348,51 +350,51 @@ function PlanView() {
           <CardContent className="p-4">
             <p className="mb-3 font-semibold">
               <History className="mr-1.5 inline h-4 w-4 text-primary" />
-              Plan versions
+              Your plan versions
             </p>
             <div className="space-y-2">
-              {versions.map((v) => (
-                <div
-                  key={v.id}
-                  className={`flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm ${
-                    v.id === active?.id ? "border-primary bg-primary/5" : ""
-                  }`}
-                >
-                  <div>
-                    <p className="font-medium">
-                      v{v.version}
-                      {v.is_final ? " · active" : ""}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(v.created_at).toLocaleString()}
-                      {v.refinement_note ? ` · "${v.refinement_note}"` : " · initial"}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={v.id === active?.id ? "secondary" : "outline"}
-                      onClick={() => setActiveId(v.id)}
-                    >
-                      View
-                    </Button>
-                    {!v.is_final && (
-                      <Button size="sm" onClick={() => doRestore(v.version)} disabled={busy}>
-                        Restore
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
+              {[...versions]
+                .sort((a, b) => a.version - b.version)
+                .map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveId(v.id);
+                      document
+                        .getElementById("plan-top")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className={`flex w-full flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-left text-sm transition-colors ${
+                      v.id === active?.id
+                        ? "border-primary bg-primary/5"
+                        : "hover:border-primary/50"
+                    }`}
+                  >
+                    <div>
+                      <p className="font-medium">
+                        Version {v.version} — {v.version === 1 ? "original" : "refined"}
+                        {v.id === active?.id ? " · showing now" : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(v.created_at).toLocaleString()}
+                        {v.refinement_note ? ` · "${v.refinement_note}"` : ""}
+                      </p>
+                    </div>
+                    <span className="text-xs font-semibold text-primary">
+                      {v.id === active?.id ? "Showing" : "Show this version"}
+                    </span>
+                  </button>
+                ))}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Restoring a previous version does NOT cost a credit.
+              Both versions are saved permanently — switching between them is free.
             </p>
           </CardContent>
         </Card>
       )}
 
-      {active && remaining > 0 && (
+      {active && remaining > 0 && !refining && (
         <Card className="mt-8">
           <CardContent className="p-4">
             <p className="font-semibold">
@@ -415,6 +417,14 @@ function PlanView() {
           </CardContent>
         </Card>
       )}
+
+      {active && remaining <= 0 && (
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          You&apos;ve used the refinement included with this plan. Both versions stay saved here —
+          buy a new plan any time for a fresh one.
+        </p>
+      )}
+
 
       <div className="mt-8 text-center">
         <Button asChild variant="ghost" size="sm">
