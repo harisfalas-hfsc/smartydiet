@@ -66,7 +66,7 @@ export function Testimonials({ className }: { className?: string }) {
 
 const FACTS: { label: string; detail: string }[] = [
   { label: "One-time €9.99", detail: "No subscription, no auto-renewal" },
-  { label: "2 free refinements", detail: "Adjust your plan after you see it" },
+  { label: "1 free refinement", detail: "Adjust your plan after you see it" },
   { label: "Yours to keep", detail: "PDF export + saved to your account" },
   { label: "Private by design", detail: "Your data, deletable any time" },
 ];
