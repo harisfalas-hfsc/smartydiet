@@ -32,7 +32,6 @@ export const Route = createFileRoute("/checkout")({
   beforeLoad: async ({ search }) => {
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/auth" });
-    if (!search.qid) throw redirect({ to: "/questionnaire" });
   },
   head: () => ({
     meta: [{ title: "Checkout — SmartyDiet" }, { name: "robots", content: "noindex" }],
@@ -76,6 +75,10 @@ function CheckoutPage() {
           });
           return;
         }
+        if (!qid) {
+          navigate({ to: "/questionnaire", replace: true });
+          return;
+        }
         setCheckingResumable(false);
       })
       .catch(() => {
@@ -84,7 +87,7 @@ function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [authLoading, navigate, user?.id]);
+  }, [authLoading, navigate, qid, user?.id]);
 
   useEffect(() => {
     (async () => {
@@ -94,7 +97,8 @@ function CheckoutPage() {
         .select("duration_weeks")
         .eq("id", qid)
         .maybeSingle();
-      setWeeks(((data?.duration_weeks as any) ?? 2) as 1 | 2 | 4);
+      const savedWeeks = Number(data?.duration_weeks);
+      setWeeks(savedWeeks === 1 || savedWeeks === 4 ? savedWeeks : 2);
       setReady(true);
     })();
   }, [qid]);
@@ -170,7 +174,18 @@ function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [freeLoading, freeAccessMode, ready, qid, weeks, freeError, startFree, generate, reportFailure, navigate]);
+  }, [
+    freeLoading,
+    freeAccessMode,
+    ready,
+    qid,
+    weeks,
+    freeError,
+    startFree,
+    generate,
+    reportFailure,
+    navigate,
+  ]);
 
   const options = useMemo(
     () => ({
@@ -222,9 +237,7 @@ function CheckoutPage() {
         <p className="mt-2 text-sm text-muted-foreground">{freeMessage}</p>
         {freeError && (
           <div className="mt-6 flex justify-center gap-3">
-            <Button onClick={() => navigate({ to: "/" })}>
-              Back to homepage
-            </Button>
+            <Button onClick={() => navigate({ to: "/" })}>Back to homepage</Button>
           </div>
         )}
       </div>

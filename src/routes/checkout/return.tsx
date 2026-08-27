@@ -41,7 +41,9 @@ function Return() {
   const processingStarted = useRef(false);
   const [retryKey, setRetryKey] = useState(0);
   const [status, setStatus] = useState<"working" | "done" | "error">("working");
-  const [message, setMessage] = useState("Please wait. Your diet is generating…");
+  const [message, setMessage] = useState(
+    "Hold on. We are creating the best diet we can for your questionnaire needs.",
+  );
 
   useEffect(() => {
     if (authLoading || !session?.access_token) return;
@@ -62,15 +64,15 @@ function Return() {
         let paidRes = await mark({
           data: { stripeSessionId: session_id, environment: getStripeEnvironment() },
         });
-        // Stripe can redirect a fraction before the final PaymentIntent state is
-        // visible through its API. Retry briefly instead of stranding a valid
-        // authorization on a false "not confirmed" screen.
+        // Card authorization can settle shortly after Stripe returns. Keep this
+        // page stationary and retry here rather than sending the customer away.
         for (
           let attempt = 0;
-          attempt < 4 && (!paidRes.paid || !paidRes.generationSessionId);
+          attempt < 15 && (!paidRes.paid || !paidRes.generationSessionId);
           attempt++
         ) {
-          await new Promise((resolve) => setTimeout(resolve, 1_500));
+          if (active) setMessage("Confirming your card authorization…");
+          await new Promise((resolve) => setTimeout(resolve, 2_000));
           paidRes = await mark({
             data: { stripeSessionId: session_id, environment: getStripeEnvironment() },
           });
@@ -85,7 +87,10 @@ function Return() {
           }).catch(() => undefined);
           if (active) {
             setStatus("error");
-            setMessage("We could not confirm the authorization. Please try again.");
+            setMessage(
+              paidRes.error ||
+                "Your card authorization could not be confirmed. Your card has not been charged.",
+            );
           }
           return;
         }
@@ -93,7 +98,9 @@ function Return() {
         generationSessionId = paidRes.generationSessionId;
         operationId = paidRes.generationSessionId;
         if (active) {
-          setMessage("Please wait. Your diet is generating… this can take up to 2 minutes.");
+          setMessage(
+            "Hold on. We are creating the best diet we can for your questionnaire needs. This can take up to 3 minutes.",
+          );
         }
         const planRes = await waitForPlanGeneration(
           generate({ data: { sessionId: paidRes.generationSessionId, operationId } }),
@@ -168,7 +175,7 @@ function Return() {
   function retry() {
     processingStarted.current = false;
     setStatus("working");
-    setMessage("Please wait. Your diet is generating…");
+    setMessage("Hold on. We are continuing your diet from your saved questionnaire.");
     setRetryKey((value) => value + 1);
   }
 
@@ -178,7 +185,7 @@ function Return() {
       {status === "done" && <CheckCircle2 className="h-10 w-10 text-primary" />}
       {status === "error" && <AlertTriangle className="h-10 w-10 text-destructive" />}
       <h1 className="mt-4 text-xl font-bold">
-        {status === "error" ? "Your plan is safe" : "Almost there"}
+        {status === "error" ? "We could not finish this time" : "Creating your diet"}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">{message}</p>
       {status === "error" && (

@@ -56,6 +56,7 @@ export const createDietCheckout = createServerFn({ method: "POST" })
           description: product.name,
           capture_method: "manual",
           statement_descriptor_suffix: "SMARTYDIET",
+          metadata: { userId, generationSessionId },
         },
         metadata: {
           userId,
@@ -104,7 +105,22 @@ export const markSessionAuthorized = createServerFn({ method: "POST" })
         cs.payment_status === "paid" ||
         pi?.status === "requires_capture" ||
         pi?.status === "succeeded";
-      if (!authorized) return { paid: false };
+      if (!authorized) {
+        const paymentError = pi?.last_payment_error;
+        const declineReason = paymentError?.decline_code ?? paymentError?.code;
+        if (pi?.status === "requires_payment_method") {
+          return {
+            paid: false,
+            error: declineReason
+              ? `Your card was declined (${declineReason}). Please use another payment method.`
+              : "Your card was declined. Please use another payment method.",
+          };
+        }
+        if (cs.status === "expired") {
+          return { paid: false, error: "This checkout expired. Your card was not charged." };
+        }
+        return { paid: false };
+      }
       const { supabase, userId } = context;
       const genSessionId = cs.metadata?.generationSessionId;
       const questionnaireId = cs.metadata?.questionnaireId;
@@ -123,49 +139,43 @@ export const markSessionAuthorized = createServerFn({ method: "POST" })
       }
       const paymentIntent =
         typeof cs.payment_intent === "string" ? cs.payment_intent : (cs.payment_intent?.id ?? null);
-      const captured = pi?.status === "succeeded" || cs.payment_status === "paid";
-      const { data: existingSession } = await supabase
+      const sessionPayload = {
+        id: genSessionId,
+        user_id: userId,
+        questionnaire_id: questionnaireId,
+        duration_weeks: durationWeeks,
+        // This function only confirms permission to generate. The app marks
+        // the session paid after the plan row exists and capture succeeds.
+        status: "authorized",
+        stripe_session_id: cs.id,
+        stripe_payment_intent: paymentIntent,
+        amount_cents: cs.amount_total ?? 999,
+        currency: cs.currency ?? "eur",
+      };
+      const { error: insertError } = await supabase
         .from("generation_sessions")
-        .select("status")
-        .eq("id", genSessionId)
-        .eq("user_id", userId)
-        .maybeSingle();
-      const preservedStatuses = new Set([
-        "paid",
-        "completed",
-        "refunded",
-        "authorization_released",
-      ]);
-      const nextStatus = preservedStatuses.has(existingSession?.status ?? "")
-        ? existingSession?.status
-        : captured
-          ? "paid"
-          : "authorized";
-      const { error: sessionError } = await supabase.from("generation_sessions").upsert(
-        {
-          id: genSessionId,
-          user_id: userId,
-          questionnaire_id: questionnaireId,
-          duration_weeks: durationWeeks,
-          status: nextStatus,
-          stripe_session_id: cs.id,
-          stripe_payment_intent: paymentIntent,
-          amount_cents: cs.amount_total ?? 999,
-          currency: cs.currency ?? "eur",
-        },
-        { onConflict: "id" },
-      );
-      if (sessionError) return { paid: false, error: sessionError.message };
+        .insert(sessionPayload);
+      if (insertError?.code === "23505") {
+        const { error: updateError } = await supabase
+          .from("generation_sessions")
+          .update(sessionPayload)
+          .eq("id", genSessionId)
+          .eq("user_id", userId)
+          .in("status", ["pending", "authorized", "failed"]);
+        if (updateError) return { paid: false, error: updateError.message };
+      } else if (insertError) {
+        return { paid: false, error: insertError.message };
+      }
       await supabase
         .from("diet_plan_attempts")
         .update({
-          status: captured ? "paid" : "authorized",
-          reached_stage: captured ? "Payment confirmed" : "Payment authorized",
+          status: "authorized",
+          reached_stage: "Payment authorized",
           generation_session_id: genSessionId,
           stripe_payment_intent: paymentIntent,
-          ...(captured ? { paid_at: new Date().toISOString() } : {}),
         })
-        .eq("stripe_session_id", cs.id);
+        .eq("stripe_session_id", cs.id)
+        .in("status", ["checkout_opened", "payment_processing", "authorized"]);
       await supabase
         .from("questionnaires")
         .update({ status: "paid" })
@@ -187,7 +197,7 @@ export const getResumableDietSession = createServerFn({ method: "GET" })
       .from("generation_sessions")
       .select("id,stripe_session_id,status,created_at")
       .eq("user_id", userId)
-      .in("status", ["authorized", "paid", "completed"])
+      .in("status", ["authorized", "paid", "completed", "failed"])
       .not("stripe_session_id", "is", null)
       .order("created_at", { ascending: false })
       .limit(5);
@@ -236,6 +246,9 @@ export const captureDietPayment = createServerFn({ method: "POST" })
 
       const stripe = createStripeClient(data.environment);
       const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
+      if (intent.metadata?.userId && intent.metadata.userId !== userId) {
+        return { captured: false, error: "Payment does not belong to this account" };
+      }
       if (intent.status === "requires_capture") {
         await stripe.paymentIntents.capture(
           session.stripe_payment_intent,
@@ -300,6 +313,9 @@ export const releaseDietAuthorization = createServerFn({ method: "POST" })
         return { released: false, error: "No authorization to release" };
       const stripe = createStripeClient(data.environment);
       const intent = await stripe.paymentIntents.retrieve(session.stripe_payment_intent);
+      if (intent.metadata?.userId && intent.metadata.userId !== userId) {
+        return { released: false, error: "Payment does not belong to this account" };
+      }
       if (intent.status === "requires_capture" || intent.status === "requires_confirmation") {
         await stripe.paymentIntents.cancel(
           session.stripe_payment_intent,
