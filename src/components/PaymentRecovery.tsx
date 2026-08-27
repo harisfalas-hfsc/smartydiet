@@ -24,7 +24,7 @@ export function PaymentRecovery() {
       })
       .then((result) => {
         if (!active || !result?.stripeSessionId) return;
-        if (!active || !result.stripeSessionId) return;
+        
         navigate({
           to: "/checkout/return",
           search: { session_id: result.stripeSessionId },
