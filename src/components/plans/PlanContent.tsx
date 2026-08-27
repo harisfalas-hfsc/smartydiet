@@ -80,7 +80,9 @@ export function PlanContent({ plan, durationWeeks, showDownloads = false }: Prop
         .map((week: any) => (
         <div key={week.weekNumber} id={`week-${week.weekNumber}`} className="scroll-mt-24 space-y-3">
           <h3 className="text-lg font-bold">Week {week.weekNumber}</h3>
-          {(week.days ?? []).map((day: any) => (
+          {[...(week.days ?? [])]
+            .sort((a: any, b: any) => (a.day ?? 0) - (b.day ?? 0))
+            .map((day: any) => (
             <Card key={day.day}>
               <CardContent className="p-4">
                 <div className="mb-2 flex items-center justify-between gap-3">
