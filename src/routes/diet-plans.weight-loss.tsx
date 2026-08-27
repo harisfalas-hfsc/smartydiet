@@ -80,7 +80,7 @@ function WeightLossPage() {
         },
         {
           heading: "What your SmartyDiet weight loss plan looks like",
-          body: "You get the daily calorie and macro targets, a full meal-by-meal menu for 1, 2 or 4 weeks at the meal frequency you chose, portion sizes in grams, a weekly grocery list, and every allergen or disliked food removed. Two refinements are included so the plan can be adjusted once you have real-world feedback.",
+          body: "You get the daily calorie and macro targets, a full meal-by-meal menu for 1, 2 or 4 weeks at the meal frequency you chose, portion sizes in grams, a weekly grocery list, and every allergen or disliked food removed. One refinement is included so the plan can be adjusted once you have real-world feedback.",
         },
       ]}
       faqs={FAQS}

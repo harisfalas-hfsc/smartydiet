@@ -484,7 +484,7 @@ export async function runPlanGeneration(
       }
     }
 
-    if ((session.credits_used ?? 0) >= (session.credits_total ?? 3))
+    if ((session.credits_used ?? 0) >= (session.credits_total ?? 2))
       return fail("No plan-generation credits remain for this session");
 
     const { data: q, error: qErr } = await supabase
@@ -526,7 +526,8 @@ export async function runPlanGeneration(
       const version = (existing?.length ?? 0) + 1;
 
       const newCreditsUsed = (session.credits_used ?? 0) + 1;
-      const isFinal = newCreditsUsed >= (session.credits_total ?? 3);
+      // The newest version is always the one shown first; both versions stay available.
+      const isFinal = true;
 
       await supabase.from("diet_plans").update({ is_final: false }).eq("session_id", session.id);
 

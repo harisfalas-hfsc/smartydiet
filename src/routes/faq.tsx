@@ -34,7 +34,7 @@ const ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "How does the AI meal planner work?",
-    a: "You answer a smart questionnaire (body, goals, activity, food preferences, allergies, schedule). SmartyDiet computes your calorie and macro targets using the Mifflin-St Jeor equation, then the AI builds a meal plan that respects every constraint you entered. You get 2 refinements included.",
+    a: "You answer a smart questionnaire (body, goals, activity, food preferences, allergies, schedule). SmartyDiet computes your calorie and macro targets using the Mifflin-St Jeor equation, then the AI builds a meal plan that respects every constraint you entered. You get 1 refinement included.",
   },
 
   {
@@ -47,7 +47,7 @@ const ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "How much does it cost?",
-    a: "€9.99 as a one-time payment. That includes your initial personalized plan and 2 refinement credits (3 AI generations in total). There is no subscription.",
+    a: "€9.99 as a one-time payment. That includes your initial personalized plan and 1 refinement credit (2 AI generations in total). There is no subscription.",
   },
   {
     q: "Is SmartyDiet medical advice?",

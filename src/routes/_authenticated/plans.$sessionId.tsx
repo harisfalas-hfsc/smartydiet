@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { generatePlan, listPlanVersions, restorePlanVersion } from "@/lib/plan.functions";
+import { generatePlan, listPlanVersions } from "@/lib/plan.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,6 @@ function PlanView() {
   const navigate = useNavigate();
   const generate = useServerFn(generatePlan);
   const listVersions = useServerFn(listPlanVersions);
-  const restore = useServerFn(restorePlanVersion);
   const reportFailure = useServerFn(reportPlanGenerationFailure);
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
@@ -77,6 +76,7 @@ function PlanView() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [refineText, setRefineText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [refining, setRefining] = useState(false);
   const [autoGenerating, setAutoGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [tipIndex, setTipIndex] = useState(0);
@@ -124,13 +124,13 @@ function PlanView() {
   }, [autoGenerating, load]);
 
   useEffect(() => {
-    if (!autoGenerating) return;
+    if (!autoGenerating && !refining) return;
     const interval = window.setInterval(
       () => setTipIndex((current) => (current + 1) % PLAN_TIPS.length),
       7_000,
     );
     return () => window.clearInterval(interval);
-  }, [autoGenerating]);
+  }, [autoGenerating, refining]);
 
   useEffect(() => {
     if (autoGenerating && versions.length > 0) {
@@ -181,6 +181,7 @@ function PlanView() {
   async function refine() {
     if (!refineText.trim()) return toast.error("Describe the change you want");
     setBusy(true);
+    setRefining(true);
     const operationId = crypto.randomUUID();
     try {
       const res = await waitForPlanGeneration(
@@ -208,20 +209,7 @@ function PlanView() {
       navigate({ to: "/", replace: true });
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function doRestore(version: number) {
-    setBusy(true);
-    try {
-      await restore({ data: { sessionId, version } });
-      setActiveId(null);
-      await load();
-      toast.success(`Restored version ${version} (no credit spent)`);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Restore failed");
-    } finally {
-      setBusy(false);
+      setRefining(false);
     }
   }
 
@@ -273,8 +261,9 @@ function PlanView() {
         <div>
           <h1 className="text-2xl font-bold">Your {session.duration_weeks}-week plan</h1>
           <p className="text-sm text-muted-foreground">
-            {remaining} refinement{remaining === 1 ? "" : "s"} remaining · viewing v
+            {remaining} refinement{remaining === 1 ? "" : "s"} remaining · viewing version{" "}
             {active?.version ?? 1}
+            {active ? (active.version === 1 ? " — original" : " — refined") : ""}
           </p>
         </div>
         <div className="flex gap-2">
@@ -286,6 +275,30 @@ function PlanView() {
           </Button>
         </div>
       </div>
+
+      {refining && (
+        <Card className="mb-6">
+          <CardContent className="p-8 text-center text-muted-foreground">
+            <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
+            <p className="font-medium text-foreground">
+              Building your refined plan… this can take up to 2 minutes.
+            </p>
+            <div
+              className="mx-auto mt-6 max-w-md rounded-md border border-border bg-muted/40 p-4 text-left"
+              aria-live="polite"
+            >
+              <p className="text-xs font-bold uppercase text-primary">Did you know?</p>
+              <p className="mt-1 min-h-12 text-sm leading-6 text-foreground">
+                {PLAN_TIPS[tipIndex]}
+              </p>
+            </div>
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              Stay on this page — your refined plan will appear here automatically when it is ready.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
 
       {!active ? (
         <Card>
@@ -327,7 +340,9 @@ function PlanView() {
           </CardContent>
         </Card>
       ) : (
-        <PlanContent plan={active.plan} durationWeeks={session.duration_weeks} />
+        <div id="plan-top">
+          <PlanContent plan={active.plan} durationWeeks={session.duration_weeks} />
+        </div>
       )}
 
       {versions.length > 1 && (
@@ -335,51 +350,51 @@ function PlanView() {
           <CardContent className="p-4">
             <p className="mb-3 font-semibold">
               <History className="mr-1.5 inline h-4 w-4 text-primary" />
-              Plan versions
+              Your plan versions
             </p>
             <div className="space-y-2">
-              {versions.map((v) => (
-                <div
-                  key={v.id}
-                  className={`flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm ${
-                    v.id === active?.id ? "border-primary bg-primary/5" : ""
-                  }`}
-                >
-                  <div>
-                    <p className="font-medium">
-                      v{v.version}
-                      {v.is_final ? " · active" : ""}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(v.created_at).toLocaleString()}
-                      {v.refinement_note ? ` · "${v.refinement_note}"` : " · initial"}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={v.id === active?.id ? "secondary" : "outline"}
-                      onClick={() => setActiveId(v.id)}
-                    >
-                      View
-                    </Button>
-                    {!v.is_final && (
-                      <Button size="sm" onClick={() => doRestore(v.version)} disabled={busy}>
-                        Restore
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
+              {[...versions]
+                .sort((a, b) => a.version - b.version)
+                .map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveId(v.id);
+                      document
+                        .getElementById("plan-top")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className={`flex w-full flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-left text-sm transition-colors ${
+                      v.id === active?.id
+                        ? "border-primary bg-primary/5"
+                        : "hover:border-primary/50"
+                    }`}
+                  >
+                    <div>
+                      <p className="font-medium">
+                        Version {v.version} — {v.version === 1 ? "original" : "refined"}
+                        {v.id === active?.id ? " · showing now" : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(v.created_at).toLocaleString()}
+                        {v.refinement_note ? ` · "${v.refinement_note}"` : ""}
+                      </p>
+                    </div>
+                    <span className="text-xs font-semibold text-primary">
+                      {v.id === active?.id ? "Showing" : "Show this version"}
+                    </span>
+                  </button>
+                ))}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Restoring a previous version does NOT cost a credit.
+              Both versions are saved permanently — switching between them is free.
             </p>
           </CardContent>
         </Card>
       )}
 
-      {active && remaining > 0 && (
+      {active && remaining > 0 && !refining && (
         <Card className="mt-8">
           <CardContent className="p-4">
             <p className="font-semibold">
@@ -402,6 +417,14 @@ function PlanView() {
           </CardContent>
         </Card>
       )}
+
+      {active && remaining <= 0 && (
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          You&apos;ve used the refinement included with this plan. Both versions stay saved here —
+          buy a new plan any time for a fresh one.
+        </p>
+      )}
+
 
       <div className="mt-8 text-center">
         <Button asChild variant="ghost" size="sm">

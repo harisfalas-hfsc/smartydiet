@@ -188,7 +188,7 @@ function NutritionIntelligencePage() {
             <SmartyRow tone="cyan" icon="🍽️" title="Smarty Meal Plan™" subtitle="Meals, portions & a weekly grocery list." />
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            ✨ You get 2 refinements included — the first plan is a starting
+            ✨ You get 1 refinement included — the first plan is a starting
             point, not a final verdict.
           </p>
         </SmartyCard>

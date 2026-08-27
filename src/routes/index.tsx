@@ -161,7 +161,7 @@ function Home() {
               </Link>
             </div>
             <p className="mt-4 text-sm text-white/60">
-              Includes 1 initial plan + 2 refinements.
+              Includes 1 initial plan + 1 refinement.
             </p>
           </div>
         </div>

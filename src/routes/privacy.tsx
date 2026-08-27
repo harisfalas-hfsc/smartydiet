@@ -87,14 +87,14 @@ function Privacy() {
       <h3>Usage &amp; Technical Data</h3>
       <ul>
         <li>Technical data such as IP address, browser type, device type, and operating system.</li>
-        <li>Aggregated usage analytics (which steps you complete, refinements used).</li>
+        <li>Aggregated usage analytics (which steps you complete, refinement used).</li>
       </ul>
 
       <h2>2. How We Use Your Data</h2>
       <ul>
         <li>Generate your personalized nutrition plan and grocery list.</li>
         <li>Exclude allergens, disliked foods, and restricted items from your plan.</li>
-        <li>Apply your refinement requests using remaining credits.</li>
+        <li>Apply your refinement request using your remaining credit.</li>
         <li>Save your plans and history so you can view them at any time.</li>
         <li>Process one-time plan payments via Stripe.</li>
         <li>

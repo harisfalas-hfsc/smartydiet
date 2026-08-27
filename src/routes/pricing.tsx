@@ -15,7 +15,7 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "One personalized Smarty Meal Plan™ for €9.99. Includes 1, 2 or 4-week meal plan, macros, grocery list, 2 free refinements and PDF export. No subscription.",
+          "One personalized Smarty Meal Plan™ for €9.99. Includes 1, 2 or 4-week meal plan, macros, grocery list, 1 free refinement and PDF export. No subscription.",
       },
       { property: "og:title", content: "SmartyDiet Pricing — €9.99 one-time" },
       {
@@ -33,7 +33,7 @@ const INCLUDES: { icon: string; label: string }[] = [
   { icon: "🎯", label: "Calorie & macro targets" },
   { icon: "🗓️", label: "1, 2 or 4-week meal plan" },
   { icon: "🛒", label: "Weekly grocery list" },
-  { icon: "✏️", label: "2 free refinements" },
+  { icon: "✏️", label: "1 free refinement" },
   { icon: "📄", label: "PDF export + printable list" },
   { icon: "☁️", label: "Saved to your account" },
 ];

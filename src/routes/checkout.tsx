@@ -239,7 +239,7 @@ function CheckoutPage() {
       <div className="mb-4">
         <h1 className="text-2xl font-bold">Complete your payment</h1>
         <p className="text-sm text-muted-foreground">
-          €9.99 — one plan, 1 initial generation + 2 refinements.
+          €9.99 — one plan, 1 initial generation + 1 refinement.
         </p>
       </div>
       <div id="checkout" className="rounded-lg border bg-card p-2">

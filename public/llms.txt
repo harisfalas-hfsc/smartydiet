@@ -45,6 +45,7 @@ SmartyDiet is not just another diet app. It is an end-to-end **AI Nutrition Inte
 - FAQ — https://smartydiet.com/faq
 - Contact — https://smartydiet.com/contact
 - Nutrition Intelligence (pillar) — https://smartydiet.com/nutrition-intelligence
+- Nutrition Library (hub for all guides) — https://smartydiet.com/nutrition-library
 - Glossary — https://smartydiet.com/glossary
 - The Diet Science — https://smartydiet.com/diet-science
 - Personalized diet plans — https://smartydiet.com/diet-plans

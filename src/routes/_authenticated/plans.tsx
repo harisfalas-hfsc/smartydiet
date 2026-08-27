@@ -221,7 +221,7 @@ function PlansList() {
                 cornerIcon={Sparkles}
                 title="Want a"
                 accent="new plan?"
-                description={freeAccessMode ? "You've used all refinements on your current plans. Create a brand new personalized diet plan." : "You've used all refinements on your current plans. Create a brand new personalized diet plan for €9.99."}
+                description={freeAccessMode ? "You've used the refinement on your current plans. Create a brand new personalized diet plan." : "You've used the refinement on your current plans. Create a brand new personalized diet plan for €9.99."}
               >
                 <Button asChild size="lg">
                   <Link to="/questionnaire">{freeAccessMode ? "Create a new diet plan" : "Create a new diet plan — €9.99"}</Link>
