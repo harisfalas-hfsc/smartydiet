@@ -1,5 +1,14 @@
 import { generateText } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import {
+  mealSlotsFor,
+  type StrictRules,
+  type ValidationIssue,
+  validatePlan,
+} from "@/lib/plan-validation";
+
+export { validatePlan } from "@/lib/plan-validation";
+export type { StrictRules, ValidationIssue } from "@/lib/plan-validation";
 
 export interface PlanResult {
   plan?: any;
@@ -16,17 +25,6 @@ type GenerationContext = {
 };
 
 // -------------------- Rules & Validation --------------------
-
-export interface StrictRules {
-  mealsPerDay: number;
-  calorieTarget: number; // exact target
-  calorieTolerance: number; // ±kcal per day
-  excludeFoods: string[]; // lower-cased tokens
-  dietStyle: string;
-  goal: string;
-  fastingWindow?: string;
-  weeks: number;
-}
 
 interface RefinementConstraints {
   mealsPerDay?: number;
@@ -164,110 +162,59 @@ function mergeConstraints(base: StrictRules, extra: RefinementConstraints): Stri
   return merged;
 }
 
-export interface ValidationIssue {
-  day: number;
-  weekNumber: number;
-  kind: "calorie" | "meal_count" | "excluded_food";
-  detail: string;
-}
-
-export function validatePlan(plan: any, rules: StrictRules): ValidationIssue[] {
-  const issues: ValidationIssue[] = [];
-  const weeks = plan?.weeks ?? [];
-  for (const w of weeks) {
-    const wn = Number(w.weekNumber) || 0;
-    for (const d of w.days ?? []) {
-      const day = Number(d.day) || 0;
-      const meals = d.meals ?? [];
-      if (meals.length !== rules.mealsPerDay) {
-        issues.push({
-          day,
-          weekNumber: wn,
-          kind: "meal_count",
-          detail: `Week ${wn} Day ${day} has ${meals.length} meals; required ${rules.mealsPerDay}.`,
-        });
-      }
-      const sum = meals.reduce((a: number, m: any) => a + (Number(m.calories) || 0), 0);
-      if (Math.abs(sum - rules.calorieTarget) > rules.calorieTolerance) {
-        issues.push({
-          day,
-          weekNumber: wn,
-          kind: "calorie",
-          detail: `Week ${wn} Day ${day} totals ${sum} kcal; must be ${rules.calorieTarget}±${rules.calorieTolerance}.`,
-        });
-      }
-      for (const m of meals) {
-        const hay = [m.title, ...(m.ingredients ?? []).map((i: any) => `${i.qty} ${i.item}`)]
-          .join(" ")
-          .toLowerCase();
-        for (const bad of rules.excludeFoods) {
-          if (!bad) continue;
-          if (hay.includes(bad)) {
-            issues.push({
-              day,
-              weekNumber: wn,
-              kind: "excluded_food",
-              detail: `Week ${wn} Day ${day} meal "${m.title}" contains banned "${bad}".`,
-            });
-          }
-        }
-      }
-    }
-  }
-  return issues;
-}
-
 // -------------------- Prompt building --------------------
 
 function buildSystemPrompt(rules: StrictRules) {
   return `You are SmartyDiet, an evidence-based nutrition assistant. You build safe, practical, personalized diet plans.
 
 ABSOLUTE HARD RULES (non-negotiable — a plan violating any of these is REJECTED):
-1. Every day must contain EXACTLY ${rules.mealsPerDay} meal(s). No more, no less. No extra snacks.
-2. Every day's total calories must equal ${rules.calorieTarget} kcal within ±${rules.calorieTolerance} kcal. Do the arithmetic; sum of meal calories per day MUST land in that range.
-3. The following foods/ingredients are FORBIDDEN and must not appear in any meal title or ingredients (case-insensitive substring): ${rules.excludeFoods.length ? rules.excludeFoods.join(", ") : "(none)"}.
-4. Diet style: ${rules.dietStyle}. Goal: ${rules.goal}.${rules.fastingWindow ? ` Fasting window: ${rules.fastingWindow} — all meals must fit inside the eating window; no eating outside it.` : ""}
-5. Portion sizes must be numeric and realistic. Include short prep instructions per meal.
-6. Weekly variety — avoid repeating identical meals more than twice per week.
-7. Provide a consolidated grocery list per week.
-8. Include a short rationale explaining WHY this plan fits the user's goal.
-9. End with a disclaimer: not medical advice; consult a professional for medical conditions.
+1. The finished plan will have exactly ${rules.weeks} week(s). For the single requested week in each response, return exactly 7 days using its specified global day numbers. Never omit, summarize, or abbreviate a day.
+2. Every day must contain EXACTLY ${rules.mealsPerDay} meal(s), in this exact order: ${mealSlotsFor(rules.mealsPerDay).join(" → ")}. No more, no less.
+3. Every day's total calories must equal ${rules.calorieTarget} kcal within ±${rules.calorieTolerance} kcal. Do the arithmetic; sum of meal calories per day MUST land in that range.
+4. The following foods/ingredients are FORBIDDEN and must not appear in any meal title or ingredients (case-insensitive substring): ${rules.excludeFoods.length ? rules.excludeFoods.join(", ") : "(none)"}.
+5. Diet style: ${rules.dietStyle}. Goal: ${rules.goal}.${rules.fastingWindow ? ` Fasting window: ${rules.fastingWindow} — all meals must fit inside the eating window; no eating outside it.` : ""}
+6. Portion sizes must be numeric and realistic. Include short prep instructions per meal.
+7. Weekly variety — avoid repeating identical meals more than twice per week.
+8. Provide a consolidated grocery list per week.
+9. Include a short rationale explaining WHY this plan fits the user's goal.
+10. End with a disclaimer: not medical advice; consult a professional for medical conditions.
 
 MATH DISCIPLINE: Before returning JSON, sum each day's meal calories yourself and adjust portion sizes so the total lands within ±${rules.calorieTolerance} of ${rules.calorieTarget}. Do not approximate.
 
-OUTPUT: Return STRICTLY valid JSON matching:
-type Plan = {
-  summary: { calorieTarget: number; macros: { protein_g: number; carbs_g: number; fat_g: number }; dietStyle: string; goal: string };
-  weeks: Array<{
-    weekNumber: number;
-    days: Array<{
-      day: number;
-      totals: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
-      meals: Array<{
+OUTPUT: You will be asked for exactly one day at a time. Return STRICTLY valid JSON matching:
+type DayResult = {
+  day: {
+    day: number;
+    totals: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
+    meals: Array<{
         name: string; time?: string; title: string;
         ingredients: Array<{ item: string; qty: string }>;
         calories: number; protein_g: number; carbs_g: number; fat_g: number;
         instructions: string;
-      }>;
     }>;
-    groceryList: Array<{ item: string; qty: string; category?: string }>;
-  }>;
-  rationale: string;
-  disclaimer: string;
+  };
 };
 No markdown, no code fences, JSON only.`;
 }
 
-function buildUserPrompt(q: any, rules: StrictRules, refinement?: string, previousPlan?: any) {
+function buildUserPrompt(
+  q: any,
+  rules: StrictRules,
+  weekNumber: number,
+  dayNumber: number,
+  refinement?: string,
+  previousPlan?: any,
+) {
   const parts = [
-    `Duration: ${rules.weeks} week(s). Meals/day: ${rules.mealsPerDay}. Calorie target: ${rules.calorieTarget} kcal/day (±${rules.calorieTolerance}).`,
+    `Build ONLY Day ${dayNumber} from Week ${weekNumber} of ${rules.weeks}. Return that one complete day only.`,
+    `Meals/day: ${rules.mealsPerDay}. Exact meal order: ${mealSlotsFor(rules.mealsPerDay).join(" → ")}. Calorie target: ${rules.calorieTarget} kcal/day (±${rules.calorieTolerance}).`,
     `Excluded foods: ${rules.excludeFoods.length ? rules.excludeFoods.join(", ") : "none"}.`,
     `Questionnaire:\n${JSON.stringify(q, null, 2)}`,
   ];
   if (previousPlan && refinement) {
     parts.push(
       `REFINEMENT REQUEST (must override earlier answers when they conflict): "${refinement}"`,
-      `Prior plan for reference:\n${JSON.stringify(previousPlan)}`,
+      `Prior Day ${dayNumber} for reference:\n${JSON.stringify(previousPlan?.weeks?.find((week: any) => Number(week?.weekNumber) === weekNumber)?.days?.find((day: any) => Number(day?.day) === dayNumber) ?? previousPlan)}`,
     );
   }
   return parts.join("\n\n");
@@ -294,12 +241,24 @@ async function askModel(system: string, user: string) {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("Missing LOVABLE_API_KEY");
   const gateway = createLovableAiGatewayProvider(key);
-  const { text } = await generateText({
-    model: gateway("google/gemini-2.5-flash"),
-    system,
-    prompt: user,
-  });
-  return stripFences(text);
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const { text } = await generateText({
+        model: gateway("google/gemini-2.5-flash"),
+        system,
+        prompt:
+          attempt === 1
+            ? user
+            : `${user}\n\nIMPORTANT RETRY: Return one complete, strictly valid JSON object. Do not truncate it, use markdown, or add prose.`,
+        maxOutputTokens: 16_000,
+      });
+      return stripFences(text);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("AI returned invalid JSON");
 }
 
 async function extractRefinementConstraints(refinement: string): Promise<RefinementConstraints> {
@@ -352,16 +311,75 @@ async function generateWithRepair(
   previousPlan?: any,
 ): Promise<{ plan: any; issues: ValidationIssue[] }> {
   const system = buildSystemPrompt(rules);
-  let plan = await askModel(system, buildUserPrompt(q, rules, refinement, previousPlan));
+  const dayResults: any[][] = [];
+  for (let weekNumber = 1; weekNumber <= rules.weeks; weekNumber += 1) {
+    const firstDay = (weekNumber - 1) * 7 + 1;
+    dayResults.push(
+      await Promise.all(
+        Array.from({ length: 7 }, (_, index) =>
+          askModel(
+            system,
+            buildUserPrompt(q, rules, weekNumber, firstDay + index, refinement, previousPlan),
+          ),
+        ),
+      ),
+    );
+  }
+
+  const assemble = () => {
+    const weeks = dayResults.map((results, weekIndex) => {
+      const days = results.map((result) => result?.day ?? result);
+      const groceryList = days.flatMap((day: any) =>
+        (day?.meals ?? []).flatMap((meal: any) =>
+          (meal?.ingredients ?? []).map((ingredient: any) => ({
+            item: ingredient.item,
+            qty: ingredient.qty,
+          })),
+        ),
+      );
+      return { weekNumber: weekIndex + 1, days, groceryList };
+    });
+    const firstTotals = weeks[0]?.days?.[0]?.totals ?? {};
+    return {
+      summary: {
+        calorieTarget: rules.calorieTarget,
+        macros: {
+          protein_g: Number(firstTotals.protein_g) || 0,
+          carbs_g: Number(firstTotals.carbs_g) || 0,
+          fat_g: Number(firstTotals.fat_g) || 0,
+        },
+        dietStyle: rules.dietStyle,
+        goal: rules.goal,
+      },
+      weeks,
+      rationale: `This plan follows the selected ${rules.dietStyle} style, ${rules.goal} goal, calorie target, meal schedule, and stated food restrictions.`,
+      disclaimer: "This plan is not medical advice. Consult a qualified professional for medical conditions.",
+    };
+  };
+
+  let plan = assemble();
   let issues = validatePlan(plan, rules);
-  for (let pass = 0; pass < 2 && issues.length; pass++) {
-    const fixMsg = `Your previous plan violated hard rules. Fix ALL of these and return the corrected full JSON plan (same shape). Do not introduce new violations.\n\nViolations:\n- ${issues
-      .slice(0, 20)
-      .map((i) => i.detail)
-      .join(
-        "\n- ",
-      )}\n\nRe-verify meal count = ${rules.mealsPerDay} and daily calories = ${rules.calorieTarget}±${rules.calorieTolerance} before responding.\n\nPrior (broken) plan:\n${JSON.stringify(plan)}`;
-    plan = await askModel(system, fixMsg);
+  for (let pass = 0; pass < 2 && issues.length; pass += 1) {
+    const affectedDays = new Set(
+      issues
+        .filter((issue) => issue.day > 0)
+        .map((issue) => issue.day),
+    );
+    if (issues.some((issue) => issue.day === 0)) {
+      for (let day = 1; day <= rules.weeks * 7; day += 1) affectedDays.add(day);
+    }
+    for (const dayNumber of affectedDays) {
+      const weekNumber = Math.ceil(dayNumber / 7);
+      const index = (dayNumber - 1) % 7;
+      const dayIssues = issues.filter((issue) => issue.day === dayNumber || issue.day === 0);
+      const current = dayResults[weekNumber - 1]?.[index];
+      const fixPrompt = `${buildUserPrompt(q, rules, weekNumber, dayNumber, refinement, previousPlan)}\n\nYour previous Day ${dayNumber} violated hard rules. Correct every violation and return the complete corrected DayResult JSON.\nViolations:\n- ${dayIssues
+        .slice(0, 20)
+        .map((issue) => issue.detail)
+        .join("\n- ")}\n\nPrevious invalid DayResult:\n${JSON.stringify(current)}`;
+      dayResults[weekNumber - 1][index] = await askModel(system, fixPrompt);
+    }
+    plan = assemble();
     issues = validatePlan(plan, rules);
   }
   return { plan, issues };
@@ -519,6 +537,15 @@ export async function runPlanGeneration(
         previousPlan,
       );
 
+      if (issues.length > 0) {
+        return fail(
+          `Generated plan failed hard validation: ${issues
+            .slice(0, 20)
+            .map((issue) => issue.detail)
+            .join(" | ")}`,
+        );
+      }
+
       const { data: existing } = await supabase
         .from("diet_plans")
         .select("id")
@@ -531,7 +558,7 @@ export async function runPlanGeneration(
 
       await supabase.from("diet_plans").update({ is_final: false }).eq("session_id", session.id);
 
-      const warnings = issues.slice(0, 10).map((i) => i.detail);
+      const warnings: string[] = [];
       const planToSave = { ...plan, _warnings: warnings };
 
       const { error: insErr } = await supabase.from("diet_plans").insert({
@@ -596,4 +623,70 @@ export async function runPlanGeneration(
       const statusDetail = Number.isFinite(status) ? ` (status ${status})` : "";
       return fail(`${message}${statusDetail}`);
     }
+}
+
+export async function repairStoredPlan(
+  planId: string,
+  context: GenerationContext,
+): Promise<PlanResult> {
+  const { supabase, userId } = context;
+  const { data: stored, error: storedError } = await supabase
+    .from("diet_plans")
+    .select("id,session_id,plan,refinement_note")
+    .eq("id", planId)
+    .eq("user_id", userId)
+    .single();
+  if (storedError || !stored) {
+    return { error: `Stored plan lookup failed: ${storedError?.message ?? "Plan not found"}` };
+  }
+
+  const { data: session, error: sessionError } = await supabase
+    .from("generation_sessions")
+    .select("id,questionnaire_id,duration_weeks")
+    .eq("id", stored.session_id)
+    .eq("user_id", userId)
+    .single();
+  if (sessionError || !session) {
+    return { error: `Session lookup failed: ${sessionError?.message ?? "Session not found"}` };
+  }
+
+  const { data: questionnaire, error: questionnaireError } = await supabase
+    .from("questionnaires")
+    .select("data")
+    .eq("id", session.questionnaire_id)
+    .eq("user_id", userId)
+    .single();
+  if (questionnaireError || !questionnaire) {
+    return {
+      error: `Questionnaire lookup failed: ${questionnaireError?.message ?? "Questionnaire not found"}`,
+    };
+  }
+
+  let rules = buildBaseRules(questionnaire.data, session.duration_weeks);
+  if (stored.refinement_note) {
+    rules = mergeConstraints(rules, await extractRefinementConstraints(stored.refinement_note));
+  }
+  const { plan, issues } = await generateWithRepair(
+    questionnaire.data,
+    rules,
+    stored.refinement_note ?? undefined,
+    stored.plan,
+  );
+  if (issues.length > 0) {
+    return {
+      error: `Repaired plan failed hard validation: ${issues
+        .slice(0, 20)
+        .map((issue) => issue.detail)
+        .join(" | ")}`,
+    };
+  }
+
+  const planToSave = { ...plan, _warnings: [] };
+  const { error: updateError } = await supabase
+    .from("diet_plans")
+    .update({ plan: planToSave, rationale: plan?.rationale ?? null })
+    .eq("id", stored.id)
+    .eq("user_id", userId);
+  if (updateError) return { error: `Saving repaired plan failed: ${updateError.message}` };
+  return { plan: planToSave, rationale: plan?.rationale, warnings: [] };
 }
