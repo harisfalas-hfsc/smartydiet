@@ -1,7 +1,9 @@
-import { AlertTriangle, CheckCircle2, Download, ShoppingBasket, Utensils } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Download, ShoppingBasket } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { toneClasses, type SmartyTone } from "@/components/SmartyCard";
+import { cn } from "@/lib/utils";
 import { exportGroceryPdf, exportPlanPdf } from "@/lib/pdf-export";
 import { toast } from "sonner";
 import {
@@ -15,6 +17,19 @@ type Props = {
   durationWeeks: number;
   showDownloads?: boolean;
 };
+
+const WEEK_TONES: SmartyTone[] = ["cyan", "green", "pink", "orange", "purple", "yellow", "blue"];
+const WEEK_EMOJIS = ["🥗", "🍓", "🥑", "🍇", "🥕", "🍋", "🫐"];
+
+function mealEmoji(name: string) {
+  const n = String(name ?? "").toLowerCase();
+  if (n.includes("breakfast")) return "🍳";
+  if (n.includes("lunch")) return "🥗";
+  if (n.includes("dinner")) return "🍽️";
+  if (n.includes("bed")) return "🌙";
+  if (n.includes("snack")) return "🍎";
+  return "🥄";
+}
 
 function jumpTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
