@@ -1,37 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
+import {
+  loadOwnedPaymentSession,
+  resolveOrCreatePaymentCustomer,
+} from "@/lib/payments.server";
 
 type CheckoutResult = { clientSecret: string } | { error: string };
-
-async function resolveOrCreateCustomer(
-  stripe: ReturnType<typeof createStripeClient>,
-  options: { email?: string; userId: string },
-): Promise<string> {
-  if (!/^[a-zA-Z0-9_-]+$/.test(options.userId)) throw new Error("Invalid userId");
-  const found = await stripe.customers.search({
-    query: `metadata['userId']:'${options.userId}'`,
-    limit: 1,
-  });
-  if (found.data.length) return found.data[0].id;
-  if (options.email) {
-    const list = await stripe.customers.list({ email: options.email, limit: 1 });
-    if (list.data.length) {
-      const c = list.data[0];
-      if (c.metadata?.userId !== options.userId) {
-        await stripe.customers.update(c.id, {
-          metadata: { ...c.metadata, userId: options.userId },
-        });
-      }
-      return c.id;
-    }
-  }
-  const created = await stripe.customers.create({
-    ...(options.email && { email: options.email }),
-    metadata: { userId: options.userId },
-  });
-  return created.id;
-}
 
 export const createDietCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -69,7 +44,7 @@ export const createDietCheckout = createServerFn({ method: "POST" })
       if (!prices.data.length) return { error: "Price not found" };
       const price = prices.data[0];
 
-      const customerId = await resolveOrCreateCustomer(stripe, { email, userId });
+      const customerId = await resolveOrCreatePaymentCustomer(stripe, { email, userId });
 
       const productId = typeof price.product === "string" ? price.product : price.product.id;
       const product = await stripe.products.retrieve(productId);
@@ -219,16 +194,6 @@ export const getResumableDietSession = createServerFn({ method: "GET" })
     return { stripeSessionId: null };
   });
 
-async function loadOwnedSession(supabase: any, userId: string, generationSessionId: string) {
-  const { data } = await supabase
-    .from("generation_sessions")
-    .select("id,user_id,status,stripe_payment_intent,questionnaire_id")
-    .eq("id", generationSessionId)
-    .eq("user_id", userId)
-    .maybeSingle();
-  return data;
-}
-
 // Capture the authorized payment — called only after the diet plan exists.
 export const captureDietPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -236,7 +201,7 @@ export const captureDietPayment = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     try {
-      const session = await loadOwnedSession(supabase, userId, data.generationSessionId);
+      const session = await loadOwnedPaymentSession(supabase, userId, data.generationSessionId);
       if (!session) return { captured: false, error: "Session not found" };
       if (session.status === "paid") return { captured: true };
       if (!session.stripe_payment_intent) {
@@ -307,7 +272,7 @@ export const releaseDietAuthorization = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     try {
-      const session = await loadOwnedSession(supabase, userId, data.generationSessionId);
+      const session = await loadOwnedPaymentSession(supabase, userId, data.generationSessionId);
       if (!session?.stripe_payment_intent)
         return { released: false, error: "No authorization to release" };
       const stripe = createStripeClient(data.environment);
