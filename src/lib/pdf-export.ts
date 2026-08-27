@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas-pro";
 import logoUrl from "@/assets/smartydiet-logo.png";
+import { mealSlotsFor, verifyPlanStructure } from "@/lib/plan-validation";
 
 const PRIMARY = "#38b6ff";
 const PRIMARY_DARK = "#0284c7";
@@ -125,6 +126,45 @@ async function renderToPdf(html: string, filename: string) {
   }
 }
 
+function rulesBlock(plan: any, durationWeeks: number) {
+  const s = plan?.summary ?? {};
+  const weeks: any[] = plan?.weeks ?? [];
+  const expectedWeeks = Number(s.weeks) || weeks.length || durationWeeks;
+  const mealsPerDay =
+    Number(s.mealsPerDay) || Number(weeks[0]?.days?.[0]?.meals?.length) || 3;
+  const slots: string[] = s.mealSlots?.length ? s.mealSlots : mealSlotsFor(mealsPerDay);
+  const snacks = slots.filter((slot: string) => slot.toLowerCase().includes("snack"));
+  const report = verifyPlanStructure(plan, expectedWeeks, mealsPerDay);
+  const okColor = report.ok ? "#15803d" : "#b91c1c";
+  const okBg = report.ok ? "#f0fdf4" : "#fef2f2";
+  const row = (label: string, value: string) => `
+    <div style="min-width:120px;">
+      <div style="font-size:10px;color:${MUTED};text-transform:uppercase;letter-spacing:0.06em;">${esc(label)}</div>
+      <div style="font-size:13px;font-weight:600;color:${INK};margin-top:2px;">${esc(value)}</div>
+    </div>`;
+  return `
+    <div style="border:1px solid ${BORDER};border-left:4px solid ${okColor};border-radius:14px;
+      background:${okBg};padding:14px 16px;margin-bottom:20px;">
+      <div style="font-size:14px;font-weight:800;color:${okColor};">
+        ${report.ok ? "✔ Plan verified — complete" : "✖ Plan incomplete"}
+      </div>
+      <div style="font-size:11px;color:${MUTED};margin-top:3px;">
+        ${report.weeks}/${report.expectedWeeks} weeks · ${report.totalDays}/${report.expectedDays} days · ${mealsPerDay} meals every day
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px 26px;margin-top:12px;padding-top:12px;border-top:1px solid ${BORDER};">
+        ${row("Duration", `${expectedWeeks} week${expectedWeeks === 1 ? "" : "s"}`)}
+        ${row("Days per week", "7")}
+        ${row("Meals per day", String(mealsPerDay))}
+        ${row("Snacks per day", String(snacks.length))}
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:${INK};">
+        <b>Daily meal order:</b> ${esc(slots.join(" · "))}
+      </div>
+      ${s.fastingWindow ? `<div style="margin-top:4px;font-size:11px;color:${INK};"><b>Fasting window:</b> ${esc(s.fastingWindow)}</div>` : ""}
+      ${s.excludeFoods?.length ? `<div style="margin-top:4px;font-size:11px;color:${INK};"><b>Excluded foods:</b> ${esc(s.excludeFoods.join(", "))}</div>` : ""}
+    </div>`;
+}
+
 export async function exportPlanPdf(plan: any, durationWeeks: number) {
   const s = plan?.summary;
   const summary = s
@@ -201,11 +241,12 @@ export async function exportPlanPdf(plan: any, durationWeeks: number) {
     ? `<div style="margin-top:14px;font-size:10px;color:${MUTED};line-height:1.5;">${esc(plan.disclaimer)}</div>`
     : "";
 
-  const body = summary + weeksHtml + rationale + disclaimer;
+  const body = rulesBlock(plan, durationWeeks) + summary + weeksHtml + rationale + disclaimer;
   await renderToPdf(shell(body, `Your ${durationWeeks}-week personalized plan`), "smartydiet-plan.pdf");
 }
 
 export async function exportGroceryPdf(plan: any) {
+  const weekCount = (plan?.weeks ?? []).length;
   const weeksHtml = (plan?.weeks ?? [])
     .map((w: any) => {
       const items = (w.groceryList ?? [])
@@ -228,5 +269,8 @@ export async function exportGroceryPdf(plan: any) {
     })
     .join("");
 
-  await renderToPdf(shell(weeksHtml, "Your printable grocery list"), "smartydiet-grocery.pdf");
+  await renderToPdf(
+    shell(rulesBlock(plan, weekCount) + weeksHtml, "Your printable grocery list"),
+    "smartydiet-grocery.pdf",
+  );
 }

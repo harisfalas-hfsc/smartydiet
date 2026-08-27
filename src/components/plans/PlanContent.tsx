@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { exportGroceryPdf, exportPlanPdf } from "@/lib/pdf-export";
 import {
   mealSlotsFor,
-  snackSlotsFor,
   sortPlanStructure,
   verifyPlanStructure,
 } from "@/lib/plan-validation";
