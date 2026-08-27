@@ -13,6 +13,7 @@ import {
   ShoppingBasket,
   History,
   AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -417,22 +418,39 @@ function PlanView() {
       )}
 
       {active && remaining > 0 && !refining && (
-        <Card className="mt-8">
-          <CardContent className="p-4">
-            <p className="font-semibold">
-              <RefreshCw className="mr-1.5 inline h-4 w-4 text-primary" />
-              Refine your plan ({remaining} left)
-            </p>
+        <Card className="mt-8 overflow-hidden border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:border-amber-500/40 dark:from-amber-500/15 dark:via-orange-500/10 dark:to-rose-500/10">
+          <CardContent className="p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex-1">
+                <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white/80 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-amber-700 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-300">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Refinement included
+                </div>
+                <p className="mt-1 text-lg font-extrabold text-amber-900 dark:text-amber-100">
+                  Refine your plan
+                </p>
+                <p className="text-sm text-amber-800/80 dark:text-amber-100/80">
+                  You have <span className="font-bold">{remaining} refinement</span> left. Tell us
+                  what to change and we&apos;ll generate an improved version while keeping your
+                  original saved.
+                </p>
+              </div>
+            </div>
             <Textarea
-              className="mt-2"
+              className="mt-4 border-amber-200 bg-white/80 placeholder:text-amber-900/40 focus-visible:ring-amber-400 dark:border-amber-500/40 dark:bg-black/20 dark:placeholder:text-amber-100/40"
               rows={3}
               placeholder='e.g. "one meal per day", "no dairy", "1800 kcal", "more protein"'
               value={refineText}
               onChange={(e) => setRefineText(e.target.value)}
             />
-            <div className="mt-2 flex justify-end">
-              <Button onClick={refine} disabled={busy}>
+            <div className="mt-3 flex justify-end">
+              <Button
+                onClick={refine}
+                disabled={busy}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600"
+              >
                 {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Sparkles className="mr-1.5 h-4 w-4" />
                 Refine plan
               </Button>
             </div>

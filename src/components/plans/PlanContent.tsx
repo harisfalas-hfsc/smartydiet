@@ -1,4 +1,4 @@
-import { AlertTriangle, CalendarDays, CheckCircle2, Download, ShoppingBasket } from "lucide-react";
+import { AlertTriangle, Brain, CalendarDays, CheckCircle2, Download, ShoppingBasket } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -314,10 +314,17 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
       })}
 
       {plan?.rationale && (
-        <Card>
+        <Card className="border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 dark:border-violet-500/40 dark:from-violet-500/15 dark:to-purple-500/10">
           <CardContent className="p-4">
-            <p className="font-semibold">Why this plan fits you</p>
-            <p className="mt-1 text-sm text-muted-foreground">{plan.rationale}</p>
+            <div className="mb-3 flex items-center gap-2">
+              <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-violet-200 bg-white dark:border-violet-500/40 dark:bg-violet-950/40">
+                <Brain className="h-4 w-4 text-violet-600 dark:text-violet-300" />
+              </div>
+              <p className="font-bold text-violet-700 dark:text-violet-200">Why this plan fits you</p>
+            </div>
+            <p className="text-sm leading-relaxed text-violet-900/80 dark:text-violet-100/80">
+              {plan.rationale}
+            </p>
           </CardContent>
         </Card>
       )}
