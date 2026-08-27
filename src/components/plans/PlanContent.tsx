@@ -1,9 +1,13 @@
-import { AlertTriangle, Download, ShoppingBasket, Utensils } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Download, ShoppingBasket, Utensils } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { exportGroceryPdf, exportPlanPdf } from "@/lib/pdf-export";
-import { sortPlanStructure } from "@/lib/plan-validation";
+import {
+  mealSlotsFor,
+  sortPlanStructure,
+  verifyPlanStructure,
+} from "@/lib/plan-validation";
 
 type Props = {
   plan: any;
@@ -19,6 +23,18 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
   const plan = sortPlanStructure(rawPlan);
   const warnings: string[] = plan?._warnings ?? [];
   const weeks: any[] = plan?.weeks ?? [];
+  const summary = plan?.summary;
+
+  // Rules the plan was generated from. Older plans don't store them, so fall
+  // back to what the stored structure actually contains.
+  const expectedWeeks = Number(summary?.weeks) || weeks.length || durationWeeks;
+  const expectedMealsPerDay =
+    Number(summary?.mealsPerDay) || Number(weeks[0]?.days?.[0]?.meals?.length) || 3;
+  const slots: string[] = summary?.mealSlots?.length
+    ? summary.mealSlots
+    : mealSlotsFor(expectedMealsPerDay);
+  const snacks = slots.filter((slot) => slot.toLowerCase().includes("snack"));
+  const report = verifyPlanStructure(plan, expectedWeeks, expectedMealsPerDay);
 
   return (
     <div className="space-y-6">
@@ -45,21 +61,83 @@ export function PlanContent({ plan: rawPlan, durationWeeks, showDownloads = fals
         </Alert>
       )}
 
-      {plan?.summary && (
+      <Card className={report.ok ? "border-primary/40 bg-primary/5" : "border-destructive/50"}>
+        <CardContent className="space-y-3 p-4">
+          <div className="flex items-start gap-2">
+            {report.ok ? (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            ) : (
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+            )}
+            <div className="text-sm">
+              <p className="font-semibold">
+                {report.ok ? "Plan verified — complete" : "Plan incomplete"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {report.weeks}/{report.expectedWeeks} weeks · {report.totalDays}/
+                {report.expectedDays} days · {report.expectedMealsPerDay} meals every day
+              </p>
+              {!report.ok && (
+                <ul className="mt-1 list-disc pl-4 text-xs text-destructive">
+                  {report.problems.map((problem, index) => <li key={index}>{problem}</li>)}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-t pt-3 text-xs sm:grid-cols-4">
+            <div>
+              <dt className="text-muted-foreground">Duration</dt>
+              <dd className="font-medium">{expectedWeeks} week{expectedWeeks === 1 ? "" : "s"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Days per week</dt>
+              <dd className="font-medium">7</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Meals per day</dt>
+              <dd className="font-medium">{expectedMealsPerDay}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Snacks per day</dt>
+              <dd className="font-medium">{snacks.length}</dd>
+            </div>
+            <div className="col-span-2 sm:col-span-4">
+              <dt className="text-muted-foreground">Daily meal order</dt>
+              <dd className="font-medium">{slots.join(" · ")}</dd>
+            </div>
+            {summary?.fastingWindow && (
+              <div className="col-span-2 sm:col-span-4">
+                <dt className="text-muted-foreground">Fasting window</dt>
+                <dd className="font-medium">{summary.fastingWindow}</dd>
+              </div>
+            )}
+            {summary?.excludeFoods?.length ? (
+              <div className="col-span-2 sm:col-span-4">
+                <dt className="text-muted-foreground">Excluded foods</dt>
+                <dd className="font-medium">{summary.excludeFoods.join(", ")}</dd>
+              </div>
+            ) : null}
+          </dl>
+        </CardContent>
+      </Card>
+
+      {summary && (
         <Card>
           <CardContent className="p-4 text-sm">
             <p className="font-semibold">
-              {plan.summary.calorieTarget} kcal / day ·{" "}
+              {summary.calorieTarget} kcal / day ·{" "}
               <span className="text-muted-foreground">
-                P {plan.summary.macros?.protein_g}g · C {plan.summary.macros?.carbs_g}g · F {plan.summary.macros?.fat_g}g
+                P {summary.macros?.protein_g}g · C {summary.macros?.carbs_g}g · F {summary.macros?.fat_g}g
               </span>
             </p>
             <p className="mt-1 text-xs uppercase text-muted-foreground">
-              {plan.summary.dietStyle} · {plan.summary.goal}
+              {summary.dietStyle} · {summary.goal}
             </p>
           </CardContent>
         </Card>
       )}
+
 
       {weeks.length > 0 && (
         <Card>
