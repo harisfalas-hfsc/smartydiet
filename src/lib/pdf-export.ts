@@ -24,8 +24,8 @@ function shell(bodyHtml: string, title: string, logoSrc: string, pageNumber: num
     color:${INK};background:#ffffff;display:flex;flex-direction:column;overflow:hidden;">
     <div style="height:88px;box-sizing:border-box;background:linear-gradient(135deg,${PRIMARY} 0%,${PRIMARY_DARK} 100%);
       padding:16px 30px;display:flex;align-items:center;gap:14px;">
-      <div style="width:48px;height:54px;display:flex;align-items:center;justify-content:center;flex:0 0 48px;">
-        <img src="${logoSrc}" alt="SmartyDiet apple" style="display:block;width:42px;height:50px;object-fit:contain;"/>
+      <div style="width:48px;height:48px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;flex:0 0 48px;background:#fff;border-radius:12px;padding:5px;box-shadow:0 3px 10px rgba(15,23,42,0.16);">
+        <img src="${logoSrc}" alt="SmartyDiet apple" style="display:block;width:34px;height:38px;object-fit:contain;"/>
       </div>
       <div style="min-width:0;">
         <div style="color:#fff;font-size:23px;font-weight:800;letter-spacing:0;line-height:1.1;">SmartyDiet</div>
