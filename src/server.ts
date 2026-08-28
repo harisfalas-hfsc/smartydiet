@@ -7,6 +7,8 @@ type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
+declare const __SMARTYDIET_BUILD_ID__: string;
+
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
 async function getServerEntry(): Promise<ServerEntry> {
@@ -37,12 +39,43 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
+async function applyFreshnessHeaders(request: Request, response: Response): Promise<Response> {
+  const url = new URL(request.url);
+  const isDocument = request.mode === "navigate" ||
+    request.headers.get("accept")?.includes("text/html") === true;
+  const isUpdateAsset = url.pathname === "/sw.js" || url.pathname === "/manifest.webmanifest";
+
+  if (!isDocument && !isUpdateAsset) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  headers.set("Pragma", "no-cache");
+  headers.set("Expires", "0");
+  headers.set("X-SmartyDiet-Build", __SMARTYDIET_BUILD_ID__);
+
+  if (url.pathname === "/sw.js" && response.ok) {
+    const source = await response.text();
+    return new Response(`${source}\n/* build:${__SMARTYDIET_BUILD_ID__} */\n`, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+      return await applyFreshnessHeaders(request, normalized);
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

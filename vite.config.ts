@@ -11,6 +11,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const buildId = `${Date.now()}`;
 
 // Load all env vars (not just VITE_*) into process.env for server-side code.
 // These are NOT exposed to the client bundle.
@@ -24,6 +25,9 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    define: {
+      __SMARTYDIET_BUILD_ID__: JSON.stringify(buildId),
+    },
     plugins: [
       mcpPlugin(),
     ],

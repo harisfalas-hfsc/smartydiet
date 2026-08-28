@@ -19,6 +19,8 @@ import { Toaster } from "../components/ui/sonner";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
 
+declare const __SMARTYDIET_BUILD_ID__: string;
+
 const SITE_URL = "https://smartydiet.com";
 const OG_IMAGE =
   "https://smartydiet.com/__l5e/assets-v1/d1e59921-5974-44b4-96d8-9bfbec15c871/smartydiet-social.png";
@@ -354,10 +356,20 @@ function RootComponent() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isPaymentProcessing = pathname === "/checkout/return";
 
-  // Always-fresh app: wipe every cache left by the old offline worker and keep
-  // only a network-only worker so each open loads the latest published build.
+  // Always-fresh app: clear legacy caches, check for each deployment's unique
+  // network-only worker, and reload an open tab as soon as the update activates.
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+    let reloading = false;
+    let updateTimer: ReturnType<typeof setInterval> | undefined;
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    const reloadForUpdate = () => {
+      if (!hadController || reloading) return;
+      reloading = true;
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", reloadForUpdate);
+
     void (async () => {
       try {
         const keys = await caches.keys();
@@ -366,13 +378,31 @@ function RootComponent() {
         // Cache clearing is best-effort.
       }
       try {
-        await navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" });
-        const registration = await navigator.serviceWorker.ready;
-        void registration.update();
+        const registration = await navigator.serviceWorker.register(
+          `/sw.js?v=${encodeURIComponent(__SMARTYDIET_BUILD_ID__)}`,
+          { updateViaCache: "none" },
+        );
+        const activateWaitingWorker = () => {
+          registration.waiting?.postMessage({ type: "SKIP_WAITING" });
+        };
+        registration.addEventListener("updatefound", () => {
+          const worker = registration.installing;
+          worker?.addEventListener("statechange", () => {
+            if (worker.state === "installed") activateWaitingWorker();
+          });
+        });
+        activateWaitingWorker();
+        await registration.update();
+        updateTimer = setInterval(() => void registration.update(), 60_000);
       } catch {
         // A blocked worker registration must never break the app.
       }
     })();
+
+    return () => {
+      navigator.serviceWorker.removeEventListener("controllerchange", reloadForUpdate);
+      if (updateTimer) clearInterval(updateTimer);
+    };
   }, []);
 
 
