@@ -19,8 +19,6 @@ import { Toaster } from "../components/ui/sonner";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
 
-declare const __SMARTYDIET_BUILD_ID__: string;
-
 const SITE_URL = "https://smartydiet.com";
 const OG_IMAGE =
   "https://smartydiet.com/__l5e/assets-v1/d1e59921-5974-44b4-96d8-9bfbec15c871/smartydiet-social.png";
@@ -356,53 +354,37 @@ function RootComponent() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isPaymentProcessing = pathname === "/checkout/return";
 
-  // Always-fresh app: clear legacy caches, check for each deployment's unique
-  // network-only worker, and reload an open tab as soon as the update activates.
+  // SmartyDiet is installable through its manifest but does not use an app-shell
+  // service worker. Remove legacy workers so they cannot serve an old release.
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
-    let reloading = false;
-    let updateTimer: ReturnType<typeof setInterval> | undefined;
-    const hadController = Boolean(navigator.serviceWorker.controller);
-    const reloadForUpdate = () => {
-      if (!hadController || reloading) return;
-      reloading = true;
-      window.location.reload();
-    };
-    navigator.serviceWorker.addEventListener("controllerchange", reloadForUpdate);
-
     void (async () => {
       try {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((key) => caches.delete(key)));
-      } catch {
-        // Cache clearing is best-effort.
-      }
-      try {
-        const registration = await navigator.serviceWorker.register(
-          `/sw.js?v=${encodeURIComponent(__SMARTYDIET_BUILD_ID__)}`,
-          { updateViaCache: "none" },
-        );
-        const activateWaitingWorker = () => {
-          registration.waiting?.postMessage({ type: "SKIP_WAITING" });
-        };
-        registration.addEventListener("updatefound", () => {
-          const worker = registration.installing;
-          worker?.addEventListener("statechange", () => {
-            if (worker.state === "installed") activateWaitingWorker();
-          });
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        const appRegistrations = registrations.filter((registration) => {
+          const scriptUrl = registration.active?.scriptURL
+            ?? registration.waiting?.scriptURL
+            ?? registration.installing?.scriptURL;
+          if (!scriptUrl) return false;
+          const pathname = new URL(scriptUrl).pathname;
+          return pathname === "/sw.js" || pathname === "/service-worker.js";
         });
-        activateWaitingWorker();
-        await registration.update();
-        updateTimer = setInterval(() => void registration.update(), 60_000);
+        await Promise.allSettled(appRegistrations.map((registration) => registration.unregister()));
+
+        const cacheNames = await caches.keys();
+        const appCacheNames = cacheNames.filter((name) =>
+          /(^|-)precache-v\d+-|(^|-)runtime-|(^|-)googleAnalytics-/.test(name),
+        );
+        await Promise.allSettled(appCacheNames.map((name) => caches.delete(name)));
+
+        if (navigator.serviceWorker.controller && !sessionStorage.getItem("smartydiet-sw-cleaned")) {
+          sessionStorage.setItem("smartydiet-sw-cleaned", "1");
+          window.location.reload();
+        }
       } catch {
-        // A blocked worker registration must never break the app.
+        // Legacy cleanup is best-effort and must never block the app.
       }
     })();
-
-    return () => {
-      navigator.serviceWorker.removeEventListener("controllerchange", reloadForUpdate);
-      if (updateTimer) clearInterval(updateTimer);
-    };
   }, []);
 
 

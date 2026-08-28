@@ -1,7 +1,7 @@
 {
   "name": "SmartyDiet — AI Nutrition Intelligence",
   "short_name": "SmartyDiet",
-  "description": "Your personal nutrition plan, built in minutes. Works offline.",
+  "description": "Your personal nutrition plan, built in minutes.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

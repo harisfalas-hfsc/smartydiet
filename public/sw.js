@@ -1,35 +1,24 @@
-/* SmartyDiet service worker — network only, no offline mode.
- *
- * It exists solely so the app stays installable. It never caches anything and
- * it deletes every cache left behind by previous versions, so every visit from
- * desktop, mobile, tablet or the installed app always loads the freshest
- * published build.
- */
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil(Promise.resolve());
-});
+/* One-release cleanup worker for old SmartyDiet app-shell workers. */
+function isSmartyDietAppCache(name) {
+  return /(^|-)precache-v\d+-|(^|-)runtime-|(^|-)googleAnalytics-/.test(name)
+    && name.endsWith(self.registration.scope);
+}
+
+self.addEventListener("install", () => self.skipWaiting());
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((key) => caches.delete(key)));
-      await self.clients.claim();
-      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      await Promise.all(
-        windows.map((client) =>
-          "navigate" in client ? client.navigate(client.url).catch(() => undefined) : undefined,
-        ),
-      );
+      try {
+        const cacheNames = await caches.keys();
+        const appCacheNames = cacheNames.filter(isSmartyDietAppCache);
+        await Promise.allSettled(appCacheNames.map((name) => caches.delete(name)));
+        await self.clients.claim();
+        const windowClients = await self.clients.matchAll({ type: "window" });
+        await Promise.allSettled(windowClients.map((client) => client.navigate(client.url)));
+      } finally {
+        await self.registration.unregister();
+      }
     })(),
   );
 });
-
-self.addEventListener("message", (event) => {
-  if (event.data?.type === "SKIP_WAITING") {
-    void self.skipWaiting();
-  }
-});
-
-// No fetch handler: every request goes straight to the network.
