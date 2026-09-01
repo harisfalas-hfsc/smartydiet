@@ -5,6 +5,8 @@ import { template as contactConfirmation } from './contact-confirmation'
 import { template as contactNotification } from './contact-notification'
 import { template as leadWelcome } from './lead-welcome'
 import { template as planGenerationFailure } from './plan-generation-failure'
+import { template as planDelayCustomer } from './plan-delay-customer'
+import { template as planReadyCustomer } from './plan-ready-customer'
 import { template as supportReply } from './support-reply'
 
 export interface TemplateEntry {
