@@ -170,9 +170,8 @@ export async function sendCapturePaymentAlert(
   const occurredAt = new Date().toISOString();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   try {
-    const delivery = await sendTemplateEmail("plan-generation-failure", ADMIN_EMAIL, {
-      idempotencyKey: `capture-failed-${details.sessionId}`,
-      templateData: {
+    const delivery = await sendAdminAlert(
+      {
         userId: context.userId,
         userEmail: claimString(context.claims, "email"),
         sessionId: details.sessionId,
@@ -181,8 +180,10 @@ export async function sendCapturePaymentAlert(
         paymentState: "Authorized but not captured — needs manual capture in Stripe",
         reason: details.reason.slice(0, 4000),
         occurredAt,
+        urgent: true,
       },
-    });
+      `capture-failed-${details.sessionId}`,
+    );
     await supabaseAdmin.from("diet_plan_attempts").update({
       email_status: delivery.sent ? "accepted" : "suppressed",
       email_error: delivery.sent ? null : delivery.reason,
