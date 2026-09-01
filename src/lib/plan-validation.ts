@@ -7,6 +7,11 @@ export interface StrictRules {
   goal: string;
   fastingWindow?: string;
   weeks: number;
+  /** Foods the user likes that survived conflict resolution. */
+  likedFoods?: string[];
+  /** Plain-language explanation of every preference dropped by a conflict. */
+  conflictNotes?: string[];
+
 }
 
 export type ValidationIssueKind =
