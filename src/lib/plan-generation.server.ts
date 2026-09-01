@@ -3,6 +3,7 @@ import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import {
   mealSlotsFor,
   sortPlanStructure,
+  splitIssues,
   type StrictRules,
   type ValidationIssue,
   validatePlan,
@@ -369,7 +370,10 @@ async function generateWithRepair(
 
   let plan = assemble();
   let issues = validatePlan(plan, rules);
-  for (let pass = 0; pass < 2 && issues.length; pass += 1) {
+  // Repair loop: rebuild only the offending days, several times. Structural
+  // problems are always retried; soft ones get the same treatment but never
+  // block delivery afterwards.
+  for (let pass = 0; pass < 3 && issues.length; pass += 1) {
     const affectedDays = new Set(
       issues
         .filter((issue) => issue.day > 0)
@@ -387,13 +391,20 @@ async function generateWithRepair(
         .slice(0, 20)
         .map((issue) => issue.detail)
         .join("\n- ")}\n\nPrevious invalid DayResult:\n${JSON.stringify(current)}`;
-      dayResults[weekNumber - 1][index] = await askModel(system, fixPrompt);
+      try {
+        const repaired = await askModel(system, fixPrompt);
+        if (repaired) dayResults[weekNumber - 1][index] = repaired;
+      } catch {
+        // Keep the previous day rather than losing it; the next pass or the
+        // soft-issue path will handle whatever remains.
+      }
     }
     plan = assemble();
     issues = validatePlan(plan, rules);
   }
   return { plan, issues };
 }
+
 
 
 export async function runPlanGeneration(
@@ -574,14 +585,16 @@ export async function runPlanGeneration(
         previousPlan,
       );
 
-      if (issues.length > 0) {
+      const { blocking, soft } = splitIssues(issues);
+      if (blocking.length > 0) {
         return fail(
-          `Generated plan failed hard validation: ${issues
+          `Generated plan failed hard validation: ${blocking
             .slice(0, 20)
             .map((issue) => issue.detail)
             .join(" | ")}`,
         );
       }
+
 
       const { data: existing } = await supabase
         .from("diet_plans")
@@ -595,8 +608,25 @@ export async function runPlanGeneration(
 
       await supabase.from("diet_plans").update({ is_final: false }).eq("session_id", session.id);
 
-      const warnings: string[] = [];
+      // Soft issues never block a paid delivery: the customer gets the plan
+      // with a visible caution, and support is alerted quietly to review it.
+      const warnings: string[] = soft.slice(0, 10).map((issue) => issue.detail);
+      if (soft.length > 0) {
+        const alerts = await import("@/lib/plan-generation-alert.server");
+        await alerts
+          .sendPlanGenerationFailureAlert(
+            { supabase, userId, claims: claims as Record<string, unknown> },
+            {
+              sessionId: data.sessionId,
+              operationId: data.operationId,
+              refinement: data.refinement,
+              reason: `Plan delivered with soft validation warnings: ${warnings.join(" | ")}`,
+            },
+          )
+          .catch(() => undefined);
+      }
       const planToSave = { ...sortPlanStructure(plan), _warnings: warnings };
+
 
       const { error: insErr } = await supabase.from("diet_plans").insert({
         ...(data.operationId ? { id: data.operationId } : {}),

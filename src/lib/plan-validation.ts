@@ -298,3 +298,32 @@ export function validatePlan(plan: any, rules: StrictRules): ValidationIssue[] {
   }
   return issues;
 }
+/**
+ * Structural issues mean the customer would not receive what they paid for
+ * (wrong number of weeks, days, or meals). Those are the only reasons a
+ * generation may be rejected. Everything else (calorie drift, a suspicious
+ * ingredient match) is delivered with a visible caution instead of failing
+ * the paid customer, and support is alerted separately.
+ */
+const BLOCKING_ISSUE_KINDS: ReadonlySet<ValidationIssueKind> = new Set([
+  "week_count",
+  "week_number",
+  "day_count",
+  "day_number",
+  "meal_count",
+  "meal_order",
+]);
+
+export function isBlockingIssue(issue: ValidationIssue): boolean {
+  return BLOCKING_ISSUE_KINDS.has(issue.kind);
+}
+
+export function splitIssues(issues: ValidationIssue[]): {
+  blocking: ValidationIssue[];
+  soft: ValidationIssue[];
+} {
+  return {
+    blocking: issues.filter(isBlockingIssue),
+    soft: issues.filter((issue) => !isBlockingIssue(issue)),
+  };
+}
