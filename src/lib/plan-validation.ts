@@ -183,6 +183,7 @@ function containsExcludedFood(searchable: string, excludedFood: string): boolean
       /\b(?:peanut|almond|cashew|hazelnut|walnut|pecan|pistachio|sunflower|seed|nut) butter\b/g,
       " ",
     );
+    normalized = normalized.replace(/\bbutter lettuce\b/g, " ");
   }
 
   return new RegExp(`\\b${escapeRegExp(excluded).replace(/\\ /g, "\\s+")}\\b`).test(
