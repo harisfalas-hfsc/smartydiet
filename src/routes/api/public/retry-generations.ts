@@ -72,7 +72,50 @@ async function run(request: Request): Promise<Response> {
     }
   }
 
-  return json({ processed: results.length, results });
+  // Safety net: paid sessions that exhausted their retry budget and still have
+  // no plan must never go quiet. Escalate once, then re-escalate daily until
+  // the plan is delivered.
+  let escalated = 0;
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60_000).toISOString();
+  const { data: stuck } = await supabaseAdmin
+    .from("generation_sessions")
+    .select("id,user_id,attempt_count,last_error,questionnaire_id,abandoned_alert_at")
+    .eq("status", "generation_failed")
+    .gte("attempt_count", MAX_ATTEMPTS)
+    .or(`abandoned_alert_at.is.null,abandoned_alert_at.lt.${dayAgo}`)
+    .limit(20);
+  if (stuck?.length) {
+    const { sendPlanAbandonedAlert } = await import("@/lib/plan-generation-alert.server");
+    for (const session of stuck) {
+      const { data: plans } = await supabaseAdmin
+        .from("diet_plans")
+        .select("id")
+        .eq("session_id", session.id)
+        .limit(1);
+      if (plans?.length) continue;
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(session.user_id);
+      await sendPlanAbandonedAlert(
+        {
+          supabase: supabaseAdmin,
+          userId: session.user_id,
+          claims: {
+            email: authUser?.user?.email,
+            user_metadata: authUser?.user?.user_metadata,
+          },
+        },
+        {
+          sessionId: session.id,
+          questionnaireId: session.questionnaire_id ?? undefined,
+          reason: session.last_error ?? "Automatic retries exhausted",
+          attemptCount: session.attempt_count ?? MAX_ATTEMPTS,
+          repeat: true,
+        },
+      ).catch(() => undefined);
+      escalated += 1;
+    }
+  }
+
+  return json({ processed: results.length, escalated, results });
 }
 
 function json(body: unknown, status = 200) {
