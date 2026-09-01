@@ -44,7 +44,7 @@ const Email = ({ userName, userEmail, userId, sessionId, questionnaireId, stage,
 export const template = {
   component: Email,
   subject: (data: Record<string, unknown>) =>
-    `[SmartyDiet alert] ${typeof data.outcomeLabel === "string" ? data.outcomeLabel : "Generation failed — technical issue"}${typeof data.userEmail === "string" ? ` — ${data.userEmail}` : ""}`,
+    `${data.urgent ? "[SmartyDiet URGENT]" : "[SmartyDiet ALERT]"} ${typeof data.outcomeLabel === "string" ? data.outcomeLabel : "Generation failed — technical issue"}${typeof data.userEmail === "string" ? ` — ${data.userEmail}` : ""}`,
   displayName: "Plan generation failure alert",
   previewData: {
     userName: "Jane Doe",
