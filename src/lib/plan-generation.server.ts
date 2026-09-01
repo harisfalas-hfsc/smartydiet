@@ -784,9 +784,10 @@ export async function repairStoredPlan(
     stored.refinement_note ?? undefined,
     stored.plan,
   );
-  if (issues.length > 0) {
+  const blockingRepairIssues = splitIssues(issues).blocking;
+  if (blockingRepairIssues.length > 0) {
     return {
-      error: `Repaired plan failed hard validation: ${issues
+      error: `Repaired plan failed hard validation: ${blockingRepairIssues
         .slice(0, 20)
         .map((issue) => issue.detail)
         .join(" | ")}`,
