@@ -79,6 +79,7 @@ describe("paid plan structural validation", () => {
     (plan.weeks[0].days[0].meals[0] as any).title = "Dairy-Free Tuna Salad";
     (plan.weeks[0].days[0].meals[0] as any).ingredients = [
       { qty: "1 tbsp", item: "peanut butter" },
+      { qty: "1 tbsp", item: "natural nut butter" },
       { qty: "100 g", item: "lactose-free yogurt" },
     ];
     const strict = { ...rules(1, 3), excludeFoods: ["dairy", "lactose", "butter"] };

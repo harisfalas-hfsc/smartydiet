@@ -117,8 +117,20 @@ export const retryPlanGeneration = createServerFn({ method: "POST" })
     if (!["paid", "generation_failed", "generating"].includes(session.status)) {
       return { ok: false, error: `This plan cannot be retried (${session.status}).` };
     }
+    const { data: failedRefinement } = await supabase
+      .from("plan_generation_failures")
+      .select("refinement")
+      .eq("session_id", data.sessionId)
+      .not("refinement", "is", null)
+      .order("occurred_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const refinement =
+      typeof failedRefinement?.refinement === "string" && failedRefinement.refinement.trim()
+        ? failedRefinement.refinement.trim()
+        : undefined;
     const result = await runPlanGeneration(
-      { sessionId: data.sessionId, operationId: crypto.randomUUID() },
+      { sessionId: data.sessionId, operationId: crypto.randomUUID(), refinement },
       context,
     );
     if (result.error) return { ok: false, error: result.error };

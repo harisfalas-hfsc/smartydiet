@@ -180,7 +180,7 @@ function containsExcludedFood(searchable: string, excludedFood: string): boolean
   );
   if (excluded === "butter") {
     normalized = normalized.replace(
-      /\b(?:peanut|almond|cashew|hazelnut|walnut|pecan|pistachio|sunflower|seed) butter\b/g,
+      /\b(?:peanut|almond|cashew|hazelnut|walnut|pecan|pistachio|sunflower|seed|nut) butter\b/g,
       " ",
     );
   }
