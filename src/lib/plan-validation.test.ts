@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { mealSlotsFor, sortPlanStructure, splitIssues, type StrictRules, validatePlan } from "./plan-validation";
+import { mealSlotsFor, resolveRuleConflicts, salvagePlanStructure, sortPlanStructure, splitIssues, type StrictRules, validatePlan } from "./plan-validation";
 
 function completePlan(weeks: number, mealsPerDay: number) {
   const slots = mealSlotsFor(mealsPerDay);
@@ -123,5 +123,24 @@ describe("issue severity", () => {
     ]);
     assert.deepEqual(blocking.map((i) => i.kind), ["day_count", "meal_count"]);
     assert.deepEqual(soft.map((i) => i.kind), ["calorie", "excluded_food"]);
+  });
+});
+
+describe("conflict resolution and salvage", () => {
+  test("liked food losing to a diet style is dropped, not failed", () => {
+    const base = rules(1, 3);
+    const resolved = resolveRuleConflicts({ ...base, dietStyle: "carnivore" }, ["potato", "steak"]);
+    assert.deepEqual(resolved.likedFoods, ["steak"]);
+    assert.equal(resolved.notes.length, 1);
+  });
+
+  test("salvage rebuilds missing days and meals into a valid plan", () => {
+    const r = rules(2, 3);
+    const broken = completePlan(2, 3) as any;
+    broken.weeks[1].days = [broken.weeks[1].days[0]];
+    broken.weeks[0].days[2].meals = broken.weeks[0].days[2].meals.slice(0, 1);
+    const salvaged = salvagePlanStructure(broken, r);
+    assert.equal(salvaged.ok, true);
+    assert.equal(splitIssues(validatePlan(salvaged.plan, r)).blocking.length, 0);
   });
 });
