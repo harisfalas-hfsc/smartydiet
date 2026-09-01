@@ -116,7 +116,7 @@ function Home() {
       </section>
 
       {/* FULL-BLEED HERO — desktop/tablet */}
-      <section className="relative left-1/2 mb-0 hidden w-screen -translate-x-1/2 overflow-hidden sm:block">
+      <section className="relative left-1/2 mb-4 hidden w-screen -translate-x-1/2 overflow-hidden sm:mb-6 sm:block">
         <img
           src={heroNutrition}
           alt="Fresh healthy food ingredients arranged for a personalized nutrition plan"
@@ -128,9 +128,9 @@ function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/92 via-black/75 to-black/25" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-        <div className="relative mx-auto w-full max-w-6xl px-5 py-16 lg:px-6 lg:py-36">
-          <div className="max-w-xl">
-            <h1 className="text-[34px] font-extrabold leading-[1.05] tracking-tight text-white sm:text-[44px] lg:text-[60px]">
+        <div className="relative mx-auto w-full max-w-6xl px-5 py-12 lg:px-6 lg:py-20">
+          <div className="max-w-xl lg:max-w-3xl">
+            <h1 className="text-[34px] font-extrabold uppercase leading-[1.05] tracking-tight text-white sm:text-[44px] lg:text-[60px]">
               Your personal nutrition plan,
               <br />
               <span className="text-primary">built in minutes.</span>
@@ -139,23 +139,23 @@ function Home() {
               Answer a smart questionnaire. Get a full 1- or 2-week diet plan
               tailored to your body, goals, food preferences and constraints.
             </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            <div className="mt-7 flex flex-wrap items-center gap-3 lg:flex-nowrap">
               <Link
                 to={heroCtaTo}
                 search={heroCtaSearch}
-                className="inline-flex h-12 items-center rounded-full bg-primary px-8 text-base font-bold text-primary-foreground no-underline hover:opacity-95"
+                className="inline-flex h-12 items-center whitespace-nowrap rounded-full bg-primary px-6 text-base font-bold text-primary-foreground no-underline hover:opacity-95 lg:px-8"
               >
                 {heroCtaLabel}
               </Link>
               <Link
                 to={secondaryTo}
-                className="inline-flex h-12 items-center rounded-full border-2 border-white/80 bg-white/10 px-8 text-base font-bold text-white no-underline backdrop-blur-sm hover:bg-white/20"
+                className="inline-flex h-12 items-center whitespace-nowrap rounded-full border-2 border-white/80 bg-white/10 px-6 text-base font-bold text-white no-underline backdrop-blur-sm hover:bg-white/20 lg:px-8"
               >
                 {secondaryLabel}
               </Link>
               <Link
                 to="/tools"
-                className="inline-flex h-12 items-center rounded-full border-2 border-white/40 px-8 text-base font-bold text-white no-underline hover:bg-white/10"
+                className="inline-flex h-12 items-center whitespace-nowrap rounded-full border-2 border-white/40 px-6 text-base font-bold text-white no-underline hover:bg-white/10 lg:px-8"
               >
                 Free nutrition tools
               </Link>
