@@ -369,7 +369,10 @@ async function generateWithRepair(
 
   let plan = assemble();
   let issues = validatePlan(plan, rules);
-  for (let pass = 0; pass < 2 && issues.length; pass += 1) {
+  // Repair loop: rebuild only the offending days, several times. Structural
+  // problems are always retried; soft ones get the same treatment but never
+  // block delivery afterwards.
+  for (let pass = 0; pass < 3 && issues.length; pass += 1) {
     const affectedDays = new Set(
       issues
         .filter((issue) => issue.day > 0)
@@ -387,13 +390,20 @@ async function generateWithRepair(
         .slice(0, 20)
         .map((issue) => issue.detail)
         .join("\n- ")}\n\nPrevious invalid DayResult:\n${JSON.stringify(current)}`;
-      dayResults[weekNumber - 1][index] = await askModel(system, fixPrompt);
+      try {
+        const repaired = await askModel(system, fixPrompt);
+        if (repaired) dayResults[weekNumber - 1][index] = repaired;
+      } catch {
+        // Keep the previous day rather than losing it; the next pass or the
+        // soft-issue path will handle whatever remains.
+      }
     }
     plan = assemble();
     issues = validatePlan(plan, rules);
   }
   return { plan, issues };
 }
+
 
 
 export async function runPlanGeneration(
