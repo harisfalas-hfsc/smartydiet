@@ -639,16 +639,15 @@ export async function runPlanGeneration(
         })
         .eq("generation_session_id", session.id);
 
-      // Recovery notice: only sessions that failed earlier get an email here.
-      if (!data.refinement) {
-        const { sendCustomerPlanReadyEmail } = await import(
-          "@/lib/plan-generation-alert.server"
-        );
-        await sendCustomerPlanReadyEmail(
-          { supabase, userId, claims: claims as Record<string, unknown> },
-          { sessionId: session.id },
-        ).catch(() => undefined);
-      }
+      // Recovery notice: only sessions that failed earlier get an email here,
+      // including a refinement that succeeds during a background retry.
+      const { sendCustomerPlanReadyEmail } = await import(
+        "@/lib/plan-generation-alert.server"
+      );
+      await sendCustomerPlanReadyEmail(
+        { supabase, userId, claims: claims as Record<string, unknown> },
+        { sessionId: session.id },
+      ).catch(() => undefined);
 
       return { plan: planToSave, rationale: plan?.rationale, warnings };
     } catch (err: any) {

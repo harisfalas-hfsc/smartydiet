@@ -74,6 +74,26 @@ describe("paid plan structural validation", () => {
     assert.ok(kinds.includes("excluded_food"));
   });
 
+  test("does not reject free-from labels or plant-based butter as dairy", () => {
+    const plan = completePlan(1, 3);
+    (plan.weeks[0].days[0].meals[0] as any).title = "Dairy-Free Tuna Salad";
+    (plan.weeks[0].days[0].meals[0] as any).ingredients = [
+      { qty: "1 tbsp", item: "peanut butter" },
+      { qty: "100 g", item: "lactose-free yogurt" },
+    ];
+    const strict = { ...rules(1, 3), excludeFoods: ["dairy", "lactose", "butter"] };
+    assert.deepEqual(validatePlan(plan, strict), []);
+  });
+
+  test("still rejects actual dairy butter", () => {
+    const plan = completePlan(1, 3);
+    (plan.weeks[0].days[0].meals[0] as any).ingredients = [
+      { qty: "1 tbsp", item: "garlic butter" },
+    ];
+    const strict = { ...rules(1, 3), excludeFoods: ["butter"] };
+    assert.ok(validatePlan(plan, strict).some((issue) => issue.kind === "excluded_food"));
+  });
+
   test("sortPlanStructure orders weeks, days and meals canonically", () => {
     const plan = completePlan(2, 4);
     plan.weeks.reverse();
