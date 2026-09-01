@@ -2,6 +2,41 @@ import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 import { classifyGenerationFailure, generationFailureLabel } from "@/lib/attempt-outcomes";
 
 const ADMIN_EMAIL = "smartydiet@outlook.com";
+const SUPPORT_REPLY_TO = "support@smartydiet.com";
+
+/**
+ * Operational alerts go to the primary inbox and, when configured, to a
+ * backup address on a different provider so an Outlook junk rule can never
+ * hide a paid-customer failure again.
+ */
+function adminRecipients(): string[] {
+  const backup = (process.env["ALERT_BACKUP_EMAIL"] ?? "").trim();
+  const list = [ADMIN_EMAIL];
+  if (backup && backup.toLowerCase() !== ADMIN_EMAIL) list.push(backup);
+  return list;
+}
+
+type AlertDelivery = { sent: boolean; messageId: string | null; reason?: string };
+
+async function sendAdminAlert(
+  templateData: Record<string, unknown>,
+  idempotencyKey: string,
+): Promise<AlertDelivery> {
+  let result: AlertDelivery = { sent: false, messageId: null, reason: "no_recipient" };
+  for (const [index, recipient] of adminRecipients().entries()) {
+    const delivery = await sendTemplateEmail("plan-generation-failure", recipient, {
+      idempotencyKey: `${idempotencyKey}-${index}`,
+      replyTo: SUPPORT_REPLY_TO,
+      templateData,
+    });
+    if (index === 0) {
+      result = delivery.sent
+        ? { sent: true, messageId: delivery.messageId }
+        : { sent: false, messageId: null, reason: delivery.reason };
+    }
+  }
+  return result;
+}
 
 type AlertContext = {
   supabase: any;
