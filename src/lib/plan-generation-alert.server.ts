@@ -126,7 +126,8 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
         reason: details.reason.slice(0, 4000),
         occurredAt,
       },
-    });
+      `plan-generation-failure-${referenceId}-${failureId}`,
+    );
     await supabaseAdmin.from("plan_generation_failures").update({
       email_status: delivery.sent ? "accepted" : "suppressed",
       email_error: delivery.sent ? null : delivery.reason,
