@@ -180,17 +180,20 @@ export type Database = {
       }
       generation_sessions: {
         Row: {
+          abandoned_alert_at: string | null
           amount_cents: number
           attempt_count: number
           created_at: string
           credits_total: number
           credits_used: number
           currency: string
+          customer_notified_at: string | null
           duration_weeks: number
           id: string
           last_error: string | null
           next_retry_at: string | null
           questionnaire_id: string
+          recovery_notified_at: string | null
           status: string
           stripe_payment_intent: string | null
           stripe_session_id: string | null
@@ -198,17 +201,20 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          abandoned_alert_at?: string | null
           amount_cents?: number
           attempt_count?: number
           created_at?: string
           credits_total?: number
           credits_used?: number
           currency?: string
+          customer_notified_at?: string | null
           duration_weeks: number
           id?: string
           last_error?: string | null
           next_retry_at?: string | null
           questionnaire_id: string
+          recovery_notified_at?: string | null
           status?: string
           stripe_payment_intent?: string | null
           stripe_session_id?: string | null
@@ -216,17 +222,20 @@ export type Database = {
           user_id: string
         }
         Update: {
+          abandoned_alert_at?: string | null
           amount_cents?: number
           attempt_count?: number
           created_at?: string
           credits_total?: number
           credits_used?: number
           currency?: string
+          customer_notified_at?: string | null
           duration_weeks?: number
           id?: string
           last_error?: string | null
           next_retry_at?: string | null
           questionnaire_id?: string
+          recovery_notified_at?: string | null
           status?: string
           stripe_payment_intent?: string | null
           stripe_session_id?: string | null
