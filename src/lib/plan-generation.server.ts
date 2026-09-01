@@ -1,7 +1,10 @@
 import { generateText } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import {
+  dietStyleBans,
   mealSlotsFor,
+  resolveRuleConflicts,
+  salvagePlanStructure,
   sortPlanStructure,
   splitIssues,
   type StrictRules,
@@ -179,7 +182,8 @@ ABSOLUTE HARD RULES (non-negotiable — a plan violating any of these is REJECTE
 7. Weekly variety — avoid repeating identical meals more than twice per week.
 8. Provide a consolidated grocery list per week.
 9. Include a short rationale explaining WHY this plan fits the user's goal.
-10. End with a disclaimer: not medical advice; consult a professional for medical conditions.
+10. CONFLICT RULE: if the questionnaire contains contradictory answers, never stop or return an error — apply this priority and continue: allergies/medical > cultural or religious restrictions > diet style > disliked foods > liked foods. The weaker preference is simply dropped.${rules.conflictNotes?.length ? ` Already resolved: ${rules.conflictNotes.join(" ")}` : ""}${dietStyleBans(rules.dietStyle).length ? `\n11. Because the diet style is ${rules.dietStyle}, avoid: ${dietStyleBans(rules.dietStyle).join(", ")}.` : ""}${rules.likedFoods?.length ? `\n12. Favor these liked foods where they fit the rules: ${rules.likedFoods.join(", ")}.` : ""}
+13. End with a disclaimer: not medical advice; consult a professional for medical conditions.
 
 MATH DISCIPLINE: Before returning JSON, sum each day's meal calories yourself and adjust portion sizes so the total lands within ±${rules.calorieTolerance} of ${rules.calorieTarget}. Do not approximate.
 
@@ -312,7 +316,7 @@ async function generateWithRepair(
   rules: StrictRules,
   refinement?: string,
   previousPlan?: any,
-): Promise<{ plan: any; issues: ValidationIssue[] }> {
+): Promise<{ plan: any; issues: ValidationIssue[]; salvageNotes: string[] }> {
   const system = buildSystemPrompt(rules);
   const dayResults: any[][] = [];
   for (let weekNumber = 1; weekNumber <= rules.weeks; weekNumber += 1) {
@@ -402,7 +406,20 @@ async function generateWithRepair(
     plan = assemble();
     issues = validatePlan(plan, rules);
   }
-  return { plan, issues };
+
+  // Last line of defence: a paid customer always receives a complete plan.
+  // Any structural gap left after the repair passes is rebuilt from the
+  // compliant days the model already produced instead of failing.
+  const salvageNotes: string[] = [];
+  if (splitIssues(issues).blocking.length > 0) {
+    const salvaged = salvagePlanStructure(plan, rules);
+    if (salvaged.ok) {
+      plan = salvaged.plan;
+      salvageNotes.push(...salvaged.notes);
+      issues = validatePlan(plan, rules);
+    }
+  }
+  return { plan, issues, salvageNotes };
 }
 
 
@@ -565,6 +582,12 @@ export async function runPlanGeneration(
     try {
       let rules = buildBaseRules(q.data, session.duration_weeks);
       let previousPlan: any | undefined;
+      const likedFoods = [
+        ...((q.data?.eating?.likedFoods as string[]) ?? []),
+        ...String(q.data?.eating?.likedFoodsOther ?? "").split(","),
+      ]
+        .map((food) => String(food).trim())
+        .filter(Boolean);
       if (data.refinement) {
         const { data: prev } = await supabase
           .from("diet_plans")
@@ -576,9 +599,17 @@ export async function runPlanGeneration(
         previousPlan = prev?.plan;
         const extra = await extractRefinementConstraints(data.refinement);
         rules = mergeConstraints(rules, extra);
+        if (extra.includeMoreFoods?.length) likedFoods.push(...extra.includeMoreFoods);
       }
+      // Contradictory answers resolve by priority instead of failing.
+      const conflicts = resolveRuleConflicts(rules, likedFoods);
+      rules = {
+        ...rules,
+        likedFoods: conflicts.likedFoods,
+        conflictNotes: conflicts.notes,
+      };
 
-      const { plan, issues } = await generateWithRepair(
+      const { plan, issues, salvageNotes } = await generateWithRepair(
         q.data,
         rules,
         data.refinement,
@@ -610,7 +641,11 @@ export async function runPlanGeneration(
 
       // Soft issues never block a paid delivery: the customer gets the plan
       // with a visible caution, and support is alerted quietly to review it.
-      const warnings: string[] = soft.slice(0, 10).map((issue) => issue.detail);
+      const warnings: string[] = [
+        ...conflicts.notes,
+        ...salvageNotes,
+        ...soft.slice(0, 10).map((issue) => issue.detail),
+      ];
       if (soft.length > 0) {
         const alerts = await import("@/lib/plan-generation-alert.server");
         await alerts
