@@ -3,6 +3,7 @@ import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import {
   mealSlotsFor,
   sortPlanStructure,
+  splitIssues,
   type StrictRules,
   type ValidationIssue,
   validatePlan,
