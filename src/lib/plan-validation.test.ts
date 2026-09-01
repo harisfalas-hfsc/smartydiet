@@ -112,3 +112,16 @@ describe("paid plan structural validation", () => {
     assert.deepEqual(validatePlan(sorted, rules(2, 4)), []);
   });
 });
+
+describe("issue severity", () => {
+  it("treats missing days and meals as blocking, other issues as soft", () => {
+    const { blocking, soft } = splitIssues([
+      { day: 0, weekNumber: 1, kind: "day_count", detail: "d" },
+      { day: 3, weekNumber: 1, kind: "meal_count", detail: "m" },
+      { day: 3, weekNumber: 1, kind: "calorie", detail: "c" },
+      { day: 4, weekNumber: 1, kind: "excluded_food", detail: "e" },
+    ]);
+    expect(blocking.map((i) => i.kind)).toEqual(["day_count", "meal_count"]);
+    expect(soft.map((i) => i.kind)).toEqual(["calorie", "excluded_food"]);
+  });
+});
