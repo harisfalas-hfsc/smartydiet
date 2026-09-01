@@ -584,14 +584,16 @@ export async function runPlanGeneration(
         previousPlan,
       );
 
-      if (issues.length > 0) {
+      const { blocking, soft } = splitIssues(issues);
+      if (blocking.length > 0) {
         return fail(
-          `Generated plan failed hard validation: ${issues
+          `Generated plan failed hard validation: ${blocking
             .slice(0, 20)
             .map((issue) => issue.detail)
             .join(" | ")}`,
         );
       }
+
 
       const { data: existing } = await supabase
         .from("diet_plans")
