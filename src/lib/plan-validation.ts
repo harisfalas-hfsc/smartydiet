@@ -160,6 +160,37 @@ function mealNameMatches(actual: unknown, expected: string): boolean {
   return name === slot;
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Match an excluded food as a word or phrase, not as an arbitrary substring.
+ * Labels such as "dairy-free" describe compliant substitutes, while nut/seed
+ * butters must not be mistaken for dairy butter.
+ */
+function containsExcludedFood(searchable: string, excludedFood: string): boolean {
+  const excluded = normalizedMealName(excludedFood);
+  if (!excluded) return false;
+
+  let normalized = ` ${normalizedMealName(searchable)} `;
+  normalized = normalized.replace(
+    /\b(?:dairy|lactose|gluten|nut|peanut|soy|sesame|egg)[ -]free\b/g,
+    " ",
+  );
+  if (excluded === "butter") {
+    normalized = normalized.replace(
+      /\b(?:peanut|almond|cashew|hazelnut|walnut|pecan|pistachio|sunflower|seed|nut) butter\b/g,
+      " ",
+    );
+    normalized = normalized.replace(/\bbutter lettuce\b/g, " ");
+  }
+
+  return new RegExp(`\\b${escapeRegExp(excluded).replace(/\\ /g, "\\s+")}\\b`).test(
+    normalized,
+  );
+}
+
 export function validatePlan(plan: any, rules: StrictRules): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const weeks = Array.isArray(plan?.weeks) ? plan.weeks : [];
@@ -251,9 +282,9 @@ export function validatePlan(plan: any, rules: StrictRules): ValidationIssue[] {
         const ingredientText = Array.isArray(meal?.ingredients)
           ? meal.ingredients.map((item: any) => `${item?.qty ?? ""} ${item?.item ?? ""}`)
           : [];
-        const searchable = [meal?.title, ...ingredientText].join(" ").toLowerCase();
+        const searchable = [meal?.title, ...ingredientText].join(" ");
         for (const excluded of rules.excludeFoods) {
-          if (excluded && searchable.includes(excluded)) {
+          if (containsExcludedFood(searchable, excluded)) {
             issues.push({
               day,
               weekNumber,

@@ -55,8 +55,23 @@ async function run(request: Request): Promise<Response> {
   for (const session of due ?? []) {
     try {
       const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(session.user_id);
+      // A failed refinement must be retried as a refinement. Without restoring
+      // its text, runPlanGeneration sees version 1 and incorrectly treats that
+      // old plan as a successful initial-generation retry.
+      const { data: failedRefinement } = await supabaseAdmin
+        .from("plan_generation_failures")
+        .select("refinement")
+        .eq("session_id", session.id)
+        .not("refinement", "is", null)
+        .order("occurred_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const refinement =
+        typeof failedRefinement?.refinement === "string" && failedRefinement.refinement.trim()
+          ? failedRefinement.refinement.trim()
+          : undefined;
       const result = await runPlanGeneration(
-        { sessionId: session.id, operationId: crypto.randomUUID() },
+        { sessionId: session.id, operationId: crypto.randomUUID(), refinement },
         {
           supabase: supabaseAdmin,
           userId: session.user_id,
@@ -92,7 +107,17 @@ async function run(request: Request): Promise<Response> {
         .select("id")
         .eq("session_id", session.id)
         .limit(1);
-      if (plans?.length) continue;
+      // An existing original plan does not resolve a failed refinement. Only
+      // skip escalation when the latest failure was initial generation.
+      const { data: failedRefinement } = await supabaseAdmin
+        .from("plan_generation_failures")
+        .select("refinement")
+        .eq("session_id", session.id)
+        .not("refinement", "is", null)
+        .order("occurred_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (plans?.length && !failedRefinement?.refinement) continue;
       const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(session.user_id);
       await sendPlanAbandonedAlert(
         {

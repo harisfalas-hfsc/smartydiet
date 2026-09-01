@@ -281,6 +281,7 @@ async function extractRefinementConstraints(refinement: string): Promise<Refinem
 Rules:
 - "one meal a day", "OMAD", "only one meal" => mealsPerDay: 1, fastingWindow: "OMAD".
 - "two meals" => mealsPerDay: 2.
+- "add snacks", "include snacks", or a request for snacks without an exact count => mealsPerDay: 5 (breakfast, morning snack, lunch, afternoon snack, dinner).
 - "less dairy", "no dairy" => excludeFoods: ["dairy","milk","yogurt","cheese"].
 - "no fish"/"no salmon" => add those to excludeFoods.
 - "more protein" => notes: "increase protein macro".
@@ -478,7 +479,7 @@ export async function runPlanGeneration(
       return fail(`Session lookup failed: ${sErr?.message ?? "Session not found"}`);
     // Another webhook/browser request already owns this generation. The
     // stable session operation will be polled instead of spending AI credits twice.
-    if (!data.refinement && session.status === "generating") {
+    if (session.status === "generating") {
       return { processing: true };
     }
     if (
@@ -499,6 +500,19 @@ export async function runPlanGeneration(
         .select("id")
         .maybeSingle();
       if (claimError) return fail(`Generation could not start: ${claimError.message}`);
+      if (!claimed) return { processing: true };
+    }
+
+    if (data.refinement) {
+      const { data: claimed, error: claimError } = await supabase
+        .from("generation_sessions")
+        .update({ status: "generating" })
+        .eq("id", session.id)
+        .eq("user_id", userId)
+        .in("status", ["paid", "completed", "generation_failed"])
+        .select("id")
+        .maybeSingle();
+      if (claimError) return fail(`Refinement could not start: ${claimError.message}`);
       if (!claimed) return { processing: true };
     }
 
@@ -639,16 +653,15 @@ export async function runPlanGeneration(
         })
         .eq("generation_session_id", session.id);
 
-      // Recovery notice: only sessions that failed earlier get an email here.
-      if (!data.refinement) {
-        const { sendCustomerPlanReadyEmail } = await import(
-          "@/lib/plan-generation-alert.server"
-        );
-        await sendCustomerPlanReadyEmail(
-          { supabase, userId, claims: claims as Record<string, unknown> },
-          { sessionId: session.id },
-        ).catch(() => undefined);
-      }
+      // Recovery notice: only sessions that failed earlier get an email here,
+      // including a refinement that succeeds during a background retry.
+      const { sendCustomerPlanReadyEmail } = await import(
+        "@/lib/plan-generation-alert.server"
+      );
+      await sendCustomerPlanReadyEmail(
+        { supabase, userId, claims: claims as Record<string, unknown> },
+        { sessionId: session.id },
+      ).catch(() => undefined);
 
       return { plan: planToSave, rationale: plan?.rationale, warnings };
     } catch (err: any) {
