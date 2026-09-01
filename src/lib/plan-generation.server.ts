@@ -607,8 +607,25 @@ export async function runPlanGeneration(
 
       await supabase.from("diet_plans").update({ is_final: false }).eq("session_id", session.id);
 
-      const warnings: string[] = [];
+      // Soft issues never block a paid delivery: the customer gets the plan
+      // with a visible caution, and support is alerted quietly to review it.
+      const warnings: string[] = soft.slice(0, 10).map((issue) => issue.detail);
+      if (soft.length > 0) {
+        const alerts = await import("@/lib/plan-generation-alert.server");
+        await alerts
+          .sendPlanGenerationFailureAlert(
+            { supabase, userId, claims: claims as Record<string, unknown> },
+            {
+              sessionId: data.sessionId,
+              operationId: data.operationId,
+              refinement: data.refinement,
+              reason: `Plan delivered with soft validation warnings: ${warnings.join(" | ")}`,
+            },
+          )
+          .catch(() => undefined);
+      }
       const planToSave = { ...sortPlanStructure(plan), _warnings: warnings };
+
 
       const { error: insErr } = await supabase.from("diet_plans").insert({
         ...(data.operationId ? { id: data.operationId } : {}),
