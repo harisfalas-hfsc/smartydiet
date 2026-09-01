@@ -327,3 +327,137 @@ export function splitIssues(issues: ValidationIssue[]): {
     soft: issues.filter((issue) => !isBlockingIssue(issue)),
   };
 }
+
+// -------------------- Conflict resolution --------------------
+
+/**
+ * Foods a diet style structurally rules out. Used for prompt guidance and to
+ * silently drop conflicting "liked foods" — never to hard-fail a plan.
+ */
+const DIET_STYLE_BANS: Record<string, string[]> = {
+  carnivore: ["potato", "rice", "pasta", "bread", "sugar", "beans", "lentil", "oat", "fruit", "vegetable"],
+  keto: ["sugar", "bread", "pasta", "rice", "potato"],
+  vegan: ["meat", "chicken", "beef", "pork", "fish", "egg", "milk", "cheese", "yogurt", "honey"],
+  vegetarian: ["meat", "chicken", "beef", "pork", "fish", "shrimp"],
+  pescatarian: ["chicken", "beef", "pork", "meat"],
+  paleo: ["bread", "pasta", "rice", "sugar", "beans", "lentil", "milk", "cheese"],
+};
+
+export function dietStyleBans(dietStyle: string): string[] {
+  return DIET_STYLE_BANS[String(dietStyle ?? "").toLowerCase().trim()] ?? [];
+}
+
+export interface ConflictResolution {
+  /** Liked foods kept after removing anything the harder rules forbid. */
+  likedFoods: string[];
+  /** Human-readable notes explaining every preference that lost. */
+  notes: string[];
+}
+
+/**
+ * Priority: allergies/medical > cultural or religious > diet style > dislikes
+ * > liked foods. A conflict never fails a generation; the weaker preference is
+ * dropped and explained.
+ */
+export function resolveRuleConflicts(
+  rules: StrictRules,
+  likedFoods: string[],
+): ConflictResolution {
+  const bans = dietStyleBans(rules.dietStyle);
+  const kept: string[] = [];
+  const notes: string[] = [];
+  for (const raw of likedFoods) {
+    const food = String(raw ?? "").trim();
+    if (!food) continue;
+    const hardHit = rules.excludeFoods.find((excluded) =>
+      containsExcludedFood(food, excluded),
+    );
+    if (hardHit) {
+      notes.push(
+        `"${food}" was left out because your allergies/restrictions exclude "${hardHit}".`,
+      );
+      continue;
+    }
+    const styleHit = bans.find((banned) => containsExcludedFood(food, banned));
+    if (styleHit) {
+      notes.push(
+        `"${food}" was left out because it conflicts with your ${rules.dietStyle} diet style.`,
+      );
+      continue;
+    }
+    kept.push(food);
+  }
+  return { likedFoods: kept, notes };
+}
+
+// -------------------- Structural salvage --------------------
+
+function sumTotals(meals: any[]) {
+  const add = (key: string) =>
+    meals.reduce((total, meal) => total + (Number(meal?.[key]) || 0), 0);
+  return {
+    calories: add("calories"),
+    protein_g: add("protein_g"),
+    carbs_g: add("carbs_g"),
+    fat_g: add("fat_g"),
+  };
+}
+
+/**
+ * Force a generated plan into the exact requested shape (weeks x 7 days x N
+ * meals) by reusing compliant content the model already produced. A paid
+ * customer must always receive a complete plan; a structural gap is repaired,
+ * not turned into a failure. Returns `ok: false` only when the model produced
+ * nothing usable at all.
+ */
+export function salvagePlanStructure(
+  plan: any,
+  rules: StrictRules,
+): { ok: boolean; plan: any; notes: string[] } {
+  const notes: string[] = [];
+  const slots = mealSlotsFor(rules.mealsPerDay);
+  const sourceWeeks: any[] = Array.isArray(plan?.weeks) ? plan.weeks : [];
+  const donors: any[] = sourceWeeks
+    .flatMap((week) => (Array.isArray(week?.days) ? week.days : []))
+    .filter((day) => Array.isArray(day?.meals) && day.meals.length > 0);
+  if (donors.length === 0) return { ok: false, plan, notes: ["No usable day was generated."] };
+
+  const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+  const weeks = Array.from({ length: rules.weeks }, (_, weekIndex) => {
+    const sourceWeek = sourceWeeks[weekIndex] ?? {};
+    const sourceDays: any[] = Array.isArray(sourceWeek?.days) ? sourceWeek.days : [];
+    const days = Array.from({ length: 7 }, (_, dayIndex) => {
+      const dayNumber = weekIndex * 7 + dayIndex + 1;
+      let day = sourceDays[dayIndex];
+      if (!day || !Array.isArray(day.meals) || day.meals.length === 0) {
+        day = clone(donors[(dayNumber - 1) % donors.length]);
+        notes.push(`Day ${dayNumber} was rebuilt from another compliant day of your plan.`);
+      }
+      let meals: any[] = [...day.meals];
+      if (meals.length > rules.mealsPerDay) {
+        meals = meals.slice(0, rules.mealsPerDay);
+        notes.push(`Day ${dayNumber} was trimmed to ${rules.mealsPerDay} meal(s).`);
+      }
+      while (meals.length < rules.mealsPerDay) {
+        const donorMeal = donors
+          .flatMap((donor: any) => donor.meals ?? [])
+          .filter((meal: any) => meal)[meals.length % Math.max(1, donors.length * rules.mealsPerDay)];
+        meals.push(clone(donorMeal ?? meals[meals.length - 1]));
+        notes.push(`Day ${dayNumber} was completed to ${rules.mealsPerDay} meal(s).`);
+      }
+      meals = meals.map((meal: any, index: number) => ({ ...meal, name: slots[index] }));
+      return { ...day, day: dayNumber, meals, totals: sumTotals(meals) };
+    });
+    const groceryList = days.flatMap((day: any) =>
+      (day.meals ?? []).flatMap((meal: any) =>
+        (meal?.ingredients ?? []).map((ingredient: any) => ({
+          item: ingredient?.item,
+          qty: ingredient?.qty,
+        })),
+      ),
+    );
+    return { ...sourceWeek, weekNumber: weekIndex + 1, days, groceryList };
+  });
+
+  return { ok: true, plan: { ...plan, weeks }, notes: Array.from(new Set(notes)) };
+}
