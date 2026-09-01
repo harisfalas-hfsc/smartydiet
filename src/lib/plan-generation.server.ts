@@ -424,16 +424,30 @@ export async function runPlanGeneration(
         })
         .eq("id", data.sessionId)
         .in("status", ["paid", "generating", "completed", "generation_failed"]);
-      const { sendPlanGenerationFailureAlert } = await import("@/lib/plan-generation-alert.server");
-      await sendPlanGenerationFailureAlert(
-        { supabase, userId, claims: claims as Record<string, unknown> },
-        {
+      const alerts = await import("@/lib/plan-generation-alert.server");
+      const alertContext = { supabase, userId, claims: claims as Record<string, unknown> };
+      await alerts
+        .sendPlanGenerationFailureAlert(alertContext, {
           sessionId: data.sessionId,
           operationId: data.operationId,
           refinement: data.refinement,
           reason,
-        },
-      ).catch(() => undefined);
+        })
+        .catch(() => undefined);
+      // Tell the customer once that their paid plan is delayed, and escalate
+      // loudly to support when the automatic retries are exhausted.
+      await alerts
+        .sendCustomerDelayEmail(alertContext, { sessionId: data.sessionId })
+        .catch(() => undefined);
+      if (attemptCount >= 5) {
+        await alerts
+          .sendPlanAbandonedAlert(alertContext, {
+            sessionId: data.sessionId,
+            reason,
+            attemptCount,
+          })
+          .catch(() => undefined);
+      }
       return { error: "We encountered an error this time. Please try again later." };
     };
     if (data.operationId && data.refinement) {
