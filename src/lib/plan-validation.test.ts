@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { mealSlotsFor, sortPlanStructure, type StrictRules, validatePlan } from "./plan-validation";
+import { mealSlotsFor, sortPlanStructure, splitIssues, type StrictRules, validatePlan } from "./plan-validation";
 
 function completePlan(weeks: number, mealsPerDay: number) {
   const slots = mealSlotsFor(mealsPerDay);
@@ -114,14 +114,14 @@ describe("paid plan structural validation", () => {
 });
 
 describe("issue severity", () => {
-  it("treats missing days and meals as blocking, other issues as soft", () => {
+  test("blocks only structural issues, softens the rest", () => {
     const { blocking, soft } = splitIssues([
       { day: 0, weekNumber: 1, kind: "day_count", detail: "d" },
       { day: 3, weekNumber: 1, kind: "meal_count", detail: "m" },
       { day: 3, weekNumber: 1, kind: "calorie", detail: "c" },
       { day: 4, weekNumber: 1, kind: "excluded_food", detail: "e" },
     ]);
-    expect(blocking.map((i) => i.kind)).toEqual(["day_count", "meal_count"]);
-    expect(soft.map((i) => i.kind)).toEqual(["calorie", "excluded_food"]);
+    assert.deepEqual(blocking.map((i) => i.kind), ["day_count", "meal_count"]);
+    assert.deepEqual(soft.map((i) => i.kind), ["calorie", "excluded_food"]);
   });
 });
