@@ -28,5 +28,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'contact-notification': contactNotification,
   'lead-welcome': leadWelcome,
   'plan-generation-failure': planGenerationFailure,
+  'plan-delay-customer': planDelayCustomer,
+  'plan-ready-customer': planReadyCustomer,
   'support-reply': supportReply,
 }
