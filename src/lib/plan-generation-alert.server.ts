@@ -210,7 +210,13 @@ export async function sendCapturePaymentAlert(
  */
 export async function sendPlanAbandonedAlert(
   context: AlertContext,
-  details: { sessionId: string; questionnaireId?: string; reason: string; attemptCount: number },
+  details: {
+    sessionId: string;
+    questionnaireId?: string;
+    reason: string;
+    attemptCount: number;
+    repeat?: boolean;
+  },
 ) {
   const occurredAt = new Date().toISOString();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -221,7 +227,7 @@ export async function sendPlanAbandonedAlert(
     .select("abandoned_alert_at,questionnaire_id")
     .eq("id", details.sessionId)
     .maybeSingle();
-  if (session?.abandoned_alert_at) return { emailStatus: "skipped" as const };
+  if (session?.abandoned_alert_at && !details.repeat) return { emailStatus: "skipped" as const };
 
   let userEmail = claimString(context.claims, "email");
   let userName: string | undefined;
@@ -249,7 +255,7 @@ export async function sendPlanAbandonedAlert(
         occurredAt,
         urgent: true,
       },
-      `plan-abandoned-${details.sessionId}`,
+      `plan-abandoned-${details.sessionId}-${occurredAt.slice(0, 10)}`,
     );
     await supabaseAdmin
       .from("generation_sessions")
