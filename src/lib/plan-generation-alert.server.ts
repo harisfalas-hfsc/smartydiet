@@ -113,9 +113,8 @@ export async function sendPlanGenerationFailureAlert(context: AlertContext, deta
       claimString(userMetadata, "name");
     const referenceId = details.sessionId ?? details.questionnaireId ?? "unknown";
 
-    const delivery = await sendTemplateEmail("plan-generation-failure", ADMIN_EMAIL, {
-      idempotencyKey: `plan-generation-failure-${referenceId}-${failureId}`,
-      templateData: {
+    const delivery = await sendAdminAlert(
+      {
         userName,
         userEmail,
         userId: context.userId,
