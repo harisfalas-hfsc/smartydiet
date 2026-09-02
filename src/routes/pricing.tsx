@@ -21,10 +21,7 @@ export const Route = createFileRoute("/pricing")({
     if (free) throw redirect({ to: "/" });
     return { freeAccessMode: free };
   },
-  head: ({ loaderData }) =>
-    loaderData?.freeAccessMode === true
-      ? { meta: [{ title: "SmartyDiet" }] }
-      : {
+  head: () => ({
     meta: [
       { title: "Pricing — SmartyDiet AI diet plan for €9.99, one-time" },
       {
@@ -40,7 +37,7 @@ export const Route = createFileRoute("/pricing")({
       { property: "og:url", content: "https://smartydiet.com/pricing" },
     ],
     links: [{ rel: "canonical", href: "https://smartydiet.com/pricing" }],
-  },
+  }),
   component: PricingPage,
 });
 
