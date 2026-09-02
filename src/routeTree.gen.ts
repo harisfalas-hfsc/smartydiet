@@ -19,6 +19,7 @@ import { Route as NutritionLibraryRouteImport } from './routes/nutrition-library
 import { Route as NutritionIntelligenceRouteImport } from './routes/nutrition-intelligence'
 import { Route as MealPlanningRouteImport } from './routes/meal-planning'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as GlossaryRouteImport } from './routes/glossary'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -106,6 +107,11 @@ const MealPlanningRoute = MealPlanningRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/glossary': typeof GlossaryRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
@@ -367,6 +374,7 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/glossary': typeof GlossaryRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
@@ -418,6 +426,7 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/glossary': typeof GlossaryRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/meal-planning': typeof MealPlanningRoute
   '/nutrition-intelligence': typeof NutritionIntelligenceRoute
@@ -469,6 +478,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/glossary'
     | '/how-it-works'
+    | '/llms.txt'
     | '/mcp'
     | '/meal-planning'
     | '/nutrition-intelligence'
@@ -518,6 +528,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/glossary'
     | '/how-it-works'
+    | '/llms.txt'
     | '/mcp'
     | '/meal-planning'
     | '/nutrition-intelligence'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/glossary'
     | '/how-it-works'
+    | '/llms.txt'
     | '/mcp'
     | '/meal-planning'
     | '/nutrition-intelligence'
@@ -619,6 +631,7 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   GlossaryRoute: typeof GlossaryRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   McpRoute: typeof McpRoute
   MealPlanningRoute: typeof MealPlanningRoute
   NutritionIntelligenceRoute: typeof NutritionIntelligenceRoute
@@ -722,6 +735,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-it-works': {
@@ -1045,6 +1065,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   GlossaryRoute: GlossaryRoute,
   HowItWorksRoute: HowItWorksRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   McpRoute: McpRoute,
   MealPlanningRoute: MealPlanningRoute,
   NutritionIntelligenceRoute: NutritionIntelligenceRoute,

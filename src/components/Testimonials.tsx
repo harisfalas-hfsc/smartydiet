@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 
 type Row = {
   id: string;
@@ -72,10 +73,19 @@ const FACTS: { label: string; detail: string }[] = [
 ];
 
 /** Factual trust strip — verifiable claims only, no invented numbers. */
+const FREE_FACTS: { label: string; detail: string }[] = [
+  { label: "Completely free", detail: "Every feature is included" },
+  { label: "1 free refinement", detail: "Adjust your plan after you see it" },
+  { label: "Yours to keep", detail: "PDF export + saved to your account" },
+  { label: "Private by design", detail: "Your data, deletable any time" },
+];
+
 export function TrustBar({ className }: { className?: string }) {
+  const { freeAccessMode } = useFreeAccessMode();
+  const facts = freeAccessMode ? FREE_FACTS : FACTS;
   return (
     <section className={cn("grid gap-3 sm:grid-cols-2 lg:grid-cols-4", className)}>
-      {FACTS.map((f) => (
+      {facts.map((f) => (
         <div key={f.label} className="rounded-2xl border border-blue-400 bg-card p-4">
           <p className="text-sm font-extrabold">{f.label}</p>
           <p className="mt-1 text-xs text-muted-foreground">{f.detail}</p>

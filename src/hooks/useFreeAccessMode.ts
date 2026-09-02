@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const FREE_ACCESS_SETTING_KEY = "free_access_mode";
@@ -44,9 +44,13 @@ export async function fetchFreeAccessMode(force = false): Promise<boolean> {
 }
 
 
+/** SSR-known value, provided by the root route loader. */
+export const FreeAccessContext = createContext<boolean | null>(null);
+
 export function useFreeAccessMode(): { freeAccessMode: boolean; loading: boolean } {
-  const [freeAccessMode, setValue] = useState<boolean>(cached ?? false);
-  const [loading, setLoading] = useState(cached === null);
+  const ssrValue = useContext(FreeAccessContext);
+  const [freeAccessMode, setValue] = useState<boolean>(ssrValue ?? cached ?? false);
+  const [loading, setLoading] = useState(ssrValue === null && cached === null);
 
   useEffect(() => {
     let active = true;

@@ -18,6 +18,8 @@ import { PaymentTestModeBanner } from "../components/PaymentTestModeBanner";
 import { Toaster } from "../components/ui/sonner";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
+import { getFreeAccessMode } from "../lib/free-access.functions";
+import { FreeAccessContext } from "../hooks/useFreeAccessMode";
 
 const SITE_URL = "https://smartydiet.com";
 const OG_IMAGE =
@@ -99,6 +101,20 @@ const KEYWORDS = [
   "Smarty Meal Plan",
   "Smarty Calorie Engine",
 ].join(", ");
+
+const PAID_OFFER = {
+  "@type": "Offer",
+  price: "9.99",
+  priceCurrency: "EUR",
+  availability: "https://schema.org/InStock",
+};
+
+const FREE_OFFER = {
+  "@type": "Offer",
+  price: "0",
+  priceCurrency: "EUR",
+  availability: "https://schema.org/InStock",
+};
 
 const JSONLD_GRAPH = {
   "@context": "https://schema.org",
@@ -189,12 +205,6 @@ const JSONLD_GRAPH = {
         "Habit coaching",
       ],
       keywords: KEYWORDS,
-      offers: {
-        "@type": "Offer",
-        price: "9.99",
-        priceCurrency: "EUR",
-        availability: "https://schema.org/InStock",
-      },
     },
   ],
 };
@@ -259,8 +269,24 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+function buildJsonLd(freeAccessMode: boolean) {
+  const graph = JSONLD_GRAPH["@graph"].map((node) =>
+    (node as { "@type"?: string })["@type"] === "SoftwareApplication"
+      ? { ...node, offers: freeAccessMode ? FREE_OFFER : PAID_OFFER }
+      : node,
+  );
+  return { ...JSONLD_GRAPH, "@graph": graph };
+}
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  loader: async () => {
+    try {
+      return await getFreeAccessMode();
+    } catch {
+      return { freeAccessMode: false };
+    }
+  },
+  head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
       {
@@ -314,7 +340,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify(JSONLD_GRAPH),
+        children: JSON.stringify(buildJsonLd(loaderData?.freeAccessMode === true)),
       },
       {
         async: true,
@@ -351,6 +377,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const rootData = Route.useLoaderData();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isPaymentProcessing = pathname === "/checkout/return";
 
@@ -391,6 +418,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <FreeAccessContext.Provider value={rootData?.freeAccessMode === true}>
       <TooltipProvider delayDuration={150}>
         <div className="flex min-h-screen flex-col bg-background">
           {!isPaymentProcessing && <PaymentTestModeBanner />}
@@ -403,6 +431,7 @@ function RootComponent() {
           {!isPaymentProcessing && <SisterAppsPopup />}
         </div>
       </TooltipProvider>
+      </FreeAccessContext.Provider>
     </QueryClientProvider>
   );
 }

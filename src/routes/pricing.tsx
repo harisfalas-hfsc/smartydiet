@@ -1,4 +1,5 @@
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, redirect } from "@tanstack/react-router";
+import { getFreeAccessMode } from "@/lib/free-access.functions";
 import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
 import { Button } from "@/components/ui/button";
 import { HandCoins } from "lucide-react";
@@ -9,6 +10,17 @@ import { Testimonials, TrustBar } from "@/components/Testimonials";
 import { StartPlanLink } from "@/components/StartPlanLink";
 
 export const Route = createFileRoute("/pricing")({
+  loader: async () => {
+    let free = false;
+    try {
+      free = (await getFreeAccessMode()).freeAccessMode;
+    } catch {
+      free = false;
+    }
+    // Free Access Mode: this page must not exist at all, not even in SSR HTML.
+    if (free) throw redirect({ to: "/" });
+    return { freeAccessMode: free };
+  },
   head: () => ({
     meta: [
       { title: "Pricing — SmartyDiet AI diet plan for €9.99, one-time" },

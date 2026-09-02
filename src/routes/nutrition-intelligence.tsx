@@ -223,7 +223,7 @@ function NutritionIntelligencePage() {
           cornerIcon={Users}
           title="Built for"
           accent="everyone with a goal"
-          description="Whatever direction you're heading, nutrition intelligence gets you there faster — without the subscription trap."
+          description="Whatever direction you're heading, nutrition intelligence gets you there faster."
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <SmartyPill tone="pink" icon="⚖️">Losing weight</SmartyPill>

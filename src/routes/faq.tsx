@@ -7,12 +7,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+import { getFreeAccessMode } from "@/lib/free-access.functions";
 
 
 const URL = "https://smartydiet.com/faq";
 const TITLE = "SmartyDiet FAQ — plans, pricing, privacy & accuracy";
 const DESCRIPTION =
   "Answers to common questions about SmartyDiet: what you get in a plan, how the AI meal planner works, pricing, privacy, allergies and accuracy.";
+const FREE_TITLE = "SmartyDiet FAQ — plans, privacy & accuracy";
+const FREE_DESCRIPTION =
+  "Answers to common questions about SmartyDiet: what you get in a plan, how the AI meal planner works, privacy, allergies and accuracy.";
 
 const ITEMS: { q: string; a: string }[] = [
   {
@@ -69,13 +74,27 @@ const ITEMS: { q: string; a: string }[] = [
 
 const PRICING_QUESTIONS = ["How much does it cost?", "Can I get a refund?"];
 
-const JSONLD = {
+function visibleItems(freeAccessMode: boolean) {
+  if (!freeAccessMode) return ITEMS;
+  return ITEMS.filter((it) => !PRICING_QUESTIONS.includes(it.q)).map((it) =>
+    it.q === "How is SmartyDiet different from a human dietitian?"
+      ? {
+          ...it,
+          a: "A human dietitian can diagnose and treat medical conditions; SmartyDiet cannot. What SmartyDiet does do is package the assessment, calculation and planning work of a dietitian into an always-available AI.",
+        }
+      : it,
+  );
+}
+
+function buildJsonLd(freeAccessMode: boolean) {
+  const items = visibleItems(freeAccessMode);
+  return {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "FAQPage",
       "@id": `${URL}#faq`,
-      mainEntity: ITEMS.map((it) => ({
+    mainEntity: items.map((it) => ({
         "@type": "Question",
         name: it.q,
         acceptedAnswer: { "@type": "Answer", text: it.a },
@@ -92,40 +111,42 @@ const JSONLD = {
         { "@type": "ListItem", position: 2, name: "FAQ", item: URL },
       ],
     },
-  ],
-};
-
-import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+    ],
+  };
+}
 
 export const Route = createFileRoute("/faq")({
-  head: () => ({
-    meta: [
-      { title: TITLE },
-      { name: "description", content: DESCRIPTION },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESCRIPTION },
-      { property: "og:url", content: URL },
-      { name: "twitter:title", content: TITLE },
-      { name: "twitter:description", content: DESCRIPTION },
-    ],
-    links: [{ rel: "canonical", href: URL }],
-    scripts: [{ type: "application/ld+json", children: JSON.stringify(JSONLD) }],
-  }),
+  loader: async () => {
+    try {
+      return await getFreeAccessMode();
+    } catch {
+      return { freeAccessMode: false };
+    }
+  },
+  head: ({ loaderData }) => {
+    const free = loaderData?.freeAccessMode === true;
+    const title = free ? FREE_TITLE : TITLE;
+    const description = free ? FREE_DESCRIPTION : DESCRIPTION;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: URL },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+      ],
+      links: [{ rel: "canonical", href: URL }],
+      scripts: [{ type: "application/ld+json", children: JSON.stringify(buildJsonLd(free)) }],
+    };
+  },
   component: FAQ,
 });
 
 function FAQ() {
   const { freeAccessMode } = useFreeAccessMode();
-  const items = freeAccessMode
-    ? ITEMS.filter((it) => !PRICING_QUESTIONS.includes(it.q)).map((it) =>
-        it.q === "How is SmartyDiet different from a human dietitian?"
-          ? {
-              ...it,
-              a: "A human dietitian can diagnose and treat medical conditions; SmartyDiet cannot. What SmartyDiet does do is package the assessment, calculation and planning work of a dietitian into an always-available AI.",
-            }
-          : it,
-      )
-    : ITEMS;
+  const items = visibleItems(freeAccessMode);
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       <div className="mb-8 text-center">

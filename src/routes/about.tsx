@@ -69,7 +69,7 @@ function AboutPage() {
               <SmartyPill tone="purple" icon="🎯">Personalized to your body</SmartyPill>
               <SmartyPill tone="purple" icon="🧪">Evidence-based methods</SmartyPill>
               <SmartyPill tone="purple" icon="🔎">Transparent numbers</SmartyPill>
-              <SmartyPill tone="purple" icon="🚫">No subscription trap</SmartyPill>
+              <SmartyPill tone="purple" icon="🚫">{freeAccessMode ? "Free for every member" : "No subscription trap"}</SmartyPill>
             </div>
 
             <div className="mt-4 border-t border-border pt-4">
@@ -103,7 +103,7 @@ function AboutPage() {
                 <SmartyRow tone="purple" icon="🎯" title="Personalization first" subtitle="Plans built around your body and preferences." />
                 <SmartyRow tone="purple" icon="🧪" title="Evidence-based" subtitle="Methods used by dietitians." />
                 <SmartyRow tone="purple" icon="🔎" title="Transparent" subtitle="See the calories, macros and rationale." />
-                <SmartyRow tone="purple" icon="🚫" title="No subscription trap" subtitle="Pay once, own your plan." />
+                <SmartyRow tone="purple" icon="🚫" title={freeAccessMode ? "Free for every member" : "No subscription trap"} subtitle={freeAccessMode ? "Create your plan and own it." : "Pay once, own your plan."} />
               </div>
             </div>
           </div>

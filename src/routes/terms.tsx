@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FileText } from "lucide-react";
 import { LegalLayout } from "@/components/LegalLayout";
+import { getFreeAccessMode } from "@/lib/free-access.functions";
 
 export const Route = createFileRoute("/terms")({
+  loader: async () => {
+    try {
+      return await getFreeAccessMode();
+    } catch {
+      return { freeAccessMode: false };
+    }
+  },
   head: () => ({
     meta: [
       { title: "Terms & Conditions | SmartyDiet" },
@@ -24,6 +32,7 @@ export const Route = createFileRoute("/terms")({
 });
 
 function Terms() {
+  const { freeAccessMode } = Route.useLoaderData();
   return (
     <LegalLayout title="Terms & Conditions" icon={<FileText className="h-5 w-5" />} lastUpdated="July 2026">
       <p>
@@ -96,40 +105,63 @@ function Terms() {
         <li>You are responsible for all activity that occurs under your account.</li>
       </ul>
 
-      <h2>5. Payments (Pay-Per-Plan)</h2>
-      <ul>
-        <li>
-          SmartyDiet operates on a <strong>pay-per-plan</strong> model. There is no subscription and
-          no recurring billing. Each plan is purchased as a one-time payment (currently €9.99 per
-          plan).
-        </li>
-        <li>
-          Each purchase unlocks <strong>2 AI credits</strong>: 1 initial plan generation plus 1
-          refinement. Once both credits have been used, the plan is locked as final and a new
-          purchase is required to start a new plan.
-        </li>
-        <li>Payments are processed securely via Stripe. We do not store full card details on our servers.</li>
-        <li>All fees are stated in the currency shown at checkout and, where applicable, include VAT.</li>
-      </ul>
+      {freeAccessMode ? (
+        <>
+          <h2>5. Access to SmartyDiet</h2>
+          <ul>
+            <li>
+              SmartyDiet is provided <strong>free of charge</strong>. There are no fees, no
+              subscriptions and no in-app purchases of any kind.
+            </li>
+            <li>
+              Each plan includes <strong>2 AI credits</strong>: 1 initial plan generation plus 1
+              refinement. Once both credits have been used, the plan is locked as final and you can
+              start a new plan at any time, at no cost.
+            </li>
+            <li>
+              We may change, limit or discontinue any free feature at any time without notice.
+            </li>
+          </ul>
+        </>
+      ) : (
+        <>
+          <h2>5. Payments (Pay-Per-Plan)</h2>
+          <ul>
+            <li>
+              SmartyDiet operates on a <strong>pay-per-plan</strong> model. There is no subscription
+              and no recurring billing. Each plan is purchased as a one-time payment (currently
+              €9.99 per plan).
+            </li>
+            <li>
+              Each purchase unlocks <strong>2 AI credits</strong>: 1 initial plan generation plus 1
+              refinement. Once both credits have been used, the plan is locked as final and a new
+              purchase is required to start a new plan.
+            </li>
+            <li>Payments are processed securely via Stripe. We do not store full card details on our servers.</li>
+            <li>All fees are stated in the currency shown at checkout and, where applicable, include VAT.</li>
+          </ul>
 
-      <h2>6. Refunds &amp; Withdrawal (EU Consumer Rights)</h2>
-      <ul>
-        <li>
-          Under EU Directive 2011/83/EU, EU consumers ordinarily have a{" "}
-          <strong>14-day right of withdrawal</strong> for digital services that have not yet been
-          consumed.
-        </li>
-        <li>
-          By generating a plan after purchase, you expressly request immediate performance and
-          acknowledge that you waive your right of withdrawal once the initial generation credit has
-          been used.
-        </li>
-        <li>
-          Unused plan credits may be refunded on request within 14 days of purchase. Once the first
-          generation has been consumed, no refund will be provided except where required by law.
-        </li>
-        <li>Your statutory consumer rights under EU and national law remain unaffected.</li>
-      </ul>
+          <h2>6. Refunds &amp; Withdrawal (EU Consumer Rights)</h2>
+          <ul>
+            <li>
+              Under EU Directive 2011/83/EU, EU consumers ordinarily have a{" "}
+              <strong>14-day right of withdrawal</strong> for digital services that have not yet been
+              consumed.
+            </li>
+            <li>
+              By generating a plan after purchase, you expressly request immediate performance and
+              acknowledge that you waive your right of withdrawal once the initial generation credit
+              has been used.
+            </li>
+            <li>
+              Unused plan credits may be refunded on request within 14 days of purchase. Once the
+              first generation has been consumed, no refund will be provided except where required by
+              law.
+            </li>
+            <li>Your statutory consumer rights under EU and national law remain unaffected.</li>
+          </ul>
+        </>
+      )}
 
       <h2>7. Health &amp; Safety Requirements</h2>
       <ul>
@@ -177,7 +209,9 @@ function Terms() {
 
       <h2>9. Third-Party Services</h2>
       <ul>
-        <li><strong>Stripe:</strong> Processes all payments. Stripe&apos;s terms and privacy policy apply.</li>
+        {!freeAccessMode && (
+          <li><strong>Stripe:</strong> Processes all payments. Stripe&apos;s terms and privacy policy apply.</li>
+        )}
         <li><strong>Lovable Cloud:</strong> Hosts the database and authentication.</li>
         <li><strong>AI provider(s):</strong> Used to generate your personalized plan.</li>
       </ul>
@@ -212,11 +246,10 @@ function Terms() {
           Account deletion permanently removes your profile, questionnaire responses, plans, and
           history, except where short operational backup windows or legal obligations apply.
         </li>
-        <li>
-          Deleting your account also forfeits any unused AI credits. There are no subscriptions to
-          cancel.
-        </li>
-        <li>Some records (e.g. transaction history) may be retained where required by tax or legal obligations.</li>
+        <li>Deleting your account also forfeits any unused AI credits.</li>
+        {!freeAccessMode && (
+          <li>Some records (e.g. transaction history) may be retained where required by tax or legal obligations.</li>
+        )}
       </ul>
 
       <h2>13. Limitation of Liability</h2>

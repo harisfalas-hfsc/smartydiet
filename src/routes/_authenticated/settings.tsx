@@ -103,7 +103,7 @@ function SettingsPage() {
           <h2 className="text-base font-bold">Download your data</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Get a JSON file with your profile, questionnaire answers, generated diet plans and
-            purchase history.
+            account history.
           </p>
           <Button onClick={handleExport} disabled={exporting} className="mt-4">
             {exporting ? (
@@ -119,7 +119,7 @@ function SettingsPage() {
           <h2 className="text-base font-bold">Delete your account</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             This permanently removes your profile, questionnaire answers, generated diet plans and
-            purchase records. This cannot be undone.
+            account records. This cannot be undone.
           </p>
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -136,7 +136,7 @@ function SettingsPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete your account permanently?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  All of your data — profile, questionnaire answers, diet plans and purchase
+                  All of your data — profile, questionnaire answers, diet plans and account
                   records — will be deleted. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
