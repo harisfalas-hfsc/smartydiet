@@ -1,4 +1,10 @@
-# SmartyDiet
+import { createFileRoute } from "@tanstack/react-router";
+
+/**
+ * llms.txt is served dynamically so Free Access Mode can strip every pricing
+ * reference (app-store review requires no purchase signals anywhere).
+ */
+const BODY = `# SmartyDiet
 
 > SmartyDiet is the AI Nutrition Intelligence Platform — a pocket dietitian, nutrition consultant, and diet coach powered by AI. It turns a smart questionnaire into a fully personalized diet plan, meal-by-meal, with calories, macros, a weekly grocery list, and free science-based tools (BMR, TDEE, BMI, macros, calorie counter).
 
@@ -69,3 +75,51 @@ AI Nutrition Intelligence, AI Dietitian, AI Nutritionist, AI Diet Coach, AI Meal
 ## Sister brands
 
 SmartyDiet is part of the Smarty Wellness family alongside SmartyGym (https://smartygym.com) and SmartyMove (https://smartymove.com).
+`;
+
+const PRICING_LINES = [
+  "- Pricing: \u20ac9.99 one-time for a fully personalized plan (no subscription).",
+  "- **No subscription trap** \u2014 one-time \u20ac9.99 for a plan users own.",
+  "- Pricing \u2014 https://smartydiet.com/pricing",
+];
+
+const FREE_REPLACEMENTS: Record<string, string | null> = {
+  [PRICING_LINES[0]!]: "- Access: completely free \u2014 no payment, no subscription, no in-app purchases.",
+  [PRICING_LINES[1]!]: "- **Free for everyone** \u2014 every feature is included at no cost.",
+  [PRICING_LINES[2]!]: null,
+};
+
+function render(freeAccessMode: boolean): string {
+  if (!freeAccessMode) return BODY;
+  return BODY.split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (trimmed in FREE_REPLACEMENTS) return FREE_REPLACEMENTS[trimmed] ?? null;
+      if (/pricing|\u20ac9\.99|subscription|payment/i.test(trimmed)) return null;
+      return line;
+    })
+    .filter((line): line is string => line !== null)
+    .join("\n");
+}
+
+export const Route = createFileRoute("/llms.txt")({
+  server: {
+    handlers: {
+      GET: async () => {
+        const { readFreeAccessMode } = await import("@/lib/free-access.server");
+        let free = false;
+        try {
+          free = await readFreeAccessMode();
+        } catch {
+          free = false;
+        }
+        return new Response(render(free), {
+          headers: {
+            "content-type": "text/plain; charset=utf-8",
+            "cache-control": "public, max-age=300",
+          },
+        });
+      },
+    },
+  },
+});
