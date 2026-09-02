@@ -13,6 +13,9 @@ const URL = "https://smartydiet.com/faq";
 const TITLE = "SmartyDiet FAQ — plans, pricing, privacy & accuracy";
 const DESCRIPTION =
   "Answers to common questions about SmartyDiet: what you get in a plan, how the AI meal planner works, pricing, privacy, allergies and accuracy.";
+const FREE_TITLE = "SmartyDiet FAQ — plans, privacy & accuracy";
+const FREE_DESCRIPTION =
+  "Answers to common questions about SmartyDiet: what you get in a plan, how the AI meal planner works, privacy, allergies and accuracy.";
 
 const ITEMS: { q: string; a: string }[] = [
   {
@@ -69,13 +72,15 @@ const ITEMS: { q: string; a: string }[] = [
 
 const PRICING_QUESTIONS = ["How much does it cost?", "Can I get a refund?"];
 
-const JSONLD = {
+function buildJsonLd(freeAccessMode: boolean) {
+  const items = freeAccessMode ? ITEMS.filter((it) => !PRICING_QUESTIONS.includes(it.q)) : ITEMS;
+  return {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "FAQPage",
       "@id": `${URL}#faq`,
-      mainEntity: ITEMS.map((it) => ({
+    mainEntity: items.map((it) => ({
         "@type": "Question",
         name: it.q,
         acceptedAnswer: { "@type": "Answer", text: it.a },
