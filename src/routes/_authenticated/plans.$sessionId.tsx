@@ -355,7 +355,7 @@ function PlanView() {
               </>
             ) : session.status === "paid" || session.status === "completed" ? (
               <>
-                <p className="mb-4">Your payment is confirmed. Tap below to build your plan.</p>
+                <p className="mb-4">Your session is confirmed. Tap below to build your plan.</p>
                 <Button onClick={runGeneration}>Generate my plan</Button>
               </>
             ) : (
