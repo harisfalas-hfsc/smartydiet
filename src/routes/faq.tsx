@@ -97,25 +97,36 @@ function buildJsonLd(freeAccessMode: boolean) {
         { "@type": "ListItem", position: 2, name: "FAQ", item: URL },
       ],
     },
-  ],
-};
-
-import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+    ],
+  };
+}
 
 export const Route = createFileRoute("/faq")({
-  head: () => ({
-    meta: [
-      { title: TITLE },
-      { name: "description", content: DESCRIPTION },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESCRIPTION },
-      { property: "og:url", content: URL },
-      { name: "twitter:title", content: TITLE },
-      { name: "twitter:description", content: DESCRIPTION },
-    ],
-    links: [{ rel: "canonical", href: URL }],
-    scripts: [{ type: "application/ld+json", children: JSON.stringify(JSONLD) }],
-  }),
+  loader: async () => {
+    try {
+      return await getFreeAccessMode();
+    } catch {
+      return { freeAccessMode: false };
+    }
+  },
+  head: ({ loaderData }) => {
+    const free = loaderData?.freeAccessMode === true;
+    const title = free ? FREE_TITLE : TITLE;
+    const description = free ? FREE_DESCRIPTION : DESCRIPTION;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: URL },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+      ],
+      links: [{ rel: "canonical", href: URL }],
+      scripts: [{ type: "application/ld+json", children: JSON.stringify(buildJsonLd(free)) }],
+    };
+  },
   component: FAQ,
 });
 
