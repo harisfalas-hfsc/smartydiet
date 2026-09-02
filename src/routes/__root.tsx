@@ -19,6 +19,7 @@ import { Toaster } from "../components/ui/sonner";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { SisterAppsPopup } from "../components/growth/SisterAppsPopup";
 import { getFreeAccessMode } from "../lib/free-access.functions";
+import { FreeAccessContext } from "../hooks/useFreeAccessMode";
 
 const SITE_URL = "https://smartydiet.com";
 const OG_IMAGE =
