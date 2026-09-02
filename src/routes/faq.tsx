@@ -7,6 +7,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useFreeAccessMode } from "@/hooks/useFreeAccessMode";
+import { getFreeAccessMode } from "@/lib/free-access.functions";
 
 
 const URL = "https://smartydiet.com/faq";
