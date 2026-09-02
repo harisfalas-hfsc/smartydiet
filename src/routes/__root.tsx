@@ -377,6 +377,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const rootData = Route.useLoaderData();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isPaymentProcessing = pathname === "/checkout/return";
 
@@ -417,6 +418,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <FreeAccessContext.Provider value={rootData?.freeAccessMode === true}>
       <TooltipProvider delayDuration={150}>
         <div className="flex min-h-screen flex-col bg-background">
           {!isPaymentProcessing && <PaymentTestModeBanner />}
@@ -429,6 +431,7 @@ function RootComponent() {
           {!isPaymentProcessing && <SisterAppsPopup />}
         </div>
       </TooltipProvider>
+      </FreeAccessContext.Provider>
     </QueryClientProvider>
   );
 }
