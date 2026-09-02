@@ -209,7 +209,9 @@ function Terms() {
 
       <h2>9. Third-Party Services</h2>
       <ul>
-        <li><strong>Stripe:</strong> Processes all payments. Stripe&apos;s terms and privacy policy apply.</li>
+        {!freeAccessMode && (
+          <li><strong>Stripe:</strong> Processes all payments. Stripe&apos;s terms and privacy policy apply.</li>
+        )}
         <li><strong>Lovable Cloud:</strong> Hosts the database and authentication.</li>
         <li><strong>AI provider(s):</strong> Used to generate your personalized plan.</li>
       </ul>

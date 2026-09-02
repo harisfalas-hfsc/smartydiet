@@ -74,8 +74,20 @@ const ITEMS: { q: string; a: string }[] = [
 
 const PRICING_QUESTIONS = ["How much does it cost?", "Can I get a refund?"];
 
+function visibleItems(freeAccessMode: boolean) {
+  if (!freeAccessMode) return ITEMS;
+  return ITEMS.filter((it) => !PRICING_QUESTIONS.includes(it.q)).map((it) =>
+    it.q === "How is SmartyDiet different from a human dietitian?"
+      ? {
+          ...it,
+          a: "A human dietitian can diagnose and treat medical conditions; SmartyDiet cannot. What SmartyDiet does do is package the assessment, calculation and planning work of a dietitian into an always-available AI.",
+        }
+      : it,
+  );
+}
+
 function buildJsonLd(freeAccessMode: boolean) {
-  const items = freeAccessMode ? ITEMS.filter((it) => !PRICING_QUESTIONS.includes(it.q)) : ITEMS;
+  const items = visibleItems(freeAccessMode);
   return {
   "@context": "https://schema.org",
   "@graph": [
@@ -134,16 +146,7 @@ export const Route = createFileRoute("/faq")({
 
 function FAQ() {
   const { freeAccessMode } = useFreeAccessMode();
-  const items = freeAccessMode
-    ? ITEMS.filter((it) => !PRICING_QUESTIONS.includes(it.q)).map((it) =>
-        it.q === "How is SmartyDiet different from a human dietitian?"
-          ? {
-              ...it,
-              a: "A human dietitian can diagnose and treat medical conditions; SmartyDiet cannot. What SmartyDiet does do is package the assessment, calculation and planning work of a dietitian into an always-available AI.",
-            }
-          : it,
-      )
-    : ITEMS;
+  const items = visibleItems(freeAccessMode);
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       <div className="mb-8 text-center">
