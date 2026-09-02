@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Shield } from "lucide-react";
 import { LegalLayout } from "@/components/LegalLayout";
+import { getFreeAccessMode } from "@/lib/free-access.functions";
 
 export const Route = createFileRoute("/privacy")({
+  loader: async () => {
+    try {
+      return await getFreeAccessMode();
+    } catch {
+      return { freeAccessMode: false };
+    }
+  },
   head: () => ({
     meta: [
       { title: "Privacy Policy | SmartyDiet" },
@@ -24,6 +32,7 @@ export const Route = createFileRoute("/privacy")({
 });
 
 function Privacy() {
+  const { freeAccessMode } = Route.useLoaderData();
   return (
     <LegalLayout title="Privacy Policy" icon={<Shield className="h-5 w-5" />} lastUpdated="July 2026">
       <p>
@@ -76,13 +85,17 @@ function Privacy() {
         <li>Your generated diet plans, grocery lists, and plan history.</li>
       </ul>
 
-      <h3>Payment Data</h3>
-      <ul>
-        <li>
-          Payment records for each one-time plan purchase are processed by Stripe. We do not store
-          your full card details on our servers.
-        </li>
-      </ul>
+      {!freeAccessMode && (
+        <>
+          <h3>Payment Data</h3>
+          <ul>
+            <li>
+              Payment records for each one-time plan purchase are processed by Stripe. We do not store
+              your full card details on our servers.
+            </li>
+          </ul>
+        </>
+      )}
 
       <h3>Usage &amp; Technical Data</h3>
       <ul>
@@ -96,9 +109,10 @@ function Privacy() {
         <li>Exclude allergens, disliked foods, and restricted items from your plan.</li>
         <li>Apply your refinement request using your remaining credit.</li>
         <li>Save your plans and history so you can view them at any time.</li>
-        <li>Process one-time plan payments via Stripe.</li>
+        {!freeAccessMode && <li>Process one-time plan payments via Stripe.</li>}
         <li>
-          Send transactional emails (account, security, billing) and, with consent, product updates.
+          Send transactional emails (account, security{freeAccessMode ? "" : ", billing"}) and, with
+          consent, product updates.
         </li>
         <li>Improve SmartyDiet through anonymized, aggregated analytics.</li>
         <li>Ensure legal compliance and platform security.</li>
@@ -112,7 +126,7 @@ function Privacy() {
         <li><strong>Consent (Art. 6(1)(a)):</strong> Marketing emails, optional analytics.</li>
         <li>
           <strong>Contractual necessity (Art. 6(1)(b)):</strong> Running the questionnaire, generating
-          plans, processing your purchases.
+          plans{freeAccessMode ? "" : ", processing your purchases"}.
         </li>
         <li><strong>Legal obligation (Art. 6(1)(c)):</strong> Tax and accounting records, fraud prevention.</li>
         <li><strong>Legitimate interests (Art. 6(1)(f)):</strong> Service security, product improvement.</li>
@@ -125,12 +139,14 @@ function Privacy() {
 
       <h2>4. Data Sharing &amp; Sub-Processors</h2>
       <ul>
-        <li>
-          <strong>Stripe</strong> — payment processing (PCI DSS compliant).{" "}
-          <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer">
-            Stripe Privacy Policy
-          </a>
-        </li>
+        {!freeAccessMode && (
+          <li>
+            <strong>Stripe</strong> — payment processing (PCI DSS compliant).{" "}
+            <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer">
+              Stripe Privacy Policy
+            </a>
+          </li>
+        )}
         <li><strong>Lovable Cloud</strong> — database hosting and authentication.</li>
         <li>
           <strong>AI provider(s)</strong> — used only to generate your personalized plan from your
@@ -193,7 +209,9 @@ function Privacy() {
       <ul>
         <li><strong>Essential:</strong> authentication tokens, session security, fraud prevention.</li>
         <li><strong>Functional:</strong> UI preferences, questionnaire progress.</li>
-        <li><strong>Third-party (Stripe):</strong> payment fraud prevention at checkout.</li>
+        {!freeAccessMode && (
+          <li><strong>Third-party (Stripe):</strong> payment fraud prevention at checkout.</li>
+        )}
       </ul>
 
       <h2>9. Children</h2>
