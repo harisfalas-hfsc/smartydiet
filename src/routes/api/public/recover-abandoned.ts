@@ -43,6 +43,13 @@ async function run(request: Request): Promise<Response> {
     allowed = Boolean(row?.token) && provided === row!.token;
   }
   if (!allowed) return json({ error: "unauthorized" }, 401);
+
+  // Free Access Mode: nothing is for sale, so no checkout reminders may go out.
+  const { readFreeAccessMode } = await import("@/lib/free-access.server");
+  if (await readFreeAccessMode()) {
+    return json({ ok: true, skipped: "free_access_mode", considered: 0, sent: 0 });
+  }
+
   const { safeSend } = await import("@/lib/support-email.server");
 
   const now = Date.now();
