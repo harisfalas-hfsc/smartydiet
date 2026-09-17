@@ -27,7 +27,7 @@ type HomeAction = {
   image: string;
   icon: LucideIcon;
   to: "/questionnaire" | "/auth" | "/how-it-works" | "/tools";
-  search?: { mode: "signup"; next: "/questionnaire" };
+  search?: { mode: "signup"; next: string };
 };
 
 export function MobileHomeActions() {
