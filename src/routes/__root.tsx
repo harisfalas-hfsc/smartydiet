@@ -153,7 +153,8 @@ const JSONLD_GRAPH = {
         "https://smartygym.com",
         "https://smartywellness.com",
         "https://www.instagram.com/smartydiet",
-        "https://www.tiktok.com/@smarty.diet",
+        "https://www.tiktok.com/@smarty.diet?_r=1&_t=ZN-99obv8i8ewg",
+        "https://www.facebook.com/share/1F2hBHPpUj/",
       ],
       contactPoint: [
         {
