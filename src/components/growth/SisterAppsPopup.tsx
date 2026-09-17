@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Sparkles, X } from "lucide-react";
-import logoGym from "@/assets/smarty-gym-logo.png";
+import logoGym from "@/assets/smartygym-icon-dark.png";
 import logoMove from "@/assets/smartymove-logo.png";
 
 const CURRENT_APP: "gym" | "move" | "diet" = "diet";
@@ -100,11 +100,7 @@ export const SisterAppsPopup = () => {
                     src={app.image}
                     alt={app.name}
                     loading="lazy"
-                    className={`h-full w-full object-contain rounded-md ${
-                      app.id === "gym"
-                        ? "border-2 border-blue-500 bg-white p-0.5"
-                        : ""
-                    }`}
+                    className="h-full w-full object-contain rounded-md"
                   />
                 </div>
                 <div className="flex-1 min-w-0">
