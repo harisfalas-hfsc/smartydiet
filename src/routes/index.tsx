@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import heroNutrition from "@/assets/hero-nutrition.jpg";
 import { Testimonials } from "@/components/Testimonials";
 import { useStartPlanTarget } from "@/components/StartPlanLink";
+import { MobileHomeActions } from "@/components/MobileHomeActions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -84,30 +85,7 @@ function Home() {
           around your body, goals, food preferences and constraints.
         </p>
 
-        <div className="mt-8 flex flex-col gap-3">
-          <Link
-            to={heroCtaTo}
-            search={heroCtaSearch}
-            className="flex h-14 w-full items-center justify-center rounded-full bg-primary text-[16px] font-extrabold text-primary-foreground no-underline"
-            style={{ textDecoration: "none" }}
-          >
-            {heroCtaLabel}
-          </Link>
-          <Link
-            to={secondaryTo}
-            className="flex h-14 w-full items-center justify-center rounded-full border-2 border-primary text-[16px] font-bold text-primary no-underline"
-            style={{ textDecoration: "none" }}
-          >
-            {secondaryLabel}
-          </Link>
-          <Link
-            to="/tools"
-            className="flex h-14 w-full items-center justify-center rounded-full border-2 border-primary text-[16px] font-bold text-primary no-underline"
-            style={{ textDecoration: "none" }}
-          >
-            Free nutrition tools
-          </Link>
-        </div>
+        <MobileHomeActions />
 
         <p className="mx-auto mt-6 max-w-[22rem] text-[12px] leading-snug text-muted-foreground/70">
           Not medical advice. SmartyDiet is made for healthy people who want to
